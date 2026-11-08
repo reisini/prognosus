@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Прогнозус</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #ecebf4; --surface: #ffffff; --soft: #f5f4fa; --ink: #1c1940; --muted: #6d6992; --line: #e3e0ef;
+    --accent: #4a3dcc; --accent-soft: #e8e5fb; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
+    --display: 'Unbounded', 'Onest', system-ui, sans-serif;
+    --text: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --hdr: 96px; --nav: 58px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
+      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; }
+  }
+  :root[data-theme="dark"] { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
+    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.35 var(--text); font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+
+  /* Шапка: марка и вкладки турниров */
+  #hdr { position: sticky; top: 0; z-index: 10; background: var(--bg); }
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 4px; }
+  .brand { display: flex; align-items: center; color: var(--ink); }
+  .brand svg { display: block; height: 34px; width: auto; }
+  .who { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+  .icon-btn { width: 32px; height: 32px; border: 0; background: none; border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 17px; }
+  .icon-btn:active { background: var(--soft); }
+  .comps { display: flex; gap: 22px; padding: 6px 16px 0; border-bottom: 1px solid var(--line); }
+  .comps button { position: relative; border: 0; background: none; padding: 8px 0 11px; cursor: pointer;
+    font: 600 14px/1 var(--display); color: var(--muted); letter-spacing: -.01em; }
+  .comps button.on { color: var(--ink); }
+  .comps button.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+  .badge { display: inline-block; min-width: 17px; height: 17px; padding: 0 5px; margin-left: 5px; border-radius: 9px; vertical-align: 1px;
+    background: var(--accent); color: var(--surface); font: 700 10.5px/17px var(--text); text-align: center; }
+
+  main { padding: 12px 10px calc(var(--nav) + 84px + env(safe-area-inset-bottom)); }
+  .panel { background: var(--surface); border-radius: 16px; margin-bottom: 14px; }
+  .ptitle { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 14px 2px; }
+  .ptitle h2 { margin: 0; font: 600 21px/1.15 var(--display); letter-spacing: -.02em; }
+  .ptitle .meta { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .pnote { padding: 2px 14px 10px; color: var(--muted); font-size: 13px; }
+  .pnote .live { color: var(--live); font-weight: 600; }
+
+  /* Сетка: столбцы — это игроки, одинаковые по всему туру */
+  .g { display: grid; grid-template-columns: var(--cols); column-gap: 2px; align-items: center; padding: 0 12px; }
+  .names { position: sticky; top: var(--hdr); z-index: 4; background: var(--surface); padding-top: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .names .c { font-size: 12px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .names .c.me { color: var(--accent); }
+  .leg { display: block; font-size: 11.5px; line-height: 1.3; color: var(--ink); }
+  .leg span { color: var(--muted); }
+  .c { text-align: center; min-width: 0; }
+  .lbl { color: var(--muted); font-size: 12.5px; min-width: 0; }
+
+  .stats { padding: 6px 0 8px; background: var(--soft); border-bottom: 1px solid var(--line); }
+  .stats .g { padding-top: 3px; padding-bottom: 3px; }
+  .stats .v { font-weight: 600; font-size: 15px; }
+  .stats .v.win { color: var(--gold); }
+  .stats .place { font: 600 17px/1 var(--display); }
+  .stats .place.p1 { color: var(--gold); }
+  .stats .tot { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); }
+
+  /* Матч */
+  .m { padding: 8px 0 9px; border-bottom: 1px solid var(--line); }
+  .m:last-child { border-bottom: 0; }
+  .m.dirty { background: var(--accent-soft); }
+  .m.late { background: var(--gold-bg); }
+  .mt { display: flex; justify-content: space-between; align-items: center; padding: 0 14px 3px; font-size: 12px; color: var(--muted); min-height: 18px; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 99px; }
+  .min { color: var(--live); font-weight: 700; font-size: 13px; }
+  .min i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--live); vertical-align: 1px; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .2; } }
+  .chip.wait { background: var(--gold-bg); color: var(--gold); }
+  .team { font-weight: 600; font-size: 15px; line-height: 28px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .p { font-size: 15px; }
+  .p.me { font-weight: 700; }
+  .p.hid { color: var(--muted); font-size: 13px; }
+  .p.pend { color: var(--gold); font-style: italic; }
+  .sc { font: 600 16px/1 var(--display); text-align: center; }
+  .ptsrow { margin-top: 3px; }
+  .pts { display: inline-block; min-width: 22px; padding: 1px 5px; border-radius: 6px; font-size: 11.5px; font-weight: 600; line-height: 17px; color: var(--muted); }
+  .pts.p2, .pts.p3 { background: var(--accent-soft); color: var(--accent); }
+  .pts.p4 { background: var(--gold-bg); color: var(--gold); }
+  .note { padding: 4px 14px 0; font-size: 12px; color: var(--gold); }
+
+  .st { display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .st button { width: 27px; height: 26px; padding: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--surface);
+    font-size: 17px; line-height: 1; cursor: pointer; }
+  .st button:active { transform: scale(.92); }
+  .st b { width: 20px; text-align: center; font-size: 16px; }
+  .st b.nil { color: var(--muted); font-weight: 500; opacity: .7; }
+  .add { width: 27px; height: 26px; padding: 0; border-radius: 8px; border: 1px dashed var(--gold); background: none; color: var(--gold); font-size: 16px; cursor: pointer; }
+  .txtbtn { border: 0; background: none; padding: 0; color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  /* Таблица */
+  .srow { display: grid; grid-template-columns: 40px minmax(0, 1fr) 66px 54px 50px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); }
+  .srow .ex { font-size: 15px; font-weight: 500; color: var(--gold); }
+  .srow.head { border-top: 0; padding-top: 4px; padding-bottom: 4px; color: var(--muted); font-size: 12px; }
+  .srow .num { text-align: right; }
+  .srow .pl { font: 600 26px/1 var(--display); }
+  .srow .pl.p1 { color: var(--gold); }
+  .srow .nm { font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .srow.me .nm { color: var(--accent); }
+  .srow .tp { font: 600 19px/1 var(--display); }
+  .srow .pp { font-size: 16px; font-weight: 500; }
+  .srow small { display: block; margin-top: 4px; font: 500 11.5px/1 var(--text); color: var(--muted); }
+  .srow small.up { color: var(--accent); }
+  .mv { display: inline-block; margin-left: 6px; font-size: 11.5px; font-weight: 600; vertical-align: 1px; }
+  .mv.up { color: var(--accent); }
+  .mv.down { color: var(--muted); }
+  .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(12, 10, 34, .45); display: flex; align-items: flex-end; }
+  .sheet[hidden] { display: none; }
+  .sheet-in { width: 100%; max-width: 520px; margin: 0 auto; max-height: 88vh; overflow: auto; background: var(--surface);
+    border-radius: 20px 20px 0 0; padding: 4px 0 calc(22px + env(safe-area-inset-bottom)); }
+  .sheet-in .ptitle { align-items: center; padding-bottom: 6px; }
+  .rules { padding: 0 16px; font-size: 14.5px; line-height: 1.45; }
+  .rules h3 { margin: 16px 0 6px; font: 600 14px/1.2 var(--display); letter-spacing: -.01em; }
+  .rules p { margin: 0 0 8px; }
+  .rules ul { margin: 0 0 8px; padding-left: 20px; }
+  .rules li { margin-bottom: 4px; }
+  .rules table { width: 100%; border-collapse: collapse; }
+  .rules td { padding: 6px 0; border-top: 1px solid var(--line); }
+  .rules td:last-child { text-align: right; width: 48px; }
+
+  /* Туры */
+  .trow { display: grid; width: 100%; border: 0; background: none; text-align: left; cursor: pointer; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .tl b { display: block; font: 600 15px/1.2 var(--display); letter-spacing: -.01em; }
+  .tl span { font-size: 12px; color: var(--muted); }
+  .tl span.live { color: var(--live); font-weight: 600; }
+  .tc .a { display: block; font-weight: 600; font-size: 16px; }
+  .tc .b { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .tc.win .b { color: var(--gold); font-weight: 700; }
+  .chev { text-align: center; color: var(--muted); transition: transform .15s; }
+  .tour.open .chev { transform: rotate(90deg); }
+  .tour.open .trow { background: var(--soft); }
+  .tbody { border-top: 1px solid var(--line); }
+  .fold { position: relative; display: block; width: 100%; border: 0; background: none; padding: 0 28px 0 0; text-align: left; cursor: pointer; }
+  .fold .chev { position: absolute; right: 16px; top: 18px; font-size: 18px; }
+  .panel.open .fold .chev { transform: rotate(90deg); }
+
+  .panel.blank { padding: 34px 20px; text-align: center; color: var(--muted); }
+  .claim { padding: 6px 14px 16px; display: grid; gap: 8px; }
+  .claim button { height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); cursor: pointer;
+    font: 600 16px/1 var(--text); color: var(--ink); }
+  .claim button:active { background: var(--accent-soft); }
+
+  /* Нижняя панель */
+  .save { position: fixed; left: 0; right: 0; bottom: calc(var(--nav) + env(safe-area-inset-bottom)); padding: 8px 12px; z-index: 9;
+    background: linear-gradient(to top, var(--bg) 65%, transparent); }
+  .save button { display: block; width: 100%; max-width: 496px; margin: 0 auto; height: 48px; border: 0; border-radius: 14px; cursor: pointer;
+    background: var(--accent); color: var(--surface); font: 600 15px/1 var(--display); letter-spacing: -.01em; }
+  .save button:disabled { opacity: .5; }
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom); }
+  nav.tabs .in { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 520px; margin: 0 auto; height: var(--nav); }
+  nav.tabs button { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--muted); font-size: 11.5px; font-weight: 600; }
+  nav.tabs button svg { width: 22px; height: 22px; }
+  nav.tabs button.on { color: var(--accent); }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--nav) + 76px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
+    background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-size: 13.5px; max-width: 90%; text-align: center;
+    opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header id="hdr"><div class="wrap">
+  <div class="bar">
+    <div class="brand" role="img" aria-label="Прогнозус"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 485.08 100" aria-hidden="true" focusable="false" color="currentColor"><defs><clipPath id="hbc"><circle cx="50" cy="50" r="19"/></clipPath></defs><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F4F2FF" stroke="#1C1940" stroke-width="2.6"/><g clip-path="url(#hbc)" fill="#1C1940"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><g stroke="#1C1940" stroke-width="2" stroke-linecap="round"><line x1="50" y1="45.44" x2="50" y2="35.18"/><line x1="54.34" y1="48.59" x2="64.09" y2="45.42"/><line x1="52.68" y1="53.69" x2="58.71" y2="61.99"/><line x1="47.32" y1="53.69" x2="41.29" y2="61.99"/><line x1="45.66" y1="48.59" x2="35.91" y2="45.42"/></g><path d="M50,44.8 L54.95,48.39 L53.06,54.21 L46.94,54.21 L45.05,48.39 Z" fill="#1C1940"/><path d="M50,6 Q51.12,11.88 57,13 Q51.12,14.12 50,20 Q48.88,14.12 43,13 Q48.88,11.88 50,6 Z" fill="#E9B740"/><path d="M27,17 Q27.64,20.36 31,21 Q27.64,21.64 27,25 Q26.36,21.64 23,21 Q26.36,20.36 27,17 Z" fill="#E9B740"/><path d="M73,17 Q73.64,20.36 77,21 Q73.64,21.64 73,25 Q72.36,21.64 69,21 Q72.36,20.36 73,17 Z" fill="#E9B740"/><g transform="translate(116,17)" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(0,0)"><path d="M4,48 V4 H36 V48"/></g><g transform="translate(48.05,0)"><path d="M4,18 V65"/><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(92.6,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(137.65,0)"><path d="M4,48 V18 H21"/></g><g transform="translate(170.2,0)"><path d="M4,48 V18"/><path d="M31,48 V18"/><path d="M4,33 H31"/></g><g transform="translate(212.25,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(256.8,0)"><path d="M1.94,21.02 A10.6,7.38 0 1 1 11.3,31.86 A12.2,8.52 0 1 1 0.53,44.38"/><path d="M11.3,31.86 H5.3"/></g><g transform="translate(290.35,0)"><path d="M4,18 L17,48"/><path d="M30,18 L9.63,65"/></g><g transform="translate(329.9,0)"><path d="M31.18,22.78 A15.9,15.9 0 1 0 31.18,43.22"/></g></g></svg></div>
+    <div class="who"><span id="who"></span>
+      <button class="icon-btn" id="rulesbtn" aria-label="Правила игры"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 16.8v.2"/></svg></button>
+      <button class="icon-btn" id="refresh" aria-label="Обновить">↻</button></div>
+  </div>
+  <nav class="comps" id="comps"></nav>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="save" id="savebar" hidden><button id="save">Сохранить</button></div>
+<nav class="tabs"><div class="in" id="tabs">
+  <button data-view="pred"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>Прогнозы</button>
+  <button data-view="table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20V9h6v11"/><path d="M3 20v-6h6"/><path d="M15 20v-8h6v8"/><path d="M2 20h20"/></svg>Таблица</button>
+  <button data-view="tours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Туры</button>
+</div></nav>
+<div class="toast" id="toast"></div>
+<div class="sheet" id="rules" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="rules-h">
+  <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть">✕</button></div>
+  <div class="rules">
+    <h3>Прогноз</h3>
+    <p>Прогноз на матч делается и редактируется до стартового свистка. Другим игрокам он становится виден с началом матча, а до этого соперники видят только отметку ✓.</p>
+    <p>Если забыл или не успел, прогноз можно сделать и во время матча, но он будет зачтён, только если согласятся остальные игроки. Они получат уведомление об опоздании: на какой минуте и при каком счёте сделан прогноз. Поменять уже сделанный прогноз после стартового свистка нельзя.</p>
+    <h3>Баллы за прогноз</h3>
+    <table><tr><td>Точный счёт</td><td><span class="pts p4">✦4</span></td></tr>
+      <tr><td>Победитель и разница мячей или ничья</td><td><span class="pts p3">3</span></td></tr>
+      <tr><td>Только победитель</td><td><span class="pts p2">2</span></td></tr>
+      <tr><td>Не угадал</td><td><span class="pts">0</span></td></tr></table>
+    <h3>Очки за тур</h3>
+    <p>В каждом туре разыгрывается 3 очка. Баллы за матчи тура складываются: набравший больше всех получает 2 очка, второй — 1, третий — 0.</p>
+    <p>При равенстве очки делятся поровну:</p>
+    <ul>
+      <li>двое разделили первое место — по 1,5, третий получает 0;</li>
+      <li>двое разделили второе место — по 0,5, победитель тура получает 2;</li>
+      <li>у всех троих поровну — каждому по 1.</li>
+    </ul>
+    <h3>Таблица</h3>
+    <p>Место в таблице считается по сумме очков, при равенстве очков — по сумме баллов, при равенстве и по этому показателю — по количеству точно угаданных результатов. У Чемпионата и Кубка таблицы отдельные.</p>
+  </div>
+</div></div>
+
+<script>
+var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
+var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
+var Q = new URLSearchParams(location.search);
+var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
+var DATA = { loading: true };
+function call(api, extra, ok, fail) {
+  var body = JSON.stringify(Object.assign({}, AUTH, extra || {}));
+  fetch(BASE + '?api=' + api, { method: 'POST', body: body, headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (d) { if (d && d.error && api !== 'data') fail({ message: d.error }); else ok(d); })
+    .catch(function () { fail({ message: 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.' }); });
+}
+var API = {
+  load: function (ok, fail) { call('data', null, ok, fail); },
+  save: function (items, ok, fail) { call('save', { items: items }, ok, fail); },
+  claim: function (name, ok, fail) { call('claim', { name: name }, ok, fail); }
+};
+var edits = {};      // key -> {h, a}
+var lateOpen = {};   // key -> true
+var S = { comp: null, view: null, open: {} };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function num(x) { return x === null || x === undefined ? '–' : String(Math.round(x * 100) / 100).replace('.', ','); }
+function signed(x) { return (x > 0 ? '+' : x < 0 ? '−' : '') + num(Math.abs(x)); }
+function remember(k, v) { try { if (v === undefined) return localStorage.getItem('prognozus.' + k); localStorage.setItem('prognozus.' + k, v); } catch (e) { return null; } }
+function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 3200); }
+
+function comps() { return DATA.comps || []; }
+function comp(kind) { return comps().filter(function (c) { return c.kind === kind; })[0] || null; }
+function groupsOf(kind) { return (DATA.groups || []).filter(function (g) { return g.kind === kind; }); }
+function find(key) {
+  var gs = DATA.groups || [];
+  for (var i = 0; i < gs.length; i++) for (var j = 0; j < gs[i].matches.length; j++) if (gs[i].matches[j].key === key) return gs[i].matches[j];
+  return null;
+}
+// Сколько прогнозов не хватает на ближайшую неделю
+function todo(kind) {
+  var n = 0, until = (DATA.now || Date.now()) + 7 * 864e5;
+  groupsOf(kind).forEach(function (g) {
+    if (g.me) g.matches.forEach(function (m) { if (!m.started && m.phase !== 'off' && m.start < until && !m.mine && !edits[m.key]) n++; });
+  });
+  return n;
+}
+
+// ---------- ввод счёта ----------
+function current(m) {
+  if (edits[m.key]) return edits[m.key];
+  if (m.started) return m.pending ? { h: m.pending[0], a: m.pending[1] } : { h: null, a: null };
+  return m.mine ? { h: m.mine[0], a: m.mine[1] } : { h: null, a: null };
+}
+function bump(key, side, d) {
+  var m = find(key), c = current(m), h = c.h, a = c.a;
+  if (h === null || a === null) { h = 0; a = 0; if (d > 0) { if (side === 'h') h = 1; else a = 1; } }
+  else if (side === 'h') h = Math.max(0, Math.min(20, h + d));
+  else a = Math.max(0, Math.min(20, a + d));
+  edits[key] = { h: h, a: a };
+  if (!m.started && m.mine && m.mine[0] === h && m.mine[1] === a) delete edits[key];
+  render();
+}
+function stepper(key, side, v) {
+  return '<div class="st"><button data-k="' + esc(key) + '" data-s="' + side + '" data-d="-1" aria-label="Меньше">−</button>' +
+    '<b class="' + (v === null ? 'nil' : '') + '">' + (v === null ? '?' : v) + '</b>' +
+    '<button data-k="' + esc(key) + '" data-s="' + side + '" data-d="1" aria-label="Больше">+</button></div>';
+}
+// После стартового свистка — только если своего прогноза нет, а матч не завершён (нужно согласие остальных)
+function canLate(g, m) { return g.me && m.started && !m.mine && !m.pending && m.phase !== 'ft' && m.phase !== 'off'; }
+
+// ---------- общие куски ----------
+function cols(n, wide) { return 'minmax(0,1fr) ' + (wide ? '90px ' : '42px ') + new Array(n).join('42px ') + '36px'; }
+function ptsBadge(p) { return p === null || p === undefined ? '' : '<span class="pts p' + p + '">' + (p === 4 ? '✦4' : p) + '</span>'; }
+function v(x) { return x === null || x === undefined ? '–' : x; }
+
+function namesRow(players, me, gridCols, last, first) {
+  var h = '<div class="g names" style="--cols:' + gridCols + '"><div class="lbl">' + (first || '') + '</div>';
+  players.forEach(function (p, j) { h += '<div class="c' + (me && j === 0 ? ' me' : '') + '">' + esc(p) + '</div>'; });
+  return h + '<div class="c lbl">' + (last || '') + '</div></div>';
+}
+
+function stateChip(m) {
+  if (m.phase === 'live') return '<span class="min"><i></i>' + esc((m.status || '').replace(/^идёт\s*/, '') || 'идёт') + '</span>';
+  if (m.phase === 'ft') return 'завершён';
+  if (m.phase === 'off') return 'перенесён';
+  return '';
+}
+
+function matchRow(g, m, gridCols, editable) {
+  var dirty = !!edits[m.key];
+  var right = stateChip(m);
+  if (editable && m.pending && !dirty) right = '<span class="chip wait">ждёт согласия</span>';
+  if (editable && lateOpen[m.key]) right = '<button class="txtbtn" data-late="' + esc(m.key) + '">отменить</button>';
+  var cls = 'm' + (m.phase === 'live' ? ' is-live' : '') + (dirty ? (m.started ? ' late' : ' dirty') : '');
+  var h = '<div class="' + cls + '"><div class="mt"><span>' + esc(m.when) + '</span><span>' + right + '</span></div>';
+  ['h', 'a'].forEach(function (side) {
+    h += '<div class="g" style="--cols:' + gridCols + '"><div class="team">' + esc(side === 'h' ? m.home : m.away) + '</div>';
+    for (var j = 0; j < m.cells.length; j++) h += cell(g, m, j, side, editable);
+    h += '<div class="sc">' + (m.started ? v(side === 'h' ? m.hs : m.as) : '') + '</div></div>';
+  });
+  if (m.started && m.cells.some(function (c) { return c.pts !== null && c.pts !== undefined; })) {
+    h += '<div class="g ptsrow" style="--cols:' + gridCols + '"><div class="lbl">баллы</div>';
+    for (var j = 0; j < m.cells.length; j++) h += '<div class="c">' + ptsBadge(m.cells[j].pts) + '</div>';
+    h += '<div></div></div>';
+  }
+  if (editable && lateOpen[m.key]) h += '<div class="note">Матч уже начался: прогноз попадёт в таблицу, если согласятся остальные.</div>';
+  else if (editable && m.pending && !dirty) h += '<div class="note">Твой прогноз ' + m.pending[0] + ':' + m.pending[1] + ' ждёт согласия остальных.</div>';
+  return h + '</div>';
+}
+
+function cell(g, m, j, side, editable) {
+  var c = m.cells[j], isMe = g.me && j === 0;
+  if (editable && isMe && (!m.started || lateOpen[m.key])) {
+    var cur = current(m);
+    return '<div class="c">' + stepper(m.key, side, side === 'h' ? cur.h : cur.a) + '</div>';
+  }
+  if (!m.started) return '<div class="c p hid">' + (c.has ? '✓' : '·') + '</div>';
+  if (editable && isMe && m.pending) return '<div class="c p pend">' + m.pending[side === 'h' ? 0 : 1] + '</div>';
+  if (editable && isMe && side === 'h' && canLate(g, m)) return '<div class="c"><button class="add" data-late="' + esc(m.key) + '" aria-label="Прогноз после начала матча">+</button></div>';
+  return '<div class="c p' + (isMe ? ' me' : '') + '">' + v(side === 'h' ? c.h : c.a) + '</div>';
+}
+
+function winners(arr) {
+  if (!arr) return [];
+  var mx = Math.max.apply(null, arr);
+  return arr.map(function (x) { return x === mx; });
+}
+
+// ---------- Прогнозы ----------
+// Развёрнуты идущий тур и ближайший; дальние свёрнуты, их можно открыть нажатием
+function isOpenTour(g, i, gs) {
+  var key = 'p:' + g.kind + ':' + g.label;
+  if (S.open[key] !== undefined) return S.open[key];
+  if (g.state !== 'open') return true;
+  var firstOpen = gs.filter(function (x) { return x.state === 'open'; })[0];
+  var soon = g.matches.some(function (m) { return m.start && m.start < (DATA.now || Date.now()) + 10 * 864e5; });
+  return g === firstOpen || soon;
+}
+
+function renderPred(kind) {
+  var gs = groupsOf(kind);
+  if (!gs.length) return '<div class="panel blank">Открытых туров нет. Бот напишет в группу, когда откроется следующий.</div>';
+  return gs.map(function (g, i) {
+    var wide = g.me && g.matches.some(function (m) { return !m.started || lateOpen[m.key]; });
+    var gc = cols(g.players.length, wide);
+    var open = g.matches.filter(function (m) { return !m.started && m.phase !== 'off'; });
+    var done = open.filter(function (m) { return m.mine || edits[m.key]; }).length;
+    var note = '';
+    if (g.state === 'live') note = '<span class="live">Тур идёт</span>';
+    else if (g.state === 'done') note = 'Тур завершён';
+    if (g.me && open.length) note += (note ? '. З' : 'З') + 'аполнено ' + done + ' из ' + open.length;
+    var unfolded = isOpenTour(g, i, gs), key = 'p:' + g.kind + ':' + g.label;
+    var title = '<div class="ptitle"><h2>' + esc(g.label) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>' +
+      '<div class="pnote">' + (note || '&nbsp;') + '</div>';
+    if (g.state === 'open') title = '<button class="fold" data-ptour="' + esc(key) + '" aria-expanded="' + unfolded + '">' + title + '<span class="chev">›</span></button>';
+    if (!unfolded) return '<section class="panel">' + title + '</section>';
+    var h = '<section class="panel open">' + title;
+    h += namesRow(g.players, g.me, gc, 'счёт');
+    var s = g.strip, w = winners(s.tp);
+    h += '<div class="stats">';
+    if (s.pp) {
+      h += '<div class="g" style="--cols:' + gc + '"><div class="lbl">Баллы в туре</div>' + s.pp.map(function (x) { return '<div class="c v">' + num(x) + '</div>'; }).join('') + '<div></div></div>';
+      h += '<div class="g" style="--cols:' + gc + '"><div class="lbl">Очки за тур</div>' + s.tp.map(function (x, j) { return '<div class="c v' + (w[j] ? ' win' : '') + '">' + num(x) + '</div>'; }).join('') + '<div></div></div>';
+    }
+    h += '<div class="g" style="--cols:' + gc + '"><div class="lbl">Место в таблице</div>' + s.place.map(function (p, j) {
+      return '<div class="c"><span class="place' + (p === 1 ? ' p1' : '') + '">' + p + '</span><span class="tot">' + num(s.tpTot[j]) + ' оч.</span></div>';
+    }).join('') + '<div></div></div></div>';
+    h += g.matches.map(function (m) { return matchRow(g, m, gc, true); }).join('');
+    return h + '</section>';
+  }).join('');
+}
+
+// ---------- Таблица ----------
+function renderTable(kind) {
+  var c = comp(kind);
+  if (!c) return '<div class="panel blank">Нет данных.</div>';
+  var sub = c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
+  if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
+  var h = '<section class="panel"><div class="ptitle"><h2>Таблица</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
+  h += '<div class="pnote">' + sub + '</div>';
+  h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
+  c.standings.forEach(function (s) {
+    var mv = s.dplace > 0 ? '<span class="mv up">▲' + s.dplace + '</span>' : s.dplace < 0 ? '<span class="mv down">▼' + (-s.dplace) + '</span>' : '';
+    h += '<div class="srow' + (s.me ? ' me' : '') + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '">' + s.place + '</span>' +
+      '<span class="nm">' + esc(s.name) + mv + '</span>' +
+      '<span class="num tp">' + num(s.tp) + (c.live.length ? '<small class="' + (s.dtp > 0 ? 'up' : '') + '">' + signed(s.dtp) + ' в туре</small>' : '') + '</span>' +
+      '<span class="num pp">' + num(s.pp) + (c.live.length ? '<small>' + signed(s.dpp) + '</small>' : '') + '</span>' +
+      '<span class="num ex">' + num(s.ex) + (c.live.length ? '<small>&nbsp;</small>' : '') + '</span></div>';
+  });
+  return h + '<div style="height:6px"></div></section>';
+}
+
+// ---------- Туры ----------
+function renderTours(kind) {
+  var c = comp(kind);
+  if (!c || !c.tours.length) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
+  var n = c.players.length, gc = 'minmax(0,1fr) ' + new Array(n + 1).join('46px ') + '30px';
+  var h = '<section class="panel tlist"><div class="ptitle"><h2>Туры</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
+  h += '<div style="height:10px"></div>' + namesRow(c.players, c.me, gc, '', '<span class="leg">баллы<br><span>очки</span></span>');
+  c.tours.forEach(function (t) {
+    var key = kind + ':' + t.label, open = !!S.open[key];
+    var w = winners(t.tp);
+    h += '<div class="tour' + (open ? ' open' : '') + '"><button class="trow g" style="--cols:' + gc + '" data-tour="' + esc(key) + '" aria-expanded="' + open + '">' +
+      '<span class="tl"><b>' + esc(t.label) + '</b><span' + (t.state === 'live' ? ' class="live">идёт' : '>' + esc(t.dates)) + '</span></span>';
+    for (var j = 0; j < n; j++) h += '<span class="c tc' + (w[j] ? ' win' : '') + '"><span class="a">' + num(t.pp ? t.pp[j] : null) + '</span><span class="b">' + num(t.tp ? t.tp[j] : null) + '</span></span>';
+    h += '<span class="chev">›</span></button>';
+    if (open) {
+      var mc = cols(n, false);
+      h += '<div class="tbody">' + t.matches.map(function (m) { return matchRow({ me: c.me }, m, mc, false); }).join('') + '</div>';
+    }
+    h += '</div>';
+  });
+  return h + '</section>';
+}
+
+// ---------- каркас ----------
+function render() {
+  $('who').textContent = DATA.name || '';
+  var app = $('app');
+  var tabs = document.querySelector('nav.tabs');
+  if (DATA.loading || DATA.error || DATA.claim) {
+    $('comps').innerHTML = ''; $('savebar').hidden = true; tabs.hidden = true;
+    if (DATA.loading) app.innerHTML = '<div class="panel blank">Загружаю…</div>';
+    else if (DATA.error) app.innerHTML = '<div class="panel blank">' + esc(DATA.error) + '</div>';
+    else app.innerHTML = DATA.claim.length
+      ? '<section class="panel"><div class="ptitle"><h2>Кто ты в таблице?</h2></div><div class="pnote">Выбери себя один раз — дальше приложение будет узнавать тебя само.</div>' +
+        '<div class="claim">' + DATA.claim.map(function (n) { return '<button data-claim="' + esc(n) + '">' + esc(n) + '</button>'; }).join('') + '</div></section>'
+      : '<div class="panel blank">Все места в таблице заняты. Чтобы добавить игрока, добавьте ему столбцы в таблице.</div>';
+    measure(); return;
+  }
+  tabs.hidden = false;
+  if (!comp(S.comp)) S.comp = comps().length ? comps()[0].kind : null;
+  $('comps').innerHTML = comps().map(function (c) {
+    var n = todo(c.kind);
+    return '<button data-comp="' + c.kind + '" class="' + (c.kind === S.comp ? 'on' : '') + '">' + esc(c.title) + (n ? '<span class="badge">' + n + '</span>' : '') + '</button>';
+  }).join('');
+  [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
+  app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
+  var n = Object.keys(edits).length;
+  $('savebar').hidden = !(S.view === 'pred' && n);
+  var late = Object.keys(edits).filter(function (k) { return find(k).started; }).length;
+  $('save').textContent = n ? (late === n ? 'Отправить на согласие' : 'Сохранить прогнозы') + ' (' + n + ')' : 'Сохранить';
+  measure();
+}
+
+function measure() { document.documentElement.style.setProperty('--hdr', $('hdr').offsetHeight + 'px'); }
+
+function setView(v) { S.view = v; remember('view', v); window.scrollTo(0, 0); render(); }
+function setComp(k) { S.comp = k; remember('comp', k); window.scrollTo(0, 0); render(); }
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.k) return bump(b.dataset.k, b.dataset.s, Number(b.dataset.d));
+  if (b.dataset.late) {
+    var k = b.dataset.late;
+    if (lateOpen[k]) { delete lateOpen[k]; delete edits[k]; } else lateOpen[k] = true;
+    return render();
+  }
+  if (b.dataset.claim) {
+    b.disabled = true;
+    return API.claim(b.dataset.claim, function (d) { DATA = d; startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
+  }
+  if (b.dataset.comp) return setComp(b.dataset.comp);
+  if (b.dataset.view) return setView(b.dataset.view);
+  if (b.dataset.tour) { S.open[b.dataset.tour] = !S.open[b.dataset.tour]; return render(); }
+  if (b.dataset.ptour) { var gs = groupsOf(S.comp), g = gs.filter(function (x) { return 'p:' + x.kind + ':' + x.label === b.dataset.ptour; })[0];
+    S.open[b.dataset.ptour] = !isOpenTour(g, gs.indexOf(g), gs); return render(); }
+});
+
+$('save').addEventListener('click', function () {
+  var items = Object.keys(edits).map(function (k) { return { key: k, h: edits[k].h, a: edits[k].a }; });
+  if (!items.length) return;
+  $('save').disabled = true; $('save').textContent = 'Сохраняю…';
+  API.save(items, function (r) {
+      edits = {}; lateOpen = {}; $('save').disabled = false;
+      var msg = [];
+      if (r.saved) msg.push('Прогнозы сохранены: ' + r.saved);
+      if (r.late) msg.push('на согласие: ' + r.late);
+      if (r.errors && r.errors.length) msg.push('не принято: ' + r.errors.join(', '));
+      toast(msg.join('. ') || 'Готово');
+      reload();
+    }, function (err) { $('save').disabled = false; toast(err && err.message ? err.message : 'Не удалось сохранить. Проверь интернет и попробуй ещё раз.'); render(); });
+});
+
+function reload() {
+  API.load(function (d) { DATA = d; render(); }, function () { render(); });
+}
+$('refresh').addEventListener('click', function () { if (!DATA.error) { toast('Обновляю…'); reload(); } });
+function rules(open) { $('rules').hidden = !open; document.body.style.overflow = open ? 'hidden' : ''; if (open) $('rulesclose').focus(); }
+$('rulesbtn').addEventListener('click', function () { rules(true); });
+$('rulesclose').addEventListener('click', function () { rules(false); });
+$('rules').addEventListener('click', function (e) { if (e.target === $('rules')) rules(false); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('rules').hidden) rules(false); });
+window.addEventListener('resize', measure);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+setInterval(function () {
+  if (DATA.error || DATA.loading || DATA.claim || Object.keys(edits).length) return;
+  var live = (DATA.groups || []).some(function (g) { return g.matches.some(function (m) { return m.started && m.phase !== 'ft'; }); })
+    || comps().some(function (c) { return c.live.length; });
+  if (live) reload();
+}, 60000);
+
+// Стартовый экран: турнир, где есть незаполненные прогнозы (или тот, что передан ссылкой из группы)
+function startView() {
+  var start = TG && TG.initDataUnsafe && TG.initDataUnsafe.start_param || '';
+  S.view = /^(pred|table|tours)$/.test(start) ? start : remember('view') || 'pred';
+  var saved = remember('comp');
+  var need = comps().filter(function (c) { return todo(c.kind); })[0];
+  S.comp = comp(start) ? start : S.view === 'pred' && need ? need.kind : (comp(saved) ? saved : (need ? need.kind : (comps()[0] || {}).kind));
+}
+
+(function init() {
+  if (TG) {
+    try {
+      TG.ready(); TG.expand();
+      var paint = function () {
+        document.documentElement.setAttribute('data-theme', TG.colorScheme === 'dark' ? 'dark' : 'light');
+        var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+        if (TG.setHeaderColor) TG.setHeaderColor(bg);
+        if (TG.setBackgroundColor) TG.setBackgroundColor(bg);
+        if (TG.setBottomBarColor) TG.setBottomBarColor(bg);
+      };
+      paint(); TG.onEvent('themeChanged', paint);
+    } catch (e) {}
+  }
+  if (DATA.loading) {
+    render();
+    API.load(function (d) { DATA = d; startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); });
+  } else { startView(); render(); }
+})();
+</script>
+</body>
+</html>
