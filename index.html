@@ -151,6 +151,17 @@
   .panel.open .fold .chev { transform: rotate(90deg); }
 
   .panel.blank { padding: 34px 20px; text-align: center; color: var(--muted); }
+  .splash { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--ink); transition: opacity .3s ease; }
+  .splash.out { opacity: 0; pointer-events: none; }
+  .splash[hidden] { display: none; }
+  .splash svg { width: 136px; height: auto; overflow: visible; }
+  .splash .ball { transform-box: view-box; transform-origin: 50px 50px; animation: ball 3.6s linear infinite; }
+  .splash .st { transform-box: fill-box; transform-origin: center; animation: twinkle 3.6s ease-in-out infinite; }
+  .splash .st1 { animation-delay: .25s; }
+  .splash .st2 { animation-delay: .8s; }
+  .splash .st3 { animation-delay: 1.35s; }
+  @keyframes ball { to { transform: rotate(72deg); } }
+  @keyframes twinkle { 0%, 25%, 100% { transform: none; } 12.5% { transform: rotate(25deg) scale(1.45); } }
   .claim { padding: 6px 14px 16px; display: grid; gap: 8px; }
   .claim button { height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); cursor: pointer;
     font: 600 16px/1 var(--text); color: var(--ink); }
@@ -188,6 +199,7 @@
 </div></header>
 <main class="wrap" id="app"></main>
 <div class="save" id="savebar" hidden><button id="save">Сохранить</button></div>
+<div class="splash" id="splash" hidden><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="spc"><circle cx="50" cy="50" r="19"/></clipPath></defs><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F4F2FF" stroke="#1C1940" stroke-width="3"/><g clip-path="url(#spc)"><g class="ball"><g fill="#1C1940"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><g stroke="#1C1940" stroke-width="2.4" stroke-linecap="round"><line x1="50" y1="45.44" x2="50" y2="35.18"/><line x1="54.34" y1="48.59" x2="64.09" y2="45.42"/><line x1="52.68" y1="53.69" x2="58.71" y2="61.99"/><line x1="47.32" y1="53.69" x2="41.29" y2="61.99"/><line x1="45.66" y1="48.59" x2="35.91" y2="45.42"/></g><path d="M50,44.8 L54.95,48.39 L53.06,54.21 L46.94,54.21 L45.05,48.39 Z" fill="#1C1940"/></g></g><path class="st st1" d="M50,6 Q51.12,11.88 57,13 Q51.12,14.12 50,20 Q48.88,14.12 43,13 Q48.88,11.88 50,6 Z" fill="#E9B740"/><path class="st st2" d="M27,17 Q27.64,20.36 31,21 Q27.64,21.64 27,25 Q26.36,21.64 23,21 Q26.36,20.36 27,17 Z" fill="#E9B740"/><path class="st st3" d="M73,17 Q73.64,20.36 77,21 Q73.64,21.64 73,25 Q72.36,21.64 69,21 Q72.36,20.36 73,17 Z" fill="#E9B740"/></svg></div>
 <nav class="tabs"><div class="in" id="tabs">
   <button data-view="pred"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>Прогнозы</button>
   <button data-view="table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20V9h6v11"/><path d="M3 20v-6h6"/><path d="M15 20v-8h6v8"/><path d="M2 20h20"/></svg>Таблица</button>
@@ -545,8 +557,12 @@ function startView() {
     } catch (e) {}
   }
   if (DATA.loading) {
-    render();
-    API.load(function (d) { DATA = d; startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); });
+    var splash = $('splash'), t0 = Date.now();
+    splash.hidden = false; render();
+    var done = function () {
+      setTimeout(function () { splash.classList.add('out'); setTimeout(function () { splash.hidden = true; }, 350); }, Math.max(0, 700 - (Date.now() - t0)));
+    };
+    API.load(function (d) { DATA = d; startView(); render(); done(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); done(); });
   } else { startView(); render(); }
 })();
 </script>
