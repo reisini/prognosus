@@ -307,10 +307,6 @@
   @keyframes gbgild { from { clip-path: circle(0% at 32% 28%); } to { clip-path: circle(80% at 32% 28%); } }
   @keyframes gbshine { to { transform: translateX(260%) skewX(-18deg); } }
   @keyframes gbtitle { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-  .vb-ico i { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; background: var(--gold); opacity: 0;
-    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
-  .gbnote.fresh .vb-ico i { animation: vbspark .8s 1.5s ease-out forwards; }
-  @keyframes vbspark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(.6); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1.2); } }
   .vwin { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; color: #e7f2eb; opacity: 0; transition: opacity .35s;
     background: radial-gradient(120% 80% at 50% 38%, #1d3a29 0%, #0c1611 62%, #070d0a 100%); }
   .vwin.in, .vwin.gate { opacity: 1; }
@@ -353,7 +349,7 @@
   @keyframes vwthud { 0%, 100% { transform: none; } 30% { transform: translateY(3px); } 60% { transform: translateY(-1px); } }
   @keyframes vwup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
-    .gbnote, .gbnote.fresh, .gbnote.fresh .gb-drop, .gbnote.fresh .gb-squash, .gbnote.fresh .gb-gild, .gbnote.fresh .vb-ico i, .gbnote.fresh .gbshine::after, .gbnote.fresh > b { animation: none; transition: none; }
+    .gbnote, .gbnote.fresh, .gbnote.fresh .gb-drop, .gbnote.fresh .gb-squash, .gbnote.fresh .gb-gild, .gbnote.fresh .gbshine::after, .gbnote.fresh > b { animation: none; transition: none; }
     .vwin.in .vw-seal, .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.in .vw-rays, .vwin.cup.in .vw-card { animation: none; opacity: 1; transform: rotate(-8deg); }
     .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.cup.in .vw-card { transform: none; }
   }
@@ -648,7 +644,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw95aspa";
+var BUILD = "mw95gtze";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -2224,12 +2220,11 @@ function goldNote(g) {
     var mx = Math.max.apply(null, pp);
     if (pp.every(function (x) { return x === mx; }) || pp[me] !== mx) return '';
   }
-  var fresh = !GB_ANIM[key], sparks = '';
+  var fresh = !GB_ANIM[key];
   GB_ANIM[key] = true;
-  for (var i = 0; i < 8; i++) sparks += '<i style="--a:' + (i * 45 + 20) + 'deg;--d:' + (30 + (i % 3) * 9) + 'px"></i>';
-  // Мяч падает сверху белым, дважды отскакивает, становится золотым; разлетаются искры, по блоку пробегает блик
+  // Мяч падает сверху белым, дважды отскакивает и становится золотым; по блоку пробегает блик
   return '<section class="gbnote' + (fresh ? ' fresh' : '') + '" role="status"><span class="gbshine" aria-hidden="true"></span><span class="vb-ico" aria-hidden="true">' +
-    '<span class="gb-drop"><span class="gb-squash">' + whiteBall() + '<span class="gb-gild">' + goldBall() + '</span></span></span>' + sparks + '</span>' +
+    '<span class="gb-drop"><span class="gb-squash">' + whiteBall() + '<span class="gb-gild">' + goldBall() + '</span></span></span></span>' +
     '<b>Золотой мяч<br>за победу в туре!</b><button type="button" class="gbx" data-gbclose="' + esc(key) + '" aria-label="Закрыть">' +
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></section>';
 }
