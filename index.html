@@ -524,12 +524,14 @@ function whoLines(c, hits) {
 
 function records(c) {
   var S = season(c), out = [];
-  // Три места по убыванию значения; одинаковые значения — одно место
-  function podium(get) {
+  // Три места по убыванию значения; одинаковые значения — одно место.
+  // dropOnes: единица — не рекорд, если кто-то набирал больше (для точных прогнозов за тур)
+  function podium(get, dropOnes) {
     var hits = [];
     S.done.forEach(function (t) { (get(t) || []).forEach(function (x, j) {
       if (x > 0) hits.push({ v: x, name: c.players[j], tour: tourNo(t.label) });
     }); });
+    if (dropOnes && hits.some(function (x) { return x.v > 1; })) hits = hits.filter(function (x) { return x.v > 1; });
     var vals = hits.map(function (x) { return x.v; }).filter(function (v, k, a) { return a.indexOf(v) === k; })
       .sort(function (a, b) { return b - a; }).slice(0, 3);
     return vals.map(function (v) { return { v: v, who: whoLines(c, hits.filter(function (x) { return x.v === v; })) }; });
@@ -542,7 +544,7 @@ function records(c) {
     });
     return best ? [{ v: best, who: who }] : [];
   }
-  var pp = podium(function (t) { return t.pp; }), ex = podium(function (t) { return t.ex; });
+  var pp = podium(function (t) { return t.pp; }), ex = podium(function (t) { return t.ex; }, true);
   var ws = streak('win'), ps = streak('pts');
   if (pp.length) out.push({ t: 'Баллы за тур', rows: pp });
   if (ex.length) out.push({ t: 'Точные прогнозы за тур', rows: ex });
