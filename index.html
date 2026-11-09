@@ -229,6 +229,17 @@
   button.team > span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
   button.team:active { color: var(--accent); }
   button.team:active > span { text-decoration-color: currentColor; }
+  /* Штампы: золотая печать победителя сезона и зелёный штамп завершённого тура. На светлом фоне краска ложится
+     поверх текста (multiply), на тёмном — как есть */
+  .srow.champ { position: relative; z-index: 2; }
+  .srow.champ .nm { overflow: visible; }
+  .sealw { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; pointer-events: none; }
+  .sealw svg { position: absolute; left: 4px; top: -56px; width: 78px; height: 78px; transform: rotate(-11deg); color: var(--gold-mark); }
+  .ptitle.done { min-height: 50px; align-items: flex-start; }
+  .tstamp { margin: -2px -2px -10px 0; pointer-events: none; color: var(--accent); }
+  .tstamp svg { display: block; transform: rotate(-5deg); }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .tstamp svg { mix-blend-mode: multiply; } }
+  :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .tstamp svg { mix-blend-mode: multiply; }
   /* Тонкое подчёркивание — намёк, что имя нажимается: команды в таблицах, игроки в нашей таблице */
   .lrow:not(.head) .ln b, button.srow .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
   .lrow:active .ln b, button.srow:active .nm { text-decoration-color: currentColor; }
@@ -513,7 +524,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw92353w";
+var BUILD = "mw92mv2q";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -689,8 +700,10 @@ function renderPred(kind) {
     else if (g.state === 'done') note = 'Тур завершён';
     if (g.me && open.length) note += (note ? '. З' : 'З') + 'аполнено ' + done + ' из ' + open.length;
     var unfolded = isOpenTour(g, i, gs), key = 'p:' + g.kind + ':' + g.label;
-    var title = '<div class="ptitle"><h2>' + esc(g.label) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>' +
-      '<div class="pnote">' + (note || '&nbsp;') + '</div>';
+    var title = g.state === 'done'
+      // Завершённый тур — зелёный штамп с датами вместо строки «Тур завершён»
+      ? '<div class="ptitle done"><h2>' + esc(g.label) + '</h2><i class="tstamp" role="img" aria-label="Тур завершён, ' + esc(g.dates) + '">' + tourStampSVG(g.dates) + '</i></div>'
+      : '<div class="ptitle"><h2>' + esc(g.label) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>' + '<div class="pnote">' + (note || '&nbsp;') + '</div>';
     if (g.state === 'open') title = '<button class="fold" data-ptour="' + esc(key) + '" aria-expanded="' + unfolded + '">' + title + '<span class="chev">›</span></button>';
     if (!unfolded) return '<section class="panel">' + title + '</section>';
     var h = '<section class="panel open">' + title;
@@ -718,6 +731,91 @@ function prow(k, note, v, sub) {
     (note ? '<small class="pkn" style="grid-area:2/1">' + note + '</small>' : '') + (sub ? '<small class="pvs" style="grid-area:2/2">' + sub + '</small>' : '') + '</div>';
 }
 
+// ---------- Штампы: печать победителя сезона и штамп завершённого тура ----------
+// Оттиск резинового штампа: мелкие пропуски краски и чуть неровный край (фильтр SVG); у каждого оттиска свой узор
+var STAMP_N = 0;
+function inkFilter(id, seed) {
+  return '<filter id="' + id + '" x="-6%" y="-6%" width="112%" height="112%">' +
+    '<feTurbulence type="fractalNoise" baseFrequency=".32" numOctaves="3" seed="' + seed + '" result="t"/>' +
+    '<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -7 5.3" result="h"/>' +
+    '<feComposite in="SourceGraphic" in2="h" operator="in" result="ink"/>' +
+    '<feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="' + (seed + 7) + '" result="w"/>' +
+    '<feDisplacementMap in="ink" in2="w" scale="1.4" xChannelSelector="R" yChannelSelector="G"/></filter>';
+}
+// Надпись по дуге: сверху — по часовой, снизу — против, буквы стоят прямо
+function arcText(id, txt, r, top, size) {
+  var d = 'M' + (50 - r) + ',50 A' + r + ',' + r + ' 0 0 ' + (top ? 1 : 0) + ' ' + (50 + r) + ',50';
+  return '<path id="' + id + '" d="' + d + '" fill="none" stroke="none"/><text font-size="' + size.toFixed(2) + '" letter-spacing="' + (size * .09).toFixed(2) + '" text-anchor="middle">' +
+    '<textPath href="#' + id + '" startOffset="50%">' + esc(txt) + '</textPath></text>';
+}
+function starPath(cx, cy, r) {
+  var p = [];
+  for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * .45 : r; p.push((cx + q * Math.cos(a)).toFixed(2) + ',' + (cy + q * Math.sin(a)).toFixed(2)); }
+  return '<polygon points="' + p.join(' ') + '"/>';
+}
+// Мяч из знака Прогнозуса: обод, центральный пятиугольник и края соседних
+function stampBall(id, cx, cy, r, sw) {
+  var s = r / 19;
+  return '<defs><clipPath id="' + id + '"><circle cx="50" cy="50" r="19"/></clipPath></defs><g transform="translate(' + (cx - 50 * s) + ' ' + (cy - 50 * s) + ') scale(' + s + ')">' +
+    '<circle cx="50" cy="50" r="19" fill="none" stroke-width="' + (sw / s) + '"/>' +
+    '<path clip-path="url(#' + id + ')" d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/>' +
+    '<path d="M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z"/></g>';
+}
+function knockMask(id, inner) {
+  return '<defs><mask id="' + id + '" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="120"><rect width="100" height="120" fill="#fff"/>' +
+    '<g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">' + inner + '</g></mask></defs>';
+}
+var STAMP_BASE = '<rect x="29" y="104.6" width="42" height="7.4" rx="1.4"/><rect x="24" y="113" width="52" height="6" rx="1.4"/>';
+// Чемпионат: сова-всезнайка в очках и академической шапочке, подняла крыло, как палец; сидит на мяче
+function owlTrophy(id) {
+  return knockMask(id + 'm', '<circle cx="41" cy="40" r="7.4" stroke-width="2.4"/><circle cx="59" cy="40" r="7.4" stroke-width="2.4"/><path d="M48.4 39.4h3.2" stroke-width="2.2"/>' +
+    '<path d="M47.4 48.6 50 53l2.6-4.4z" stroke-width="1.8"/><path d="M42 62q4 3 8 0 4 3 8 0M44 69q3 2.4 6 0 3 2.4 6 0" stroke-width="1.7"/>') +
+    '<path mask="url(#' + id + 'm)" d="M50 21c14.5 0 23 12 23 29 0 19-9.5 30.5-23 30.5S27 69 27 50c0-17 8.5-29 23-29z"/>' +
+    '<circle cx="41.6" cy="40.6" r="2.8"/><circle cx="58.4" cy="40.6" r="2.8"/>' +
+    '<path d="M28 15.5 50 8l22 7.5L50 23z"/><path d="M38 19.6h24v6.4H38z"/><path d="M68.5 16.6v9" fill="none" stroke-width="1.6"/><circle cx="68.5" cy="27" r="2"/>' +
+    '<path d="M71.6 52c8.5-6 12.5-16 11-26.5-.6-4.4-5.6-4.4-5.6-.4.4 9-2.6 16.4-8.4 21.4z"/>' +
+    '<path d="M42 80.5l-2 4M46 81l-1 4M54 81l1 4M58 80.5l2 4" fill="none" stroke-width="2" stroke-linecap="round"/>' +
+    stampBall(id + 'b', 50, 92.4, 8.6, 2) + STAMP_BASE;
+}
+// Кубок: осьминог-предсказатель обнимает мяч и показывает щупальцем вверх
+function octopusTrophy(id) {
+  return knockMask(id + 'm', '<circle cx="41.5" cy="34" r="5.4" stroke-width="2.4"/><circle cx="58.5" cy="34" r="5.4" stroke-width="2.4"/><path d="M45 44.5q5 3.2 10 0" stroke-width="2"/>') +
+    '<path mask="url(#' + id + 'm)" d="M50 8c13.5 0 21.5 11 21.5 25 0 10-5.5 16.5-12 19.5H40.5C34 49.5 28.5 43 28.5 33 28.5 19 36.5 8 50 8z"/>' +
+    '<circle cx="42.2" cy="34.6" r="2.4"/><circle cx="59.2" cy="34.6" r="2.4"/>' + stampBall(id + 'b', 50, 77, 12.5, 2.4) +
+    '<g fill="none" stroke-width="5.4" stroke-linecap="round"><path d="M34 47c-11 7-14 21-7.5 33 2.5 4.2 7.5 4.6 8.5.6"/><path d="M42 51c-5.5 7-7.8 16-5 25.5"/><path d="M58 51c5.5 7 7.8 16 5 25.5"/>' +
+    '<path d="M66 47c11 7 14 21 7.5 33-2.5 4.2-7.5 4.6-8.5.6"/><path d="M69.5 36c9-3 13.5-11 12.5-20.5-.6-5-6-5.6-6.6-1.6"/></g>' +
+    '<path d="M43.5 91h13l1.6 5.5h-16.2z"/><path d="M34 104q1.6-7.6 16-8.4 14.4.8 16 8.4z"/>' + STAMP_BASE;
+}
+// Печать победителя сезона: чемпионат — сова и «Прогноз верен», Кубок — осьминог и «Знал заранее»
+function sealSVG(kind, season) {
+  var id = 'st' + (++STAMP_N), cup = kind === 'cup';
+  var top = cup ? 'ЗНАЛ ЗАРАНЕЕ' : 'ПРОГНОЗ ВЕРЕН', bot = (cup ? 'ОБЛАДАТЕЛЬ КУБКА ' : 'ЧЕМПИОН ') + season;
+  // Кегль по длине надписи: верхняя дуга около 150°, нижняя — до 170°
+  var ts = Math.min(9.6, 90 / (top.length * .76)), bs = Math.min(8.8, 118 / (bot.length * .76));
+  return '<svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><defs>' + inkFilter(id + 'f', STAMP_N * 3) + '</defs>' +
+    '<g fill="currentColor" stroke="currentColor" filter="url(#' + id + 'f)" font-family="Tektur, Onest, sans-serif" font-weight="600">' +
+    '<circle cx="50" cy="50" r="46.6" fill="none" stroke-width="3.2"/><circle cx="50" cy="50" r="42.4" fill="none" stroke-width="1"/><circle cx="50" cy="50" r="30.6" fill="none" stroke-width="1.4"/>' +
+    '<g stroke="none">' + arcText(id + 't', top, 33.6, true, ts) + arcText(id + 'b', bot, 40.3, false, bs) + starPath(13.4, 50, 2.4) + starPath(86.6, 50, 2.4) + '</g>' +
+    '<g transform="translate(28.6 23.6) scale(.428)" stroke-width="0">' + (cup ? octopusTrophy(id) : owlTrophy(id)) + '</g></g></svg>';
+}
+// Штамп завершённого тура: «ЗАВЕРШЁН» и даты тура; ширина — по длине дат
+function tourStampSVG(dates) {
+  var id = 'st' + (++STAMP_N), l2 = String(dates || '').toUpperCase(), w = Math.max(8 * 10.4, l2.length * 7.2) + 26;
+  return '<svg class="tbox" viewBox="0 0 ' + w + ' 40" style="width:' + (w * .82).toFixed(1) + 'px" aria-hidden="true"><defs>' + inkFilter(id + 'f', STAMP_N * 3) + '</defs>' +
+    '<g fill="currentColor" stroke="currentColor" filter="url(#' + id + 'f)" font-family="Tektur, Onest, sans-serif" font-weight="600">' +
+    '<rect x="2.5" y="2.5" width="' + (w - 5) + '" height="35" rx="3" fill="none" stroke-width="2.4"/>' +
+    '<g stroke="none"><text x="' + w / 2 + '" y="19" font-size="13" letter-spacing="1.6" text-anchor="middle">ЗАВЕРШЁН</text>' +
+    (l2 ? '<text x="' + w / 2 + '" y="31.5" font-size="9.4" letter-spacing="1" text-anchor="middle">' + esc(l2) + '</text>' : '') + '</g></g></svg>';
+}
+// Сезон окончен: прошлый сезон или все туры сыграны (чемпионат — 30 туров, Кубок — сыгран финал или суперфинал)
+function seasonOver(c) {
+  if (c.past) return true;
+  var t = c.tours || [];
+  if (!t.length || c.live.length || t.some(function (x) { return x.state !== 'done'; })) return false;
+  if ((DATA.groups || []).some(function (g) { return g.kind === c.kind && g.state === 'open'; })) return false;
+  return c.kind === 'cup' ? /^(супер)?финал/i.test(t[0].label) : t.length >= 30;
+}
+
 // ---------- Таблица ----------
 function tblMode(c0) { return S.tbl === 'league' || (S.tbl === 'mine' && c0 && c0.me) ? S.tbl : 'ours'; }
 function renderTable(kind) {
@@ -734,7 +832,8 @@ function renderTable(kind) {
   if (mode === 'mine') return renderMine(kind, head);
   if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   // Во время тура — результаты live, между турами — после какого тура
-  var sub = c.past ? 'Итоговая таблица сезона' : c.live.length ? 'Результаты live' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
+  var over = seasonOver(c);
+  var sub = over ? 'Итоговая таблица сезона' : c.live.length ? 'Результаты live' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   var h = head;
   h += '<div class="pnote">' + sub + '</div>';
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
@@ -742,8 +841,10 @@ function renderTable(kind) {
     var oc = outcomes(c, c.players.indexOf(s.name));
     var mv = s.dplace > 0 ? '<span class="mv up">▲' + s.dplace + '</span>' : s.dplace < 0 ? '<span class="mv down">▼' + (-s.dplace) + '</span>' : '';
     // Первый ряд — место, имя и числа, второй — подписи: у каждого ряда своя базовая линия, кегль соседей её не сдвигает
-    h += '<button class="srow' + (s.me ? ' me' : '') + '" data-player="' + esc(s.name) + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '" style="grid-area:1/1">' + s.place + '</span>' +
-      '<span class="nm" style="grid-area:1/2">' + esc(s.name) + mv + '</span>' +
+    // Победитель окончённого сезона: печать сразу за именем (с ничьей за первое место — у обоих)
+    var champ = over && s.place === 1, seal = champ ? '<i class="sealw" role="img" aria-label="' + (c.kind === 'cup' ? 'Обладатель Кубка ' : 'Чемпион ') + esc(c.season) + '">' + sealSVG(c.kind, c.season) + '</i>' : '';
+    h += '<button class="srow' + (s.me ? ' me' : '') + (champ ? ' champ' : '') + '" data-player="' + esc(s.name) + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '" style="grid-area:1/1">' + s.place + '</span>' +
+      '<span class="nm" style="grid-area:1/2">' + esc(s.name) + seal + mv + '</span>' +
       '<span class="num tp" style="grid-area:1/3">' + num(s.tp) + '</span>' +
       '<span class="num pp" style="grid-area:1/4">' + num(s.pp) + '</span>' +
       '<span class="num ex" style="grid-area:1/5">' + num(s.ex) + '</span>' +
