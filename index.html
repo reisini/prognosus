@@ -191,13 +191,19 @@
   .tsum { display: flex; gap: 18px; padding: 2px 16px 12px; color: var(--muted); font-size: 13px; }
   .tsum b { display: block; color: var(--ink); font: 600 20px/1.1 var(--display); }
   .tm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(24px, auto); align-items: baseline; column-gap: 10px; row-gap: 2px; padding: 10px 16px; border-top: 1px solid var(--line); }
-  .tm .op .self { color: var(--muted); font-weight: 500; }
+  .tm .op .self { color: var(--ink); font-weight: 700; }
   .tm .tmd { min-width: 0; font-size: 12px; line-height: 1.3; color: var(--muted); }
   .tm .tmd.my { color: var(--ink); }
   .tm .tmd.my.ex { color: var(--gold); font-weight: 600; }
   .tm .tmp { font: 500 11px/1.3 var(--text); color: var(--muted); text-align: right; white-space: nowrap; }
   .rs.LV { width: auto; padding: 0 6px; color: var(--live); box-shadow: inset 0 0 0 1px var(--live); font-size: 11px; font-weight: 600; }
   .tgo { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 6px; }
+  .tgo.tmore { padding: 10px 16px 4px; border-top: 1px solid var(--line); }
+  .tctabs { display: flex; align-items: baseline; gap: 18px; padding: 0 16px 12px; }
+  .tctabs button { border: 0; background: none; padding: 8px 0; margin: -8px 0; cursor: pointer; font: 600 17px/1 var(--display); letter-spacing: -.01em; color: var(--faint); -webkit-tap-highlight-color: transparent; }
+  .tctabs button.on { color: var(--ink); cursor: default; }
+  .tctabs button:focus { outline: none; }
+  .tctabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   .tgo .retry { margin-top: 0; }
   .tsub2 { padding: 14px 16px 6px; font-size: 12.5px; color: var(--muted); }
   .tnote.tk { padding-top: 0; }
@@ -207,8 +213,10 @@
   .lg.my { --lcols: 20px minmax(0, 1fr) 24px repeat(4, 22px) 38px; }
   .lg.my .lrow { column-gap: 5px; }
   button.team { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; font-size: 15px; line-height: 28px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button.team span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
   button.team:active { color: var(--accent); }
-  .tm .op { min-width: 0; font-weight: 600; font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  button.team:active span { text-decoration-color: currentColor; }
+  .tm .op { min-width: 0; font-weight: 500; font-size: 15px; line-height: 1.3; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tm .sc { font: 600 17px/1.3 var(--display); font-variant-numeric: tabular-nums; text-align: right; }
   .rs { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font: 700 12px/1 var(--text); }
   .rs.W { background: var(--accent); color: var(--surface); }
@@ -489,7 +497,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw8znild";
+var BUILD = "mw9093c8";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -609,7 +617,7 @@ function matchRow(g, m, gridCols, editable) {
   var cls = 'm' + (m.phase === 'live' ? ' is-live' : '') + (dirty ? (m.started ? ' late' : ' dirty') : '');
   var h = '<div class="' + cls + '"><div class="mt"><span>' + esc(m.when) + '</span><span>' + right + '</span></div>';
   ['h', 'a'].forEach(function (side) {
-    h += '<div class="g" style="--cols:' + gridCols + '"><button class="team" data-team="' + esc(side === 'h' ? m.hn || m.home : m.an || m.away) + '">' + esc(side === 'h' ? m.home : m.away) + '</button>';
+    h += '<div class="g" style="--cols:' + gridCols + '"><button class="team" data-team="' + esc(side === 'h' ? m.hn || m.home : m.an || m.away) + '"><span>' + esc(side === 'h' ? m.home : m.away) + '</span></button>';
     for (var j = 0; j < m.cells.length; j++) h += cell(g, m, j, side, editable);
     h += '<div class="sc">' + (m.started ? v(side === 'h' ? m.hs : m.as) : '') + '</div></div>';
   });
@@ -1213,19 +1221,51 @@ function teamMatchRow(c, m, name) {
     (m.pen ? '<small class="tmp" style="grid-area:2/2">пен. ' + esc(m.pen) + '</small>' : '') +
     (my ? '<small class="tmd my' + (x && x.pts === 4 ? ' ex' : '') + '" style="grid-area:3/1">' + esc(my) + '</small>' : '') + '</div>';
 }
+// Открытая карточка: команда, вкладка турнира, турнир, из которого открыли, развёрнуты ли следующие матчи
+var TC = null;
 function teamCard(name, from) {
-  var kind = S.comp, L = leagueData(kind); if (!L) return;
-  var c = L.c, cup = kind === 'cup', r = L.T[name], pl = L.place[name];
-  var ms = L.all.filter(function (m) { return m.h === name || m.a === name; });
-  var h = '<div class="tsum">' + (pl ? '<span><b>' + pl.n + '</b>' + (pl.group ? 'место в группе ' + esc(pl.group.replace(/^Группа\s*/, '')) : 'место') + '</span>' : '') +
+  TC = { name: name, origin: S.comp, kind: S.comp, from: from, more: false };
+  drawTeamCard();
+}
+// Будущие матчи команды из открытых для прогнозов туров, по порядку
+function upcoming(kind, name) {
+  var out = [];
+  (DATA.groups || []).forEach(function (g) {
+    if (g.kind !== kind) return;
+    g.matches.forEach(function (m) {
+      if (!m.started && m.phase !== 'off' && ((m.hn || m.home) === name || (m.an || m.away) === name)) out.push({ m: m, g: g });
+    });
+  });
+  return out.sort(function (a, b) { return (a.m.start || 0) - (b.m.start || 0); });
+}
+function playsIn(kind, name) {
+  var L = leagueData(kind);
+  return !!L && (L.all.some(function (m) { return m.h === name || m.a === name; }) || upcoming(kind, name).length > 0);
+}
+function nextRow(x, name) {
+  var nm = x.m, cur = current(nm);
+  return '<div class="tm"><b class="op" style="grid-area:1/1">' + fixture(nm.hn || nm.home, nm.an || nm.away, name) + '</b>' +
+    '<small class="tmd" style="grid-area:2/1">' + esc([x.g.label, nm.when].filter(Boolean).join(' · ')) + '</small>' +
+    (x.g.me ? '<small class="tmd my" style="grid-area:3/1">' + (cur.h !== null ? 'мой прогноз ' + cur.h + ':' + cur.a : 'прогноза пока нет') + '</small>' : '') + '</div>';
+}
+function drawTeamCard() {
+  var name = TC.name, other = TC.origin === 'cup' ? 'champ' : 'cup';
+  // Вкладки: сначала турнир, из которого открыли команду, затем второй — если команда в нём играет
+  var kinds = [TC.origin, other].filter(function (k) { return comp(k) && playsIn(k, name); });
+  if (kinds.indexOf(TC.kind) < 0) TC.kind = kinds[0] || TC.origin;
+  var kind = TC.kind, L = leagueData(kind); if (!L) return;
+  var c = L.c, r = L.T[name], pl = L.place[name], h = '';
+  if (kinds.length > 1) h += '<div class="tctabs" role="tablist">' + kinds.map(function (k) {
+    return '<button role="tab" data-tctab="' + k + '" class="' + (k === kind ? 'on' : '') + '" aria-selected="' + (k === kind) + '">' + (k === 'cup' ? 'Кубок' : 'РПЛ') + '</button>'; }).join('') + '</div>';
+  h += '<div class="tsum">' + (pl ? '<span><b>' + pl.n + '</b>' + (pl.group ? 'место в группе ' + esc(pl.group.replace(/^Группа\s*/, '')) : 'место') + '</span>' : '') +
     (r ? '<span><b>' + r.pts + '</b>' + plural(r.pts, 'очко', 'очка', 'очков') + '</span><span><b>' + r.p + '</b>' + plural(r.p, 'игра', 'игры', 'игр') + '</span><span><b>' + r.gf + '–' + r.ga + '</b>мячи</span>' : '') + '</div>';
-  // Ссылки на таблицы: сначала турнира, из которого открыли команду, затем второго (если команда в нём играет).
-  // Из самой таблицы турнира — только на второй.
-  var other = cup ? 'champ' : 'cup', LO = leagueData(other), go = [];
-  function goBtn(k) { return '<button class="retry" data-goleague="' + esc(name) + '" data-gokind="' + k + '">' + (k === 'cup' ? 'Таблица Кубка России' : 'Таблица РПЛ') + '</button>'; }
-  if (from !== 'table' && r) go.push(goBtn(kind));
-  if (LO && LO.T[name]) go.push(goBtn(other));
+  // Ссылки на обе таблицы — в том же порядке, что и вкладки
+  var go = [TC.origin, other].filter(function (k) { var LL = leagueData(k); return LL && LL.T[name]; }).map(function (k) {
+    return '<button class="retry" data-goleague="' + esc(name) + '" data-gokind="' + k + '">' + (k === 'cup' ? 'Таблица Кубка России' : 'Таблица РПЛ') + '</button>'; });
   if (go.length) h += '<div class="tgo">' + go.join('') + '</div>';
+  var up = upcoming(kind, name);
+  if (up.length) h += '<div class="tsec">Ближайший матч</div>' + nextRow(up[0], name);
+  var ms = L.all.filter(function (m) { return m.h === name || m.a === name; });
   var last = ms.slice(-5).reverse(), older = ms.slice(0, -5).reverse();
   h += '<div class="tsec">Последние матчи</div>' + (last.length ? last.map(function (m) { return teamMatchRow(c, m, name); }).join('') : '<div class="tnote">Матчей пока нет.</div>');
   // Мои прогнозы на все её матчи: итог и всё, что раньше последних пяти
@@ -1240,19 +1280,15 @@ function teamCard(name, from) {
       if (older.length) h += '<div class="tsub2">Раньше</div>' + older.map(function (m) { return teamMatchRow(c, m, name); }).join('');
     }
   }
-  // Ближайший матч — если он уже есть в прогнозах
-  var next = null;
-  (DATA.groups || []).forEach(function (g) { if (g.kind !== kind) return; g.matches.forEach(function (m) {
-    if (!m.started && ((m.hn || m.home) === name || (m.an || m.away) === name) && (!next || m.start < next.start)) next = { m: m, g: g }; }); });
-  if (next) {
-    var nm = next.m, cur = current(nm);
-    h += '<div class="tsec">Следующий матч</div><div class="tm"><b class="op" style="grid-area:1/1">' + fixture(nm.hn || nm.home, nm.an || nm.away, name) + '</b>' +
-      '<small class="tmd" style="grid-area:2/1">' + esc([next.g.label, nm.when].filter(Boolean).join(' · ')) + '</small>' +
-      (next.g.me ? '<small class="tmd my" style="grid-area:3/1">' + (cur.h !== null ? 'мой прогноз ' + cur.h + ':' + cur.a : 'прогноза пока нет') + '</small>' : '') + '</div>';
+  // Следующие матчи: три ближайших после ближайшего, остальные — по кнопке
+  var rest = up.slice(1);
+  if (rest.length) {
+    h += '<div class="tsec">Следующие матчи</div>' + rest.slice(0, TC.more ? rest.length : 3).map(function (x) { return nextRow(x, name); }).join('');
+    if (!TC.more && rest.length > 3) h += '<div class="tgo tmore"><button class="retry" data-tcmore="1">Показать ещё ' + (rest.length - 3) + '</button></div>';
   }
   $('team-h').textContent = name;
   $('teambody').innerHTML = h;
-  if ($('team').hidden) sheet('team', true); else $('team').querySelector('.sheet-in').scrollTop = 0;
+  if ($('team').hidden) sheet('team', true);
 }
 // Из карточки — в таблицу турнира, к строке команды
 function goLeague(name, kind) {
@@ -1520,6 +1556,8 @@ document.addEventListener('click', function (e) {
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
   if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
+  if (b.dataset.tctab) { if (TC && TC.kind !== b.dataset.tctab) { TC.kind = b.dataset.tctab; TC.more = false; drawTeamCard(); $('team').querySelector('.sheet-in').scrollTop = 0; } return; }
+  if (b.dataset.tcmore) { if (TC) { TC.more = true; drawTeamCard(); } return; }
   if (b.dataset.reseason) { b.dataset.reseason.split(',').forEach(function (id) { delete SEASONS[id]; }); render(); return refreshProfile(); }
   if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
