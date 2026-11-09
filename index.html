@@ -7,22 +7,24 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Tektur:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
+  /* «Табло на газоне»: зелёный — действия и свой игрок, золото — только лидер, красный — идущий матч и «закрыть».
+     Tektur, шрифт табло, — в заголовках и крупных цифрах; Onest — в тексте, мелких цифрах и знаке процента */
   :root {
-    --bg: #ecebf4; --surface: #ffffff; --soft: #f5f4fa; --ink: #1c1940; --muted: #6d6992; --line: #e3e0ef;
-    --accent: #4a3dcc; --accent-soft: #e8e5fb; --faint: #a7a3c2; --red: #e0393e; --gold-mark: #a87a0e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
-    --display: 'Unbounded', 'Onest', system-ui, sans-serif;
+    --bg: #edf1ee; --surface: #ffffff; --soft: #f3f6f4; --ink: #14231b; --muted: #5f6f66; --line: #dfe6e1;
+    --accent: #13804f; --accent-soft: #dff0e6; --faint: #9aa89f; --red: #e0393e; --gold-mark: #a87a0e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #d6402b;
+    --display: 'Tektur', 'Onest', system-ui, sans-serif;
     --text: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --hdr: 96px; --nav: 58px;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #524e7d; --red: #f0525a; --gold-mark: #f2c14e; }
+    :root:not([data-theme="light"]) { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a;
+      --accent: #3fcf88; --accent-soft: #163a27; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #ff6b57; --faint: #4b6255; --red: #f0525a; --gold-mark: #f2c14e; }
   }
-  :root[data-theme="dark"] { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #524e7d; --red: #f0525a; --gold-mark: #f2c14e; }
+  :root[data-theme="dark"] { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a;
+    --accent: #3fcf88; --accent-soft: #163a27; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #ff6b57; --faint: #4b6255; --red: #f0525a; --gold-mark: #f2c14e; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.35 var(--text); font-variant-numeric: tabular-nums; }
@@ -61,7 +63,7 @@
   main { padding: 12px 10px calc(var(--nav) + 84px + env(safe-area-inset-bottom)); }
   .panel { background: var(--surface); border-radius: 16px; margin-bottom: 14px; }
   .ptitle { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 14px 2px; }
-  .ptitle h2 { margin: 0; font: 600 21px/1.15 var(--display); letter-spacing: -.02em; }
+  .ptitle h2 { margin: 0; font: 600 21px/1.15 var(--display); letter-spacing: -.01em; }
   .ptitle .meta { color: var(--muted); font-size: 13px; white-space: nowrap; }
   .pnote { padding: 2px 14px 10px; color: var(--muted); font-size: 13px; }
   .pnote .live { color: var(--live); font-weight: 600; }
@@ -189,10 +191,11 @@
   .tl2 li b { font: 600 16px/1.1 var(--display); white-space: nowrap; }
   .tl2 .top li:first-child b { color: var(--gold); }
   .tnote { padding: 8px 16px 14px; font-size: 13px; color: var(--muted); }
+  .pc { font-family: var(--text); font-weight: 600; margin-left: 1px; }
   .pscope { padding: 0 16px 6px; }
   .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
   .tcap + .tl2 { padding-top: 6px; }
-  .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(12, 10, 34, .45); display: flex; align-items: flex-end; }
+  .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(6, 16, 10, .45); display: flex; align-items: flex-end; }
   .sheet[hidden] { display: none; }
   .sheet-in { width: 100%; max-width: 520px; margin: 0 auto; max-height: 88vh; overflow: auto; background: var(--surface);
     border-radius: 20px 20px 0 0; padding: 4px 0 calc(22px + env(safe-area-inset-bottom)); }
@@ -228,7 +231,7 @@
   .tmv.down { color: var(--muted); }
   /* Перестановка мест при открытии таблицы */
   .srow.moving { position: relative; background: var(--surface); transition: transform .75s cubic-bezier(.22, .8, .24, 1); }
-  .srow.moving.up { z-index: 2; box-shadow: 0 6px 18px rgba(28, 25, 64, .12); }
+  .srow.moving.up { z-index: 2; box-shadow: 0 6px 18px rgba(10, 30, 18, .12); }
   .srow .pl.swap { animation: plswap .4s ease; }
   @keyframes plswap { 0% { opacity: .2; transform: scale(.7); } 100% { opacity: 1; transform: none; } }
   .chev { text-align: center; color: var(--muted); transition: transform .15s; }
@@ -260,7 +263,7 @@
   .save { position: fixed; left: 0; right: 0; bottom: calc(var(--nav) + env(safe-area-inset-bottom)); padding: 8px 12px; z-index: 9;
     background: linear-gradient(to top, var(--bg) 65%, transparent); }
   .save button { display: block; width: 100%; max-width: 496px; margin: 0 auto; height: 48px; border: 0; border-radius: 14px; cursor: pointer;
-    background: var(--accent); color: var(--surface); font: 600 15px/1 var(--display); letter-spacing: -.01em; }
+    background: var(--accent); color: var(--surface); font: 600 15px/1 var(--text); }
   .save button:disabled { opacity: .5; }
   nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--surface); border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom); }
@@ -287,7 +290,7 @@
   .sheet-in .ptitle .icon-btn:active { background: none; }
   /* Лист выезжает снизу и так же уходит вниз */
   .sheet:not([hidden]) .sheet-in { animation: sheetUp .26s cubic-bezier(.2, .8, .2, 1); }
-  .sheet.closing { background: rgba(12, 10, 34, 0); transition: background .22s; }
+  .sheet.closing { background: rgba(6, 16, 10, 0); transition: background .22s; }
   .sheet.closing .sheet-in { transform: translateY(105%); transition: transform .22s cubic-bezier(.4, 0, 1, 1); }
   @keyframes sheetUp { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
   .icon-btn svg.rc.play { animation: card .32s cubic-bezier(.3, 1.5, .5, 1); }
@@ -334,7 +337,7 @@
 <body>
 <header id="hdr"><div class="wrap">
   <div class="bar">
-    <div class="brand" role="img" aria-label="Прогнозус"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -6 489.76 102" aria-hidden="true" focusable="false"><g transform="translate(3.84,-7)"><defs><clipPath id="hbc"><circle cx="50" cy="50" r="19"/></clipPath></defs><g transform="translate(50,50) scale(1.08) translate(-50,-50)"><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="7.41" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F4F2FF" stroke="#1C1940" stroke-width="3.33"/><g clip-path="url(#hbc)" fill="#1C1940"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><path d="M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z" fill="#1C1940"/><path d="M50,3.55 Q51.51,11.49 59.45,13 Q51.51,14.51 50,22.45 Q48.49,14.51 40.55,13 Q48.49,11.49 50,3.55 Z" fill="#E9B740"/><path d="M27,15.6 Q27.86,20.14 32.4,21 Q27.86,21.86 27,26.4 Q26.14,21.86 21.6,21 Q26.14,20.14 27,15.6 Z" fill="#E9B740"/><path d="M73,15.6 Q73.86,20.14 78.4,21 Q73.86,21.86 73,26.4 Q72.14,21.86 67.6,21 Q72.14,20.14 73,15.6 Z" fill="#E9B740"/></g></g><g transform="translate(120.68,17)" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(0,0)"><path d="M4,48 V4 H36 V48"/></g><g transform="translate(48.05,0)"><path d="M4,18 V65"/><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(92.6,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(137.65,0)"><path d="M4,48 V18 H21"/></g><g transform="translate(170.2,0)"><path d="M4,48 V18"/><path d="M31,48 V18"/><path d="M4,33 H31"/></g><g transform="translate(212.25,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(256.8,0)"><path d="M1.94,21.02 A10.6,7.38 0 1 1 11.3,31.86 A12.2,8.52 0 1 1 0.53,44.38"/><path d="M11.3,31.86 H5.3"/></g><g transform="translate(290.35,0)"><path d="M4,18 L17,48"/><path d="M30,18 L9.63,65"/></g><g transform="translate(329.9,0)"><path d="M31.18,22.78 A15.9,15.9 0 1 0 31.18,43.22"/></g></g></svg></div>
+    <div class="brand" role="img" aria-label="Прогнозус"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -6 489.76 102" aria-hidden="true" focusable="false"><g transform="translate(3.84,-7)"><defs><clipPath id="hbc"><circle cx="50" cy="50" r="19"/></clipPath></defs><g transform="translate(50,50) scale(1.08) translate(-50,-50)"><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="7.41" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F3F7F4" stroke="#14231B" stroke-width="3.33"/><g clip-path="url(#hbc)" fill="#14231B"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><path d="M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z" fill="#14231B"/><path d="M50,3.55 Q51.51,11.49 59.45,13 Q51.51,14.51 50,22.45 Q48.49,14.51 40.55,13 Q48.49,11.49 50,3.55 Z" fill="#E9B740"/><path d="M27,15.6 Q27.86,20.14 32.4,21 Q27.86,21.86 27,26.4 Q26.14,21.86 21.6,21 Q26.14,20.14 27,15.6 Z" fill="#E9B740"/><path d="M73,15.6 Q73.86,20.14 78.4,21 Q73.86,21.86 73,26.4 Q72.14,21.86 67.6,21 Q72.14,20.14 73,15.6 Z" fill="#E9B740"/></g></g><g transform="translate(120.68,17)" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(0,0)"><path d="M4,48 V4 H36 V48"/></g><g transform="translate(48.05,0)"><path d="M4,18 V65"/><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(92.6,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(137.65,0)"><path d="M4,48 V18 H21"/></g><g transform="translate(170.2,0)"><path d="M4,48 V18"/><path d="M31,48 V18"/><path d="M4,33 H31"/></g><g transform="translate(212.25,0)"><path d="M3.1,33 a15.9,15.9 0 1 0 31.8,0 a15.9,15.9 0 1 0 -31.8,0"/></g><g transform="translate(256.8,0)"><path d="M1.94,21.02 A10.6,7.38 0 1 1 11.3,31.86 A12.2,8.52 0 1 1 0.53,44.38"/><path d="M11.3,31.86 H5.3"/></g><g transform="translate(290.35,0)"><path d="M4,18 L17,48"/><path d="M30,18 L9.63,65"/></g><g transform="translate(329.9,0)"><path d="M31.18,22.78 A15.9,15.9 0 1 0 31.18,43.22"/></g></g></svg></div>
     <div class="who"><span id="who"></span>
       <button class="icon-btn" id="rulesbtn" aria-label="Правила игры"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="wb"><g transform="rotate(-18 12 12)"><circle cx="8.2" cy="15" r="5.6"/><path d="M8.2 9.4H20.2c.6 0 1 .4 1 1v1.6c0 .6-.4 1-1 1H13.3"/><circle class="fill" cx="8.2" cy="15" r="1.6"/></g></g><path class="ws ws1" d="M19.6 16.4c1 .7 1.6 1.6 1.8 2.7"/><path class="ws ws2" d="M18 18.6c.7.4 1.1 1 1.3 1.8"/></svg></button>
       <button class="icon-btn" id="refresh" aria-label="Обновить"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="rr"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M18.2 2.9v3.6h-3.6"/></g><g class="rb"><defs><clipPath id="f3b"><circle cx="12" cy="12" r="3.8"/></clipPath></defs><circle cx="12" cy="12" r="3.8"/><path class="fill" d="M12 10.48 L13.45 11.53 L12.89 13.23 L11.11 13.23 L10.55 11.53Z"/><path class="fill" clip-path="url(#f3b)" d="M12 9.49 L10.7 8.55 L11.2 7.02 L12.8 7.02 L13.3 8.55ZM14.39 11.22 L14.88 9.7 L16.49 9.7 L16.99 11.22 L15.69 12.17ZM13.47 14.03 L15.08 14.03 L15.58 15.56 L14.28 16.5 L12.98 15.56ZM10.53 14.03 L11.02 15.56 L9.72 16.5 L8.42 15.56 L8.92 14.03ZM9.61 11.22 L8.31 12.17 L7.01 11.22 L7.51 9.7 L9.12 9.7Z"/></g></svg></button></div>
@@ -343,7 +346,7 @@
 </div></header>
 <main class="wrap" id="app"></main>
 <div class="save" id="savebar" hidden><button id="save">Сохранить</button></div>
-<div class="splash" id="splash" hidden><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="spc"><circle cx="50" cy="50" r="19"/></clipPath></defs><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F4F2FF" stroke="#1C1940" stroke-width="3"/><g clip-path="url(#spc)"><g class="ball"><g fill="#1C1940"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><g stroke="#1C1940" stroke-width="2.4" stroke-linecap="round"><line x1="50" y1="45.44" x2="50" y2="35.18"/><line x1="54.34" y1="48.59" x2="64.09" y2="45.42"/><line x1="52.68" y1="53.69" x2="58.71" y2="61.99"/><line x1="47.32" y1="53.69" x2="41.29" y2="61.99"/><line x1="45.66" y1="48.59" x2="35.91" y2="45.42"/></g><path d="M50,44.8 L54.95,48.39 L53.06,54.21 L46.94,54.21 L45.05,48.39 Z" fill="#1C1940"/></g></g><path class="st st1" d="M50,6 Q51.12,11.88 57,13 Q51.12,14.12 50,20 Q48.88,14.12 43,13 Q48.88,11.88 50,6 Z" fill="#E9B740"/><path class="st st2" d="M27,17 Q27.64,20.36 31,21 Q27.64,21.64 27,25 Q26.36,21.64 23,21 Q26.36,20.36 27,17 Z" fill="#E9B740"/><path class="st st3" d="M73,17 Q73.64,20.36 77,21 Q73.64,21.64 73,25 Q72.36,21.64 69,21 Q72.36,20.36 73,17 Z" fill="#E9B740"/></svg></div>
+<div class="splash" id="splash" hidden><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><clipPath id="spc"><circle cx="50" cy="50" r="19"/></clipPath></defs><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="50" r="19" fill="#F3F7F4" stroke="#14231B" stroke-width="3"/><g clip-path="url(#spc)"><g class="ball"><g fill="#14231B"><path d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z"/><path d="M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z"/><path d="M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z"/><path d="M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z"/><path d="M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"/></g><g stroke="#14231B" stroke-width="2.4" stroke-linecap="round"><line x1="50" y1="45.44" x2="50" y2="35.18"/><line x1="54.34" y1="48.59" x2="64.09" y2="45.42"/><line x1="52.68" y1="53.69" x2="58.71" y2="61.99"/><line x1="47.32" y1="53.69" x2="41.29" y2="61.99"/><line x1="45.66" y1="48.59" x2="35.91" y2="45.42"/></g><path d="M50,44.8 L54.95,48.39 L53.06,54.21 L46.94,54.21 L45.05,48.39 Z" fill="#14231B"/></g></g><path class="st st1" d="M50,6 Q51.12,11.88 57,13 Q51.12,14.12 50,20 Q48.88,14.12 43,13 Q48.88,11.88 50,6 Z" fill="#E9B740"/><path class="st st2" d="M27,17 Q27.64,20.36 31,21 Q27.64,21.64 27,25 Q26.36,21.64 23,21 Q26.36,20.36 27,17 Z" fill="#E9B740"/><path class="st st3" d="M73,17 Q73.64,20.36 77,21 Q73.64,21.64 73,25 Q72.36,21.64 69,21 Q72.36,20.36 73,17 Z" fill="#E9B740"/></svg></div>
 <nav class="tabs"><div class="in" id="tabs">
   <button data-view="pred"><svg viewBox="0 0 24 24" class="p2" aria-hidden="true"><defs><clipPath id="pcl"><rect x="2.8" y="6" width="8" height="12"/></clipPath><clipPath id="pcr"><rect x="13.2" y="6" width="8" height="12"/></clipPath></defs><rect x="1.8" y="5" width="20.4" height="14" rx="3.2"/><g clip-path="url(#pcl)"><g class="reel rl"><g transform="translate(0 0)"><path d="M5 10.2a1.8 1.8 0 0 1 3.6 0c0 1.34-1.8 1.46-1.8 2.91"/><circle class="fill" cx="6.8" cy="16" r="1.1"/></g><g transform="translate(0 12)"><path d="M5 10.6a1.8 1.8 0 0 1 3.6 0c0 1.92-3.6 2.69-3.6 4.6h3.6"/></g><g transform="translate(0 24)"><rect x="5" y="8.8" width="3.6" height="6.4" rx="1.8"/></g><g transform="translate(0 36)"><path d="M7.64 15.2V8.8L4.9 13.02H8.7"/></g><g transform="translate(0 48)"><path d="M6.2 10.46l1.8 -1.66v6.4"/></g><g transform="translate(0 60)"><path d="M5 10.2a1.8 1.8 0 0 1 3.6 0c0 1.34-1.8 1.46-1.8 2.91"/><circle class="fill" cx="6.8" cy="16" r="1.1"/></g></g></g><g class="cl"><circle class="fill" cx="12" cy="10.3" r="1.05"/><circle class="fill" cx="12" cy="14.3" r="1.05"/></g><g clip-path="url(#pcr)"><g class="reel rr2"><g transform="translate(0 0)"><path d="M15.4 10.2a1.8 1.8 0 0 1 3.6 0c0 1.34-1.8 1.46-1.8 2.91"/><circle class="fill" cx="17.2" cy="16" r="1.1"/></g><g transform="translate(0 12)"><path d="M16.6 10.46l1.8 -1.66v6.4"/></g><g transform="translate(0 24)"><path d="M18.04 15.2V8.8L15.3 13.02H19.1"/></g><g transform="translate(0 36)"><path d="M15.4 10.6a1.8 1.8 0 0 1 3.6 0c0 1.92-3.6 2.69-3.6 4.6h3.6"/></g><g transform="translate(0 48)"><rect x="15.4" y="8.8" width="3.6" height="6.4" rx="1.8"/></g><g transform="translate(0 60)"><path d="M16.6 10.46l1.8 -1.66v6.4"/></g><g transform="translate(0 72)"><path d="M15.4 10.2a1.8 1.8 0 0 1 3.6 0c0 1.34-1.8 1.46-1.8 2.91"/><circle class="fill" cx="17.2" cy="16" r="1.1"/></g></g></g></svg>Прогнозы</button>
   <button data-view="table"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill s1" d="M12.3 2.5Q13.42 8.38 19.3 9.5Q13.42 10.62 12.3 16.5Q11.18 10.62 5.3 9.5Q11.18 8.38 12.3 2.5Z"/><path class="fill s2" d="M4.7 12.1Q5.37 15.63 8.9 16.3Q5.37 16.97 4.7 20.5Q4.03 16.97 0.5 16.3Q4.03 15.63 4.7 12.1Z"/><path class="fill s3" d="M20.1 14.7Q20.64 17.56 23.5 18.1Q20.64 18.64 20.1 21.5Q19.56 18.64 16.7 18.1Q19.56 17.56 20.1 14.7Z"/></svg>Таблица</button>
@@ -747,7 +750,7 @@ function profileSection(c, name) {
   h += '<div class="kpis"><div><b class="' + (st.place === 1 ? 'p1' : '') + '">' + st.place + '</b><span>место</span></div>' +
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
   var oc = outcomes(c, c.players.indexOf(name));
-  if (oc.n) h += row('Угаданные исходы', 'исход матча, счёт не важен', oc.pct + '%', oc.ok + ' из ' + oc.n + ' ' + plural(oc.n, 'матча', 'матчей', 'матчей'));
+  if (oc.n) h += row('Угаданные исходы', 'исход матча, счёт не важен', oc.pct + '<span class="pc">%</span>', oc.ok + ' из ' + oc.n + ' ' + plural(oc.n, 'матча', 'матчей', 'матчей'));
   if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>' + teamBlock([c], name, c.kind);
   h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
   // Справа — текущая серия, слева под названием — рекорд игрока
@@ -807,7 +810,7 @@ function allSection(c0, name) {
     st.map(function (x) { return x.place; }).join(' · '), list.map(function (c) { return esc(c.season); }).join(' · '));
   var ok = 0, n = 0;
   list.forEach(function (c) { var o = outcomes(c, c.players.indexOf(name)); ok += o.ok; n += o.n; });
-  if (n) h += row('Угаданные исходы', 'исход матча, счёт не важен', Math.round(100 * ok / n) + '%', ok + ' из ' + n + ' ' + plural(n, 'матча', 'матчей', 'матчей'));
+  if (n) h += row('Угаданные исходы', 'исход матча, счёт не важен', Math.round(100 * ok / n) + '<span class="pc">%</span>', ok + ' из ' + n + ' ' + plural(n, 'матча', 'матчей', 'матчей'));
   var wins = 0, done = 0, bw = { v: 0, w: [] }, bp = { v: 0, w: [] }, bt = null;
   list.forEach(function (c) {
     var S2 = season(c), p = S2.players.filter(function (x) { return x.name === name; })[0];
@@ -880,7 +883,7 @@ function teamBlock(list, name, kind) {
   var tr = ends(ts, function (t) { return t.trust / t.n; }, 3);
   h += '<div class="tcap">Доверие: как часто ставит на победу команды</div>';
   h += teamLists(tr[0], tr[1], 'Верит', 'Не верит', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '%</b></li>';
+    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
   if (fe[0].length) h += '<div class="tcap">Сколько баллов в среднем приносит прогноз на матч команды</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
