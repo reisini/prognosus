@@ -240,8 +240,10 @@
   .fanp button[data-fanp]:focus { outline: none; }
   .fanp button[data-fanp]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tbsub + .fanp { padding-top: 4px; }
-  /* Сезоны рядом: игроки строками, сезоны столбцами; текущий — жирнее, лидер этапа — золотом */
-  .cmpm { display: inline-flex; gap: 4px; flex: none; }
+  /* Сравнение сезонов: игроки строками, сезоны столбцами; текущий — жирнее, лидер этапа — золотом */
+  .cmps { flex-wrap: wrap; row-gap: 8px; }
+  .cmps > .season { flex: none; }
+  .cmpm { display: inline-flex; gap: 4px; flex: none; margin-left: auto; }
   .cmpm button { border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); padding: 4px 8px; font: 600 12.5px/1.15 var(--text); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .cmpm button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--ink); cursor: default; }
   .cmpm button:focus { outline: none; }
@@ -498,7 +500,8 @@
   .season.one { padding: 0; border: 0; background: none; color: var(--muted); cursor: default; }
   .season.one::after { display: none; }
   .smenu { position: fixed; z-index: 60; min-width: 156px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(6, 22, 12, .18); transform-origin: 24px 0; animation: smenu .14s ease-out; }
+    box-shadow: 0 12px 32px rgba(6, 22, 12, .18); transform-origin: 24px 0; animation: smenu .14s ease-out;
+    max-height: min(60vh, 440px); overflow-y: auto; overscroll-behavior: contain; } /* длинный список (туры) прокручивается внутри */
   .smenu.up { transform-origin: 24px 100%; }
   .smenu button { position: relative; display: block; width: 100%; padding: 11px 14px 11px 34px; border: 0; border-radius: 8px; background: none;
     color: var(--ink); font: 600 15px/1.2 var(--text); font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -686,7 +689,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw99dzdm";
+var BUILD = "mw9as96r";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -727,7 +730,7 @@ var API = {
 })();
 var edits = {};      // key -> {h, a}
 var lateOpen = {};   // key -> true
-var S = { cmpM: /^(tp|pp|pl)$/.test(remember('cmpm') || '') ? remember('cmpm') : 'tp', comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
+var S = { cmpT: {}, cmpM: /^(tp|pp|pl)$/.test(remember('cmpm') || '') ? remember('cmpm') : 'tp', comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -1097,7 +1100,7 @@ function renderTable(kind) {
   return h + renderCompare(c0, c) + renderRecords(c) + renderTeams(c);
 }
 
-// ---------- Сезоны рядом: наша таблица на том же этапе прошлых сезонов ----------
+// ---------- Сравнение сезонов: наша таблица после выбранного тура в каждом сезоне ----------
 // Итог после первых n завершённых туров: очки, баллы, точные и место — по имени игрока; null, если в сезоне меньше туров
 function standAfter(c, n) {
   var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).slice().reverse();
@@ -1111,18 +1114,24 @@ function standAfter(c, n) {
   var o = {}; P.forEach(function (name, j) { o[name] = { tp: tp[j], pp: pp[j], pl: pl[j] }; });
   return o;
 }
+function doneCount(c) { return (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).length; }
 function renderCompare(c0, c) {
   var list = c0.seasons && c0.seasons.length ? c0.seasons : [c0.season];
-  var n = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).length;
-  if (list.length < 2 || !n) return '';
-  var m = S.cmpM, cols = list.map(function (x) {
-    var r = seasonComp(c0, x);
+  if (list.length < 2) return '';
+  // Тур для сравнения: выбранный, иначе последний завершённый в открытом сезоне. Выбор — до самого длинного из загруженных сезонов
+  var rs = list.map(function (x) { return seasonComp(c0, x); });
+  var most = rs.reduce(function (k, r) { return Math.max(k, r.c ? doneCount(r.c) : 0); }, 0);
+  var n = S.cmpT[c0.kind] || doneCount(c) || 1;
+  if (most && n > most) n = most;
+  var m = S.cmpM, cols = list.map(function (x, i) {
+    var r = rs[i];
     return { season: x, cur: x === c.season, st: r.c ? standAfter(r.c, n) : null, wait: !r.c && !r.error };
   });
+  var opts = []; for (var k = 1; k <= Math.max(most, n); k++) opts.push(String(k));
   var rows = c.standings.map(function (st) { return st.name; });
   var tabs = [['tp', 'очки'], ['pp', 'баллы'], ['pl', 'места']];
-  var h = '<section class="panel cmp"><div class="ptitle"><h2>Сезоны рядом</h2></div>' +
-    '<div class="tbsub"><span>После ' + n + ' ' + plural(n, 'тура', 'туров', 'туров') + '</span><span class="cmpm" role="group" aria-label="Что сравнивать">' +
+  var h = '<section class="panel cmp"><div class="ptitle"><h2>Сравнение сезонов</h2></div>' +
+    '<div class="tbsub cmps">' + (opts.length > 1 ? pickBtn('cmptour:' + c0.kind, opts, String(n)) : '<span>после тура ' + n + '</span>') + '<span class="cmpm" role="group" aria-label="Что сравнивать">' +
     tabs.map(function (t) { return '<button data-cmpm="' + t[0] + '" class="' + (m === t[0] ? 'on' : '') + '" aria-pressed="' + (m === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</span></div>' +
     '<div class="cmpg" style="--n:' + cols.length + '"><div class="cr head"><span></span>' +
     cols.map(function (x) { return '<span class="' + (x.cur ? 'cur' : '') + '">' + esc(x.season) + '</span>'; }).join('') + '</div>';
@@ -1136,7 +1145,7 @@ function renderCompare(c0, c) {
       return '<span class="' + (x.cur ? 'cur' : '') + (v.pl === 1 ? ' p1' : '') + '">' + num(v[m]) + '</span>';
     }).join('') + '</div>';
   });
-  return h + '</div>' + (gap ? '<div class="hint">«—» — в том сезоне этого этапа нет или игрок не играл.</div>' : '<div style="height:6px"></div>') + '</section>';
+  return h + '</div>' + (gap ? '<div class="hint">«—» — в том сезоне до этого тура не дошли или игрок не играл.</div>' : '<div style="height:6px"></div>') + '</section>';
 }
 
 // ---------- Рекорды и серии ----------
@@ -1848,9 +1857,9 @@ function goLeague(name, kind) {
 // Прошлые сезоны: загружаются по запросу и хранятся до перезагрузки приложения
 var SEASONS = {}, seasonBusy = {}, seasonWant = {};
 // Выбор сезона: кнопка и список в стиле приложения
-function pickLabel(x) { return x === 'all' ? 'все сезоны' : 'сезон ' + x; }
+function pickLabel(x, what) { return /^cmptour/.test(what || '') ? 'после тура ' + x : x === 'all' ? 'все сезоны' : 'сезон ' + x; }
 function pickBtn(what, list, cur) {
-  return '<button type="button" class="season" data-pick="' + esc(what) + '" data-opts="' + esc(list.join(',')) + '" data-val="' + esc(cur) + '" aria-haspopup="listbox" aria-expanded="false">' + esc(pickLabel(cur)) + '</button>';
+  return '<button type="button" class="season" data-pick="' + esc(what) + '" data-opts="' + esc(list.join(',')) + '" data-val="' + esc(cur) + '" aria-haspopup="listbox" aria-expanded="false">' + esc(pickLabel(cur, what)) + '</button>';
 }
 var PICK = null;
 function closePick(refocus) {
@@ -1864,7 +1873,7 @@ function openPick(btn) {
   closePick();
   var opts = btn.dataset.opts.split(','), cur = btn.dataset.val, menu = document.createElement('div');
   menu.className = 'smenu'; menu.setAttribute('role', 'listbox');
-  menu.innerHTML = opts.map(function (x) { return '<button type="button" role="option" aria-selected="' + (x === cur) + '" data-pv="' + esc(x) + '">' + esc(pickLabel(x)) + '</button>'; }).join('');
+  menu.innerHTML = opts.map(function (x) { return '<button type="button" role="option" aria-selected="' + (x === cur) + '" data-pv="' + esc(x) + '">' + esc(pickLabel(x, btn.dataset.pick)) + '</button>'; }).join('');
   document.body.appendChild(menu);
   var r = btn.getBoundingClientRect(), mh = menu.offsetHeight, up = innerHeight - r.bottom < mh + 16 && r.top > mh + 16;
   menu.style.left = Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8)) + 'px';
@@ -1878,6 +1887,7 @@ function openPick(btn) {
     closePick();
     if (v === cur) return;
     if (what === 'pscope') { S.pscope = v; return refreshProfile(); }
+    if (/^cmptour:/.test(what)) { S.cmpT[what.split(':')[1]] = +v; return render(); }
     S.season[what.split(':')[1]] = v; shownKey = ''; render();
   });
   menu.addEventListener('keydown', function (e) {
@@ -1885,7 +1895,9 @@ function openPick(btn) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); all[(i + (e.key === 'ArrowDown' ? 1 : all.length - 1)) % all.length].focus(); }
     if (e.key === 'Tab') closePick();
   });
-  (menu.querySelector('[aria-selected="true"]') || menu.firstChild).focus({ preventScroll: true });
+  var sel = menu.querySelector('[aria-selected="true"]') || menu.firstChild;
+  if (menu.scrollHeight > menu.clientHeight) menu.scrollTop = sel.offsetTop - menu.clientHeight / 2 + sel.offsetHeight / 2; // длинный список туров — выбранный посередине
+  sel.focus({ preventScroll: true });
 }
 document.addEventListener('pointerdown', function (e) { if (PICK && !PICK.menu.contains(e.target) && !PICK.btn.contains(e.target)) closePick(); }, true);
 document.addEventListener('scroll', function (e) { if (PICK && !PICK.menu.contains(e.target)) closePick(); }, true);
