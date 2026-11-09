@@ -13,17 +13,17 @@
   /* «Табло на газоне»: зелёный — действия и свой игрок, золото — только лидер, красный — идущий матч и «закрыть».
      Tektur, шрифт табло, — в заголовках и крупных цифрах; Onest — в тексте, мелких цифрах и знаке процента */
   :root {
-    --bg: #edf1ee; --surface: #ffffff; --soft: #f3f6f4; --ink: #14231b; --muted: #5f6f66; --line: #dfe6e1;
+    --bg: #edf1ee; --surface: #ffffff; --soft: #f3f6f4; --ink: #14231b; --muted: #5f6f66; --line: #dfe6e1; --edge: #c3cfc7;
     --accent: #13804f; --accent-soft: #dff0e6; --faint: #9aa89f; --red: #e0393e; --gold-mark: #a87a0e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #d6402b;
     --display: 'Tektur', 'Onest', system-ui, sans-serif;
     --text: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --hdr: 96px; --nav: 58px;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a;
+    :root:not([data-theme="light"]) { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a; --edge: #35503f;
       --accent: #3fcf88; --accent-soft: #163a27; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #ff6b57; --faint: #4b6255; --red: #f0525a; --gold-mark: #f2c14e; }
   }
-  :root[data-theme="dark"] { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a;
+  :root[data-theme="dark"] { --bg: #0c1611; --surface: #132219; --soft: #18291f; --ink: #e7f2eb; --muted: #8fa699; --line: #21362a; --edge: #35503f;
     --accent: #3fcf88; --accent-soft: #163a27; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #ff6b57; --faint: #4b6255; --red: #f0525a; --gold-mark: #f2c14e; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
@@ -221,13 +221,29 @@
   /* Сдвиг в таблице после тура: стрелка рядом с очками */
   .tc .bn { position: relative; }
   /* Выбор сезона — в клетке над списком туров */
-  .season { position: relative; display: inline-flex; align-items: center; }
-  .season select { appearance: none; -webkit-appearance: none; margin: 0; padding: 6px 26px 6px 10px; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--surface); color: var(--ink); font: 600 13px/1.2 var(--text); cursor: pointer; }
-  .season::after { content: ''; position: absolute; right: 10px; top: 50%; width: 6px; height: 6px; margin-top: -5px; border: solid var(--muted); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); pointer-events: none; }
-  .season.one { font: 600 13px/1.2 var(--text); color: var(--muted); }
+  /* Свой список вместо системного: тот же шрифт и цвета, что во всём приложении, без голубой рамки iOS */
+  .season { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink); font: 600 13px/1.2 var(--text); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .season::after { content: ''; width: 6px; height: 6px; margin: -4px 1px 0 0; border: solid var(--muted); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); transition: transform .15s, margin .15s; }
+  .season[aria-expanded="true"] { border-color: var(--accent); }
+  .season[aria-expanded="true"]::after { transform: rotate(-135deg); margin-top: 3px; border-color: var(--accent); }
+  .season:focus { outline: none; }
+  .season:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .season.one { padding: 0; border: 0; background: none; color: var(--muted); cursor: default; }
   .season.one::after { display: none; }
-  .season .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .smenu { position: fixed; z-index: 60; min-width: 156px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(6, 22, 12, .18); transform-origin: 24px 0; animation: smenu .14s ease-out; }
+  .smenu.up { transform-origin: 24px 100%; }
+  .smenu button { position: relative; display: block; width: 100%; padding: 11px 14px 11px 34px; border: 0; border-radius: 8px; background: none;
+    color: var(--ink); font: 600 15px/1.2 var(--text); font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .smenu button[aria-selected="true"] { color: var(--accent); }
+  .smenu button[aria-selected="true"]::before { content: ''; position: absolute; left: 14px; top: 50%; width: 5px; height: 10px; margin-top: -7px;
+    border: solid var(--accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .smenu button:focus { outline: none; }
+  .smenu button:focus-visible, .smenu button:active { background: var(--soft); }
+  @keyframes smenu { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+  .smenu.up { animation-name: smenuUp; }
+  @keyframes smenuUp { from { opacity: 0; transform: translateY(4px) scale(.97); } }
   .tmv { position: absolute; left: 100%; bottom: 1px; margin-left: 3px; font-style: normal; font-size: 10px; line-height: 1; font-weight: 700; color: var(--accent); white-space: nowrap; }
   .tmv.down { color: var(--muted); }
   /* Перестановка мест при открытии таблицы */
@@ -237,8 +253,11 @@
   @keyframes plswap { 0% { opacity: .2; transform: scale(.7); } 100% { opacity: 1; transform: none; } }
   .chev { text-align: center; color: var(--muted); transition: transform .15s; }
   .tour.open .chev { transform: rotate(90deg); }
-  .tour.open .trow { background: var(--soft); }
+  /* Раскрытый тур — одна подложка от шапки до последнего матча, снизу — отступ и плотная линия: видно, где начинается следующий тур */
+  .tour.open { background: var(--soft); padding-bottom: 10px; border-bottom: 2px solid var(--edge); }
+  .tour.open + .tour .trow { border-top: 0; }
   .tbody { border-top: 1px solid var(--line); }
+  .tour.open .tbody .m:last-child { border-bottom: 0; }
   .fold { position: relative; display: block; width: 100%; border: 0; background: none; padding: 0 28px 0 0; text-align: left; cursor: pointer; }
   .fold .chev { position: absolute; right: 16px; top: 18px; font-size: 18px; }
   .panel.open .fold .chev { transform: rotate(90deg); }
@@ -786,9 +805,7 @@ function allSeasons() {
 }
 function profile(kind, name, keep) {
   var list = allSeasons(), scope = S.pscope && (S.pscope === 'all' || list.indexOf(S.pscope) >= 0) ? S.pscope : (comps()[0] || {}).season;
-  var pick = list.length > 1 ? '<div class="pscope"><label class="season"><span class="sr">Сезон</span><select data-pscope="1">' +
-    list.concat(['all']).map(function (x) { return '<option value="' + esc(x) + '"' + (x === scope ? ' selected' : '') + '>' + (x === 'all' ? 'все сезоны' : 'сезон ' + esc(x)) + '</option>'; }).join('') +
-    '</select></label></div>' : '';
+  var pick = list.length > 1 ? '<div class="pscope">' + pickBtn('pscope', list.concat(['all']), scope) + '</div>' : '';
   var h = comps().map(function (c0) {
     if (scope === 'all') return allSection(c0, name);
     if (scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) return '';
@@ -846,7 +863,7 @@ function refreshProfile() { if (PROF && !$('prof').hidden) profile(PROF.kind, PR
 function scopeSeasons(c, scope) {
   var past = (c.seasons || []).filter(function (x) { return x !== c.season; }), list = scope === 'past' ? [] : [c], missing = [], errors = 0;
   if (scope !== 'cur') past.forEach(function (x) {
-    var d = SEASONS[c.kind + '|' + x];
+    var d = seasonGet(c.kind + '|' + x);
     if (!d) missing.push(x); else if (d.error) errors++; else list.push(d);
   });
   return { list: list, missing: missing, errors: errors };
@@ -855,8 +872,9 @@ function scopeSeasons(c, scope) {
 // who — имя игрока или null (все игроки вместе). Берём только завершённые матчи с прогнозом.
 function teamStats(list, who) {
   var T = {};
+  function ent(name) { return T[name] || (T[name] = { name: name, n: 0, trust: 0, pm: 0, pts: 0, g: 0 }); }
   function add(name, share, pts) {
-    var t = T[name] || (T[name] = { name: name, n: 0, trust: 0, pm: 0, pts: 0 });
+    var t = ent(name);
     if (share !== null) { t.n++; t.trust += share; }
     if (pts !== null && pts !== undefined) { t.pm++; t.pts += pts; }
   }
@@ -865,12 +883,14 @@ function teamStats(list, who) {
     if (js[0] < 0) return;
     (d.tours || []).forEach(function (t) { (t.matches || []).forEach(function (m) {
       if (m.phase !== 'ft' || m.hs === null || m.hs === undefined) return;
+      var any = false;
       js.forEach(function (j) {
         var x = m.cells && m.cells[j];
         if (!x || x.h === null || x.h === undefined || x.a === null || x.a === undefined) return;
         var sh = x.h > x.a ? 1 : x.h === x.a ? .5 : 0;
-        add(m.hn || m.home, sh, x.pts); add(m.an || m.away, 1 - sh, x.pts);
+        add(m.hn || m.home, sh, x.pts); add(m.an || m.away, 1 - sh, x.pts); any = true;
       });
+      if (any) { ent(m.hn || m.home).g++; ent(m.an || m.away).g++; } // сыгранные матчи команды (с прогнозом хотя бы одного)
     }); });
   });
   return Object.keys(T).map(function (k) { return T[k]; });
@@ -908,38 +928,104 @@ function renderTeams(c) {
   var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
   if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
-  h += '<div class="pnote">Сколько баллов в среднем приносит прогноз на матч команды, у всех игроков вместе.</div>';
+  h += '<div class="pnote">Сколько баллов в среднем приносит прогноз на матч команды.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>всем ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.g) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
 }
 
 // ---------- Туры ----------
 // Прошлые сезоны: загружаются по запросу и хранятся до перезагрузки приложения
-var SEASONS = {}, seasonBusy = {};
+var SEASONS = {}, seasonBusy = {}, seasonWant = {};
+// Выбор сезона: кнопка и список в стиле приложения
+function pickLabel(x) { return x === 'all' ? 'все сезоны' : 'сезон ' + x; }
+function pickBtn(what, list, cur) {
+  return '<button type="button" class="season" data-pick="' + esc(what) + '" data-opts="' + esc(list.join(',')) + '" data-val="' + esc(cur) + '" aria-haspopup="listbox" aria-expanded="false">' + esc(pickLabel(cur)) + '</button>';
+}
+var PICK = null;
+function closePick(refocus) {
+  if (!PICK) return;
+  var p = PICK; PICK = null;
+  p.menu.remove(); p.btn.setAttribute('aria-expanded', 'false');
+  if (refocus && document.body.contains(p.btn)) p.btn.focus({ preventScroll: true });
+}
+function openPick(btn) {
+  if (PICK && PICK.btn === btn) return closePick();
+  closePick();
+  var opts = btn.dataset.opts.split(','), cur = btn.dataset.val, menu = document.createElement('div');
+  menu.className = 'smenu'; menu.setAttribute('role', 'listbox');
+  menu.innerHTML = opts.map(function (x) { return '<button type="button" role="option" aria-selected="' + (x === cur) + '" data-pv="' + esc(x) + '">' + esc(pickLabel(x)) + '</button>'; }).join('');
+  document.body.appendChild(menu);
+  var r = btn.getBoundingClientRect(), mh = menu.offsetHeight, up = innerHeight - r.bottom < mh + 16 && r.top > mh + 16;
+  menu.style.left = Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8)) + 'px';
+  menu.style.top = (up ? r.top - mh - 6 : r.bottom + 6) + 'px';
+  if (up) menu.classList.add('up');
+  btn.setAttribute('aria-expanded', 'true');
+  PICK = { btn: btn, menu: menu };
+  menu.addEventListener('click', function (e) {
+    var o = e.target.closest('[data-pv]'); if (!o) return;
+    var what = btn.dataset.pick, v = o.dataset.pv;
+    closePick();
+    if (v === cur) return;
+    if (what === 'pscope') { S.pscope = v; return refreshProfile(); }
+    S.season[what.split(':')[1]] = v; shownKey = ''; render();
+  });
+  menu.addEventListener('keydown', function (e) {
+    var all = [].slice.call(menu.querySelectorAll('button')), i = all.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); all[(i + (e.key === 'ArrowDown' ? 1 : all.length - 1)) % all.length].focus(); }
+    if (e.key === 'Tab') closePick();
+  });
+  (menu.querySelector('[aria-selected="true"]') || menu.firstChild).focus({ preventScroll: true });
+}
+document.addEventListener('pointerdown', function (e) { if (PICK && !PICK.menu.contains(e.target) && !PICK.btn.contains(e.target)) closePick(); }, true);
+document.addEventListener('scroll', function (e) { if (PICK && !PICK.menu.contains(e.target)) closePick(); }, true);
+window.addEventListener('resize', function () { closePick(); });
 function seasonPick(c) {
   var list = c.seasons && c.seasons.length ? c.seasons : [c.season];
   var cur = S.season[c.kind] || c.season;
   if (list.length < 2) return '<span class="season one">сезон ' + esc(cur) + '</span>';
-  return '<label class="season"><span class="sr">Сезон</span><select data-season="' + c.kind + '">' + list.map(function (x) {
-    return '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>сезон ' + esc(x) + '</option>';
-  }).join('') + '</select></label>';
+  return pickBtn('season:' + c.kind, list, cur);
 }
-function loadSeason(kind, season) {
+// Прошлые сезоны не меняются: загруженный хранится на устройстве, со второго раза открывается сразу.
+// Свой столбец считаем здесь — сохранённый сезон годится любому игроку на этом устройстве.
+var SEASON_V = 1;
+function seasonKey(id) { return 'prognozus.season.v' + SEASON_V + '.' + id; }
+function mine(d) { var i = d.players.indexOf(DATA.name); d.me = i >= 0; d.meIdx = i; delete d.comp; return d; }
+function seasonGet(id) {
+  if (!SEASONS[id]) {
+    try { var o = JSON.parse(localStorage.getItem(seasonKey(id)) || 'null'); if (o && o.d && o.d.tours && Date.now() - o.at < 60 * 864e5) SEASONS[id] = mine(o.d); } catch (e) {}
+  }
+  return SEASONS[id];
+}
+// quiet — фоновая подгрузка: экран перерисовываем, только если этот сезон уже ждут
+function loadSeason(kind, season, quiet) {
   var id = kind + '|' + season;
-  if (SEASONS[id] || seasonBusy[id]) return;
+  if (!quiet) seasonWant[id] = true;
+  if (seasonGet(id) || seasonBusy[id]) { if (typeof quiet === 'function') setTimeout(quiet, 0); return; }
   seasonBusy[id] = true;
-  API.season(kind, season, function (d) {
+  function done(d) {
     seasonBusy[id] = false;
-    SEASONS[id] = d && d.tours ? d : { error: (d && d.error) || 'Не удалось загрузить сезон.' };
-    render(); refreshProfile();
-  }, function (e) { seasonBusy[id] = false; SEASONS[id] = { error: (e && e.message) || 'Нет связи с сервером.' }; render(); refreshProfile(); });
+    if (d.tours) { SEASONS[id] = mine(d); try { localStorage.setItem(seasonKey(id), JSON.stringify({ at: Date.now(), d: d })); } catch (e) {} }
+    else if (seasonWant[id]) SEASONS[id] = d;
+    if (seasonWant[id]) { delete seasonWant[id]; render(); refreshProfile(); }
+    if (typeof quiet === 'function') setTimeout(quiet, 200);
+  }
+  API.season(kind, season, function (d) { done(d && d.tours ? d : { error: (d && d.error) || 'Не удалось загрузить сезон.' }); },
+    function (e) { done({ error: (e && e.message) || 'Нет связи с сервером.' }); });
+}
+// После загрузки приложения по одному подтягиваем прошлые сезоны, которых ещё нет на устройстве
+var prefetched = false;
+function prefetchSeasons() {
+  if (prefetched) return; prefetched = true;
+  var q = [];
+  comps().forEach(function (c) { (c.seasons || []).forEach(function (x) { if (x !== c.season && !seasonGet(c.kind + '|' + x)) q.push([c.kind, x]); }); });
+  (function next() { var j = q.shift(); if (j) loadSeason(j[0], j[1], next); })();
 }
 
 // Соревнование в выбранном сезоне: текущий — как есть, прошлый — из архива (места, очки и баллы считаем по турам)
 function seasonComp(c0, sel) {
   if (!sel || sel === c0.season) return { c: c0 };
-  var d = SEASONS[c0.kind + '|' + sel];
+  var d = seasonGet(c0.kind + '|' + sel);
   if (!d) { loadSeason(c0.kind, sel); return { loading: true }; }
   if (d.error) return { error: d.error, retry: c0.kind + '|' + sel };
   return { c: d.comp || (d.comp = pastComp(c0, d)) };
@@ -1092,9 +1178,10 @@ document.addEventListener('click', function (e) {
   }
   if (b.dataset.claim) {
     b.disabled = true;
-    return API.claim(b.dataset.claim, function (d) { DATA = d; startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
+    return API.claim(b.dataset.claim, function (d) { gotData(d); startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
   }
-  if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { DATA = d; startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
+  if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { gotData(d); startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
+  if (b.dataset.pick) return openPick(b);
   if (b.dataset.reseason) { b.dataset.reseason.split(',').forEach(function (id) { delete SEASONS[id]; }); render(); return refreshProfile(); }
   if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
@@ -1107,6 +1194,7 @@ document.addEventListener('click', function (e) {
 $('save').addEventListener('click', function () {
   var items = Object.keys(edits).map(function (k) { return { key: k, h: edits[k].h, a: edits[k].a }; });
   if (!items.length) return;
+  if (DATA.stale) return toast('Секунду — обновляю данные');
   $('save').disabled = true; $('save').textContent = 'Сохраняю…';
   API.save(items, function (r) {
       edits = {}; lateOpen = {}; $('save').disabled = false;
@@ -1120,26 +1208,37 @@ $('save').addEventListener('click', function () {
 });
 
 function reload(done) {
-  API.load(function (d) { DATA = d; render(); if (done) done(); }, function () { render(); if (done) done(); });
+  API.load(function (d) { gotData(d); render(); if (done) done(); }, function () { render(); if (done) done(); });
+}
+// Быстрый старт: последние данные с этого устройства показываем сразу, свежие догружаются следом (крутится «Обновить»)
+function dataKey() {
+  var u = TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id || (typeof AUTH !== 'undefined' && AUTH && AUTH.u) || '';
+  return u ? 'prognozus.data.v1.' + u : '';
+}
+function gotData(d) {
+  DATA = d;
+  var k = dataKey();
+  if (k && d && d.comps) { try { localStorage.setItem(k, JSON.stringify({ at: Date.now(), d: d })); } catch (e) {} }
+  if (d && d.comps) setTimeout(prefetchSeasons, 1500);
+}
+function savedData() {
+  var k = dataKey(); if (!k) return null;
+  try { var o = JSON.parse(localStorage.getItem(k) || 'null'); return o && o.d && o.d.comps && Date.now() - o.at < 14 * 864e5 ? o.d : null; } catch (e) { return null; }
+}
+// Крутим стрелку «Обновить», пока идёт загрузка; останавливается в конце оборота
+function spinRefresh() {
+  var b = $('refresh'), rr = b.querySelector('.rr'), loaded = false;
+  spinning = true; b.classList.add('busy');
+  function stop() { b.classList.remove('busy'); spinning = false; }
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return stop;
+  rr.addEventListener('animationiteration', function end() { if (!loaded) return; rr.removeEventListener('animationiteration', end); stop(); });
+  return function () { loaded = true; };
 }
 // Стрелка с мячом крутится, пока идёт загрузка, и останавливается в конце оборота
 var spinning = false;
 $('refresh').addEventListener('click', function () {
   if (DATA.error || spinning) return;
-  var b = $('refresh'), loaded = false;
-  spinning = true; b.classList.add('busy'); toast('Обновляю…');
-  b.querySelector('.rr').addEventListener('animationiteration', function stop() {
-    if (!loaded) return;
-    b.querySelector('.rr').removeEventListener('animationiteration', stop);
-    b.classList.remove('busy'); spinning = false;
-  });
-  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { reload(function () { b.classList.remove('busy'); spinning = false; }); return; }
-  reload(function () { loaded = true; });
-});
-document.addEventListener('change', function (e) {
-  var t = e.target;
-  if (t && t.dataset && t.dataset.season) { S.season[t.dataset.season] = t.value; shownKey = ''; render(); }
-  if (t && t.dataset && t.dataset.pscope) { S.pscope = t.value; refreshProfile(); }
+  toast('Обновляю…'); reload(spinRefresh());
 });
 function sheet(id, open) {
   $(id).hidden = !open; document.body.style.overflow = open ? 'hidden' : '';
@@ -1163,7 +1262,7 @@ $('rulesbtn').addEventListener('click', function () { play($('rulesbtn').querySe
   $(id + 'close').addEventListener('click', function () { closeSheet(id); });
   $(id).addEventListener('click', function (e) { if (e.target === $(id)) closeSheet(id); });
 });
-document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ['rules', 'prof'].forEach(function (id) { if (!$(id).hidden) sheet(id, false); }); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && PICK) return closePick(true); if (e.key === 'Escape') ['rules', 'prof'].forEach(function (id) { if (!$(id).hidden) sheet(id, false); }); });
 window.addEventListener('resize', measure);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 
@@ -1197,14 +1296,20 @@ function startView() {
       paint(); TG.onEvent('themeChanged', paint);
     } catch (e) {}
   }
-  if (DATA.loading) {
+  var saved = DATA.loading && savedData();
+  if (saved) {
+    DATA = saved; DATA.stale = true; startView(); render();
+    var stop = spinRefresh();
+    API.load(function (d) { gotData(d); render(); stop(); },
+      function () { DATA.stale = false; render(); stop(); toast('Нет связи с сервером — показаны данные с прошлого раза'); });
+  } else if (DATA.loading) {
     var splash = $('splash'), t0 = Date.now();
     splash.hidden = false; render();
     var done = function () {
       setTimeout(function () { splash.classList.add('out'); setTimeout(function () { splash.hidden = true; }, 350); }, Math.max(0, 700 - (Date.now() - t0)));
     };
-    API.load(function (d) { DATA = d; startView(); render(); done(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); done(); });
-  } else { startView(); render(); }
+    API.load(function (d) { gotData(d); startView(); render(); done(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); done(); });
+  } else { gotData(DATA); startView(); render(); }
 })();
 </script>
 </body>
