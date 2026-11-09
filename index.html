@@ -69,6 +69,9 @@
   .names { position: sticky; top: var(--hdr); z-index: 4; background: var(--surface); padding-top: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
   .names .c { font-size: 12px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .names .c.me { color: var(--accent); }
+  /* Номер тура в прилипшей полосе имён: появляется, когда заголовок тура уехал под шапку */
+  .names .stk { font: 600 13px/1 var(--display); letter-spacing: -.01em; color: var(--ink); opacity: 0; transition: opacity .15s; white-space: nowrap; }
+  .names.stuck .stk { opacity: 1; }
   .leg { display: block; font-size: 11.5px; line-height: 1.3; color: var(--ink); }
   .leg span { color: var(--muted); }
   .c { text-align: center; min-width: 0; }
@@ -175,9 +178,6 @@
   .tsub { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 16px 0; border-top: 1px solid var(--line); margin-top: 2px; }
   .tsub h4 { margin: 0; font: 600 15px/1.25 var(--text); }
   .tsub small { font-size: 12px; color: var(--muted); }
-  .seg { display: flex; gap: 4px; margin: 10px 16px 0; padding: 3px; border-radius: 11px; background: var(--soft); }
-  .seg button { flex: 1; border: 0; background: none; padding: 6px 4px; border-radius: 8px; font: 600 12.5px/1.2 var(--text); color: var(--muted); cursor: pointer; }
-  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(20, 16, 60, .12); }
   .tl2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; padding: 10px 16px 14px; }
   .tl2 h5 { margin: 0 0 2px; font: 600 12.5px/1.3 var(--text); color: var(--muted); }
   .tl2 ol { list-style: none; margin: 0; padding: 0; }
@@ -187,6 +187,7 @@
   .tl2 li b { font: 600 16px/1.1 var(--display); white-space: nowrap; }
   .tl2 .top li:first-child b { color: var(--gold); }
   .tnote { padding: 8px 16px 14px; font-size: 13px; color: var(--muted); }
+  .pscope { padding: 0 16px 6px; }
   .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
   .tcap + .tl2 { padding-top: 6px; }
   .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(12, 10, 34, .45); display: flex; align-items: flex-end; }
@@ -364,7 +365,7 @@
     <h3>Команды</h3>
     <p>Доверие — как часто игрок ставит на победу команды: прогноз её победы — 1, ничьей — ½, поражения — 0. Процент — среднее по её матчам.</p>
     <p>Кормильцы и обманщики — команды, в матчах которых прогнозы приносят больше и меньше всего баллов за матч. Сколько всего принесла команда: баллы за матч делятся пополам между двумя командами, поэтому сумма по всем командам равна баллам игрока.</p>
-    <p>В профиле статистику можно смотреть за этот сезон, за прошлые и за все вместе. Учитываются завершённые матчи, команды — с трёх матчей, в Кубке — с двух.</p>
+    <p>Учитываются завершённые матчи, команды — с трёх матчей, в Кубке — с двух. В профиле и таблице можно выбрать прошлый сезон, а в профиле — ещё и все сезоны сразу.</p>
   </div>
 </div></div>
 
@@ -399,7 +400,7 @@ function remember(k, v) { try { if (v === undefined) return localStorage.getItem
 function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 3200); }
 
 function comps() { return DATA.comps || []; }
-S.season = S.season || {}; S.tscope = S.tscope || {};
+S.season = S.season || {};
 function comp(kind) { return comps().filter(function (c) { return c.kind === kind; })[0] || null; }
 function groupsOf(kind) { return (DATA.groups || []).filter(function (g) { return g.kind === kind; }); }
 function find(key) {
@@ -528,7 +529,7 @@ function renderPred(kind) {
     if (g.state === 'open') title = '<button class="fold" data-ptour="' + esc(key) + '" aria-expanded="' + unfolded + '">' + title + '<span class="chev">›</span></button>';
     if (!unfolded) return '<section class="panel">' + title + '</section>';
     var h = '<section class="panel open">' + title;
-    h += namesRow(g.players, meOf(g), gc, 'счёт');
+    h += namesRow(g.players, meOf(g), gc, 'счёт', '<span class="stk">' + esc(g.label) + '</span>');
     var s = g.strip, w = winners(s.tp);
     h += '<div class="stats">';
     if (s.pp) {
@@ -548,11 +549,14 @@ function renderPred(kind) {
 
 // ---------- Таблица ----------
 function renderTable(kind) {
-  var c = comp(kind);
-  if (!c) return '<div class="panel blank">Нет данных.</div>';
-  var sub = c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
+  var c0 = comp(kind);
+  if (!c0) return '<div class="panel blank">Нет данных.</div>';
+  var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
+  var head = '<section class="panel"><div class="ptitle"><h2>Таблица</h2>' + seasonPick(c0) + '</div>';
+  if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
+  var sub = c.past ? 'Итоговая таблица сезона' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
-  var h = '<section class="panel"><div class="ptitle"><h2>Таблица</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
+  var h = head;
   h += '<div class="pnote">' + sub + '</div>';
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
   c.standings.forEach(function (s) {
@@ -725,25 +729,82 @@ function profileSection(c, name) {
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
   var oc = outcomes(c, c.players.indexOf(name));
   if (oc.n) h += row('Угаданные исходы', 'исход матча, счёт не важен', oc.pct + '%', oc.ok + ' из ' + oc.n + ' ' + plural(oc.n, 'матча', 'матчей', 'матчей'));
-  if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>' + teamBlock(c, name);
+  if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>' + teamBlock([c], name, c.kind);
   h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
   // Справа — текущая серия, слева под названием — рекорд игрока
   function best(x) { return x.best ? 'рекорд ' + x.best + ', ' + spansText(x.spans) : 'пока не было'; }
-  h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
-  h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
+  // В завершённом сезоне «сейчас» не имеет смысла — показываем рекорд сезона
+  if (c.past) {
+    h += row('Победы подряд', p.win.best ? spansText(p.win.spans) : 'не было', p.win.best, 'рекорд');
+    h += row('Беспроигрышная серия', p.pts.best ? spansText(p.pts.spans) : 'не было', p.pts.best, 'рекорд');
+  } else {
+    h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
+    h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
+  }
   if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(p.best.label)));
-  return h + teamBlock(c, name);
+  return h + teamBlock([c], name, c.kind);
 }
 
 // Профиль: Чемпионат и Кубок, в порядке вкладок. keep — перерисовать открытый профиль, не трогая прокрутку
 var PROF = null;
+function yearOf(x) { return Number(String(x).split('/')[0]) || 0; }
+function allSeasons() {
+  var out = [];
+  comps().forEach(function (c) { (c.seasons && c.seasons.length ? c.seasons : [c.season]).forEach(function (x) { if (x && out.indexOf(x) < 0) out.push(x); }); });
+  return out.sort(function (a, b) { return yearOf(b) - yearOf(a); });
+}
 function profile(kind, name, keep) {
-  var h = (DATA.comps || []).map(function (c) { return profileSection(c, name); }).join('');
-  if (!h) return;
+  var list = allSeasons(), scope = S.pscope && (S.pscope === 'all' || list.indexOf(S.pscope) >= 0) ? S.pscope : (comps()[0] || {}).season;
+  var pick = list.length > 1 ? '<div class="pscope"><label class="season"><span class="sr">Сезон</span><select data-pscope="1">' +
+    list.concat(['all']).map(function (x) { return '<option value="' + esc(x) + '"' + (x === scope ? ' selected' : '') + '>' + (x === 'all' ? 'все сезоны' : 'сезон ' + esc(x)) + '</option>'; }).join('') +
+    '</select></label></div>' : '';
+  var h = comps().map(function (c0) {
+    if (scope === 'all') return allSection(c0, name);
+    if (scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) return '';
+    var r = seasonComp(c0, scope);
+    if (!r.c) return '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">' + (r.error ? esc(r.error) : 'Загружаю сезон…') + '</div>';
+    return profileSection(r.c, name) || '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">В этом сезоне не играл.</div>';
+  }).join('');
   PROF = { kind: kind, name: name };
   $('prof-h').textContent = name;
-  $('profbody').innerHTML = h;
+  $('profbody').innerHTML = pick + (h || '<div class="tnote">Нет данных.</div>');
   if (!keep) sheet('prof', true);
+}
+// Все сезоны соревнования: суммы, места по сезонам, лучшие серии и туры, команды
+function allSection(c0, name) {
+  var past = (c0.seasons || []).filter(function (x) { return x !== c0.season; }), list = [c0], wait = false;
+  past.forEach(function (x) { var r = seasonComp(c0, x); if (r.c) list.push(r.c); else if (r.loading) wait = true; });
+  var h = '<div class="psec">' + esc(c0.title) + '<small>все сезоны</small></div>';
+  if (wait) return h + '<div class="tnote">Загружаю прошлые сезоны…</div>';
+  list = list.filter(function (c) { return c.players.indexOf(name) >= 0 && c.standings.some(function (x) { return x.name === name; }); });
+  if (!list.length) return h + '<div class="tnote">Не играл.</div>';
+  function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
+  var st = list.map(function (c) { return c.standings.filter(function (x) { return x.name === name; })[0]; });
+  var tot = function (k) { return st.reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); };
+  var titles = list.filter(function (c, i) { return c.past && st[i].place === 1; }).length;
+  h += '<div class="kpis"><div><b class="' + (titles ? 'p1' : '') + '">' + titles + '</b><span>' + plural(titles, 'титул', 'титула', 'титулов') + '</span></div>' +
+    '<div><b>' + num(tot('tp')) + '</b><span>очки</span></div><div><b>' + num(tot('pp')) + '</b><span>баллы</span></div><div><b>' + num(tot('ex')) + '</b><span>точные</span></div></div>';
+  h += row('Места по сезонам', list.some(function (c) { return !c.past; }) ? 'текущий сезон ещё идёт' : null,
+    st.map(function (x) { return x.place; }).join(' · '), list.map(function (c) { return esc(c.season); }).join(' · '));
+  var ok = 0, n = 0;
+  list.forEach(function (c) { var o = outcomes(c, c.players.indexOf(name)); ok += o.ok; n += o.n; });
+  if (n) h += row('Угаданные исходы', 'исход матча, счёт не важен', Math.round(100 * ok / n) + '%', ok + ' из ' + n + ' ' + plural(n, 'матча', 'матчей', 'матчей'));
+  var wins = 0, done = 0, bw = { v: 0, w: [] }, bp = { v: 0, w: [] }, bt = null;
+  list.forEach(function (c) {
+    var S2 = season(c), p = S2.players.filter(function (x) { return x.name === name; })[0];
+    if (!p) return;
+    wins += p.wins; done += S2.done.length;
+    [[p.win, bw], [p.pts, bp]].forEach(function (z) {
+      if (z[0].best > z[1].v) { z[1].v = z[0].best; z[1].w = []; }
+      if (z[0].best && z[0].best === z[1].v) z[1].w.push(spansText(z[0].spans) + ' (' + c.season + ')');
+    });
+    if (p.best && (!bt || p.best.v > bt.v)) bt = { v: p.best.v, label: p.best.label, season: c.season };
+  });
+  if (done) h += row('Победы в турах', 'первое место по баллам', wins, 'из ' + done);
+  if (bw.v) h += row('Победы подряд', esc(bw.w.join('; ')), bw.v, 'рекорд');
+  if (bp.v) h += row('Беспроигрышная серия', esc(bp.w.join('; ')), bp.v, 'рекорд');
+  if (bt) h += row('Лучший тур', null, num(bt.v), plural(bt.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(bt.label)) + ', ' + esc(bt.season));
+  return h + teamBlock(list, name, c0.kind);
 }
 function refreshProfile() { if (PROF && !$('prof').hidden) profile(PROF.kind, PROF.name, true); }
 
@@ -792,18 +853,11 @@ function ends(arr, val, k) {
   var s = arr.slice().sort(function (x, y) { return val(y) - val(x) || y.n - x.n; }), m = Math.min(k, Math.floor(s.length / 2));
   return [s.slice(0, m), s.slice(s.length - m).reverse()];
 }
-function teamBlock(c, name) {
-  var past = (c.seasons || []).filter(function (x) { return x !== c.season; });
-  var scope = past.length ? (S.tscope[c.kind] || 'cur') : 'cur';
-  var h = '<div class="tsub"><h4>Команды</h4>' + (past.length ? '' : '<small>этот сезон</small>') + '</div>';
-  if (past.length) h += '<div class="seg">' + [['cur', 'этот сезон'], ['past', 'прошлые'], ['all', 'все']].map(function (x) {
-    return '<button data-tscope="' + c.kind + '|' + x[0] + '"' + (x[0] === scope ? ' class="on"' : '') + '>' + x[1] + '</button>';
-  }).join('') + '</div>';
-  var sc = scopeSeasons(c, scope);
-  if (sc.missing.length) { sc.missing.forEach(function (x) { loadSeason(c.kind, x); }); return h + '<div class="tnote">Загружаю прошлые сезоны…</div>'; }
-  var min = c.kind === 'cup' ? 2 : 3;
-  var ts = teamStats(sc.list, name).filter(function (t) { return t.n >= min; });
-  if (ts.length < 2) return h + '<div class="tnote">' + (sc.errors ? 'Не удалось загрузить прошлые сезоны.' : scope === 'past' && !sc.list.some(function (d) { return d.players.indexOf(name) >= 0; }) ? 'В прошлых сезонах не играл.' : 'Пока мало сыгранных матчей.') + '</div>';
+function teamBlock(list, name, kind) {
+  var h = '<div class="tsub"><h4>Команды</h4></div>';
+  var min = kind === 'cup' ? 2 : 3;
+  var ts = teamStats(list, name).filter(function (t) { return t.n >= min; });
+  if (ts.length < 2) return h + '<div class="tnote">Пока мало сыгранных матчей.</div>';
   var tr = ends(ts, function (t) { return t.trust / t.n; }, 3);
   h += '<div class="tcap">Доверие: как часто ставит на победу команды</div>';
   h += teamLists(tr[0], tr[1], 'Верит', 'Не верит', function (t) {
@@ -849,19 +903,30 @@ function loadSeason(kind, season) {
   }, function (e) { seasonBusy[id] = false; SEASONS[id] = { error: (e && e.message) || 'Нет связи с сервером.' }; render(); refreshProfile(); });
 }
 
+// Соревнование в выбранном сезоне: текущий — как есть, прошлый — из архива (места, очки и баллы считаем по турам)
+function seasonComp(c0, sel) {
+  if (!sel || sel === c0.season) return { c: c0 };
+  var d = SEASONS[c0.kind + '|' + sel];
+  if (!d) { loadSeason(c0.kind, sel); return { loading: true }; }
+  if (d.error) return { error: d.error };
+  return { c: d.comp || (d.comp = pastComp(c0, d)) };
+}
+function pastComp(c0, d) {
+  var P = d.players, last = d.tours[0];
+  function sum(key) { return P.map(function (x, j) { return d.tours.reduce(function (s, t) { return s + (Number((t[key] || [])[j]) || 0); }, 0); }); }
+  var tp = sum('tp'), pp = sum('pp'), ex = sum('ex'), place = last && last.place ? last.place : P.map(function () { return 1; });
+  var st = P.map(function (name, j) { return { name: name, me: !!d.me && j === d.meIdx, place: place[j], tp: tp[j], pp: pp[j], ex: ex[j], dtp: 0, dpp: 0, dplace: 0, j: j }; })
+    .sort(function (a, b) { return a.place - b.place || a.j - b.j; });
+  return { kind: c0.kind, title: c0.title, season: d.season, seasons: c0.seasons, players: P, me: d.me, meIdx: d.meIdx,
+    tours: d.tours, live: [], after: last ? last.label : null, standings: st, past: true };
+}
+
 function renderTours(kind) {
   var c0 = comp(kind);
   if (!c0) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
-  var sel = S.season[kind] || c0.season, c = c0;
-  if (sel !== c0.season) {
-    var d = SEASONS[kind + '|' + sel];
-    if (!d) { loadSeason(kind, sel); d = { loading: true }; }
-    if (d.loading || d.error) {
-      return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
-        '<div class="pnote" style="padding:14px">' + (d.error ? esc(d.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
-    }
-    c = { kind: kind, season: sel, seasons: c0.seasons, players: d.players, me: d.me, meIdx: d.meIdx, tours: d.tours, live: [] };
-  }
+  var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
+  if (!c) return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
+    '<div class="pnote" style="padding:14px">' + (r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   if (!c.tours.length) return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div><div class="pnote" style="padding:14px">Сыгранных туров пока нет.</div></section>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
   var h = '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div>';
@@ -954,7 +1019,8 @@ function render() {
   [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
   var key = S.view + '|' + S.comp;
-  if (S.view === 'table' && key !== shownKey) animateTable(comp(S.comp));
+  var cur = comp(S.comp), sel = S.season[S.comp];
+  if (S.view === 'table' && key !== shownKey && (!sel || !cur || sel === cur.season)) animateTable(cur);
   shownKey = key;
   var n = Object.keys(edits).length;
   $('savebar').hidden = !(S.view === 'pred' && n);
@@ -963,7 +1029,16 @@ function render() {
   measure();
 }
 
-function measure() { document.documentElement.style.setProperty('--hdr', $('hdr').offsetHeight + 'px'); }
+function measure() { document.documentElement.style.setProperty('--hdr', $('hdr').offsetHeight + 'px'); markStuck(); }
+// Полоса имён прилипла, если заголовок её тура уже под шапкой
+function markStuck() {
+  var top = $('hdr').offsetHeight;
+  [].forEach.call(document.querySelectorAll('.panel.open > .names'), function (el) {
+    var r = el.getBoundingClientRect(), sec = el.parentElement.getBoundingClientRect();
+    el.classList.toggle('stuck', r.top <= top + 1 && sec.top < top - 8 && sec.bottom > r.bottom + 4);
+  });
+}
+window.addEventListener('scroll', markStuck, { passive: true });
 
 function play(el) { if (!el) return; el.classList.remove('play'); void el.getBoundingClientRect(); el.classList.add('play'); }
 function setView(v) {
@@ -985,8 +1060,7 @@ document.addEventListener('click', function (e) {
     b.disabled = true;
     return API.claim(b.dataset.claim, function (d) { DATA = d; startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
   }
-  if (b.dataset.tscope) { var ts = b.dataset.tscope.split('|'); S.tscope[ts[0]] = ts[1]; return refreshProfile(); }
-  if (b.dataset.player) return profile(S.comp, b.dataset.player);
+  if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
   if (b.dataset.view) return setView(b.dataset.view);
   if (b.dataset.tour) { S.open[b.dataset.tour] = !S.open[b.dataset.tour]; return render(); }
@@ -1028,7 +1102,8 @@ $('refresh').addEventListener('click', function () {
 });
 document.addEventListener('change', function (e) {
   var t = e.target;
-  if (t && t.dataset && t.dataset.season) { S.season[t.dataset.season] = t.value; render(); }
+  if (t && t.dataset && t.dataset.season) { S.season[t.dataset.season] = t.value; shownKey = ''; render(); }
+  if (t && t.dataset && t.dataset.pscope) { S.pscope = t.value; refreshProfile(); }
 });
 function sheet(id, open) { $(id).hidden = !open; document.body.style.overflow = open ? 'hidden' : ''; if (open) $(id + 'close').focus(); }
 function rules(open) { sheet('rules', open); }
