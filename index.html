@@ -240,6 +240,23 @@
   .fanp button[data-fanp]:focus { outline: none; }
   .fanp button[data-fanp]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tbsub + .fanp { padding-top: 4px; }
+  /* Сезоны рядом: игроки строками, сезоны столбцами; текущий — жирнее, лидер этапа — золотом */
+  .cmpm { display: inline-flex; gap: 4px; flex: none; }
+  .cmpm button { border: 1px solid var(--line); border-radius: 8px; background: none; color: var(--muted); padding: 4px 8px; font: 600 12.5px/1.15 var(--text); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .cmpm button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--ink); cursor: default; }
+  .cmpm button:focus { outline: none; }
+  .cmpm button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cmpg { overflow-x: auto; }
+  .cr { display: grid; grid-template-columns: minmax(84px, 1fr) repeat(var(--n), minmax(58px, 72px)); align-items: baseline; padding: 11px 14px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .cr.head { padding-top: 2px; padding-bottom: 6px; border-top: 0; color: var(--muted); font-size: 12px; }
+  .cr > span { text-align: right; white-space: nowrap; }
+  .cr .cn { text-align: left; font-weight: 600; font-size: 16px; overflow: hidden; text-overflow: ellipsis; }
+  .cr.me .cn { color: var(--accent); }
+  .cr:not(.head) > span:not(.cn) { font: 500 16px/1 var(--text); color: var(--muted); }
+  .cr:not(.head) > span.cur { font: 600 19px/1 var(--display); color: var(--ink); }
+  .cr.head > span.cur { color: var(--ink); font-weight: 600; }
+  .cr > span.p1 { color: var(--gold) !important; }
+  .cr .cw { font-style: normal; color: var(--faint); }
   .fanempty { padding-bottom: 14px; }
   .fpo { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: baseline; padding: 9px 14px; border-top: 1px solid var(--line); font: 500 14px/1.25 var(--text); }
   .lgrp + .fpo { border-top: 0; }
@@ -669,7 +686,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw98qy7t";
+var BUILD = "mw99dzdm";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -710,7 +727,7 @@ var API = {
 })();
 var edits = {};      // key -> {h, a}
 var lateOpen = {};   // key -> true
-var S = { comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
+var S = { cmpM: /^(tp|pp|pl)$/.test(remember('cmpm') || '') ? remember('cmpm') : 'tp', comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -1077,7 +1094,49 @@ function renderTable(kind) {
       (c.live.length ? '<small class="num' + (s.dtp > 0 ? ' up' : '') + '" style="grid-area:2/3">' + signed(s.dtp) + ' в туре</small><small class="num" style="grid-area:2/4">' + signed(s.dpp) + '</small>' : '') + '</button>';
   });
   h += '<div class="hint">Нажми на игрока, чтобы увидеть его профиль.</div></section>';
-  return h + renderRecords(c) + renderTeams(c);
+  return h + renderCompare(c0, c) + renderRecords(c) + renderTeams(c);
+}
+
+// ---------- Сезоны рядом: наша таблица на том же этапе прошлых сезонов ----------
+// Итог после первых n завершённых туров: очки, баллы, точные и место — по имени игрока; null, если в сезоне меньше туров
+function standAfter(c, n) {
+  var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).slice().reverse();
+  if (done.length < n || !n) return null;
+  var P = c.players, tp = P.map(function () { return 0; }), pp = tp.slice(), ex = tp.slice();
+  done.slice(0, n).forEach(function (t) { P.forEach(function (_, j) { tp[j] += +t.tp[j] || 0; pp[j] += +t.pp[j] || 0; ex[j] += (t.ex ? +t.ex[j] : 0) || 0; }); });
+  // Место после n-го тура — как в таблице (сервер считает по итогам из листа); нет — считаем сами: очки, баллы, точные
+  var pl = done[n - 1].place || tp.map(function (_, j) {
+    return 1 + tp.filter(function (_, k) { return tp[k] > tp[j] || (tp[k] === tp[j] && (pp[k] > pp[j] || (pp[k] === pp[j] && ex[k] > ex[j]))); }).length;
+  });
+  var o = {}; P.forEach(function (name, j) { o[name] = { tp: tp[j], pp: pp[j], pl: pl[j] }; });
+  return o;
+}
+function renderCompare(c0, c) {
+  var list = c0.seasons && c0.seasons.length ? c0.seasons : [c0.season];
+  var n = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).length;
+  if (list.length < 2 || !n) return '';
+  var m = S.cmpM, cols = list.map(function (x) {
+    var r = seasonComp(c0, x);
+    return { season: x, cur: x === c.season, st: r.c ? standAfter(r.c, n) : null, wait: !r.c && !r.error };
+  });
+  var rows = c.standings.map(function (st) { return st.name; });
+  var tabs = [['tp', 'очки'], ['pp', 'баллы'], ['pl', 'места']];
+  var h = '<section class="panel cmp"><div class="ptitle"><h2>Сезоны рядом</h2></div>' +
+    '<div class="tbsub"><span>После ' + n + ' ' + plural(n, 'тура', 'туров', 'туров') + '</span><span class="cmpm" role="group" aria-label="Что сравнивать">' +
+    tabs.map(function (t) { return '<button data-cmpm="' + t[0] + '" class="' + (m === t[0] ? 'on' : '') + '" aria-pressed="' + (m === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</span></div>' +
+    '<div class="cmpg" style="--n:' + cols.length + '"><div class="cr head"><span></span>' +
+    cols.map(function (x) { return '<span class="' + (x.cur ? 'cur' : '') + '">' + esc(x.season) + '</span>'; }).join('') + '</div>';
+  // Лидер сезона на этом этапе — золотом (по месту, как в таблице)
+  var gap = false;
+  rows.forEach(function (name) {
+    h += '<div class="cr' + (name === DATA.name ? ' me' : '') + '"><span class="cn">' + esc(name) + '</span>' + cols.map(function (x) {
+      var v = x.st && x.st[name];
+      if (!v && !x.wait) gap = true;
+      if (!v) return '<span class="' + (x.cur ? 'cur' : '') + '">' + (x.wait ? '<i class="cw">…</i>' : '<i class="cw">—</i>') + '</span>';
+      return '<span class="' + (x.cur ? 'cur' : '') + (v.pl === 1 ? ' p1' : '') + '">' + num(v[m]) + '</span>';
+    }).join('') + '</div>';
+  });
+  return h + '</div>' + (gap ? '<div class="hint">«—» — в том сезоне этого этапа нет или игрок не играл.</div>' : '<div style="height:6px"></div>') + '</section>';
 }
 
 // ---------- Рекорды и серии ----------
@@ -2052,6 +2111,7 @@ document.addEventListener('click', function (e) {
   if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { gotData(d); startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
   if (b.dataset.pick) return openPick(b);
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
+  if (b.dataset.cmpm) { if (S.cmpM !== b.dataset.cmpm) { S.cmpM = b.dataset.cmpm; remember('cmpm', S.cmpM); render(); } return; }
   if (b.dataset.fanp) { if (S.fanP !== b.dataset.fanp || !b.classList.contains('on')) { S.fanP = b.dataset.fanp; remember('fanp', S.fanP); render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
   if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
