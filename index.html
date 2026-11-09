@@ -974,7 +974,7 @@ function teamBlock(list, name, kind) {
     return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
-  if (fe[0].length) h += '<div class="tcap">Справа — сколько в среднем баллов приносит прогноз на матч команды. Под названием — сколько всего баллов принесли её матчи; баллы за матч делятся поровну между соперниками.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+  if (fe[0].length) h += '<div class="tcap">Сколько в среднем баллов приносит прогноз на матч команды и сколько всего баллов принесли её матчи; баллы за матч делятся поровну между соперниками.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   });
   return h;
@@ -985,7 +985,7 @@ function renderTeams(c) {
   var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
   if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
-  h += '<div class="pnote">Справа — сколько в среднем баллов приносит прогноз на матч команды. Под названием — сколько всего баллов принесли её матчи всем вместе; баллы за матч делятся поровну между соперниками.</div>';
+  h += '<div class="pnote">Сколько в среднем баллов приносит прогноз на матч команды и сколько всего баллов принесли её матчи всем вместе; баллы за матч делятся поровну между соперниками.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
