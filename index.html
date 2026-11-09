@@ -143,7 +143,8 @@
   .srow.me .nm { color: var(--accent); }
   .srow .tp { font: 600 19px/1 var(--display); }
   .srow .pp { font-size: 16px; font-weight: 500; }
-  .srow small { display: block; margin-top: 4px; font: 500 11.5px/1 var(--text); color: var(--muted); }
+  .srow { row-gap: 4px; }
+  .srow small { display: block; min-width: 0; font: 500 11.5px/1.2 var(--text); color: var(--muted); white-space: nowrap; }
   .srow small.up { color: var(--accent); }
   .mv { display: inline-block; margin-left: 6px; font-size: 11.5px; font-weight: 600; vertical-align: 1px; }
   .mv.up { color: var(--accent); }
@@ -158,7 +159,7 @@
   /* Турнирная таблица: место, команда с формой, И В Н П, мячи, разница, очки */
   .lg { --lcols: 20px minmax(0, 1fr) repeat(4, 20px) 56px 26px 26px; }
   .lg.cup { --lcols: 20px minmax(0, 1fr) 20px 20px 24px 24px 20px 46px 26px; }
-  .lrow { display: grid; grid-template-columns: var(--lcols); column-gap: 2px; align-items: center; width: 100%; padding: 8px 14px 8px 12px; border: 0; border-top: 1px solid var(--line);
+  .lrow { display: grid; grid-template-columns: var(--lcols); column-gap: 2px; align-items: baseline; width: 100%; padding: 8px 14px 8px 12px; border: 0; border-top: 1px solid var(--line);
     background: none; color: var(--ink); text-align: left; font: 500 13.5px/1.2 var(--text); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .lrow:active { background: var(--soft); }
   .lrow.head { padding-top: 2px; padding-bottom: 6px; border-top: 0; color: var(--muted); font-size: 11.5px; cursor: default; }
@@ -189,10 +190,12 @@
   /* Карточка команды: последние матчи */
   .tsum { display: flex; gap: 18px; padding: 2px 16px 12px; color: var(--muted); font-size: 13px; }
   .tsum b { display: block; color: var(--ink); font: 600 20px/1.1 var(--display); }
-  .tm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(24px, auto); align-items: center; column-gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); }
+  .tm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(24px, auto); align-items: baseline; column-gap: 10px; row-gap: 2px; padding: 10px 16px; border-top: 1px solid var(--line); }
   .tm .op .self { color: var(--muted); font-weight: 500; }
-  .tm .op small.my { color: var(--ink); }
-  .tm .op small.my.ex { color: var(--gold); font-weight: 600; }
+  .tm .tmd { min-width: 0; font-size: 12px; line-height: 1.3; color: var(--muted); }
+  .tm .tmd.my { color: var(--ink); }
+  .tm .tmd.my.ex { color: var(--gold); font-weight: 600; }
+  .tm .tmp { font: 500 11px/1.3 var(--text); color: var(--muted); text-align: right; white-space: nowrap; }
   .rs.LV { width: auto; padding: 0 6px; color: var(--live); box-shadow: inset 0 0 0 1px var(--live); font-size: 11px; font-weight: 600; }
   .tgo { padding: 0 16px 6px; }
   .tgo .retry { margin-top: 0; }
@@ -205,11 +208,8 @@
   .lg.my .lrow { column-gap: 5px; }
   button.team { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; font-size: 15px; line-height: 28px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   button.team:active { color: var(--accent); }
-  .tm .op { min-width: 0; }
-  .tm .op b { display: block; font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tm .op small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
-  .tm .sc { font: 600 17px/1 var(--display); font-variant-numeric: tabular-nums; text-align: right; }
-  .tm .sc small { display: block; margin-top: 3px; font: 500 11px/1 var(--text); color: var(--muted); }
+  .tm .op { min-width: 0; font-weight: 600; font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tm .sc { font: 600 17px/1.3 var(--display); font-variant-numeric: tabular-nums; text-align: right; }
   .rs { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; font: 700 12px/1 var(--text); }
   .rs.W { background: var(--accent); color: var(--surface); }
   .rs.D { background: var(--soft); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
@@ -240,7 +240,9 @@
   .prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
   .kpis + .prow { border-top: 0; margin-top: 6px; }
   .prow .pk { font-size: 15px; font-weight: 600; line-height: 1.3; }
-  .prow .pk small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .prow { row-gap: 3px; }
+  .prow .pkn { min-width: 0; font-size: 12px; line-height: 1.3; font-weight: 400; color: var(--muted); }
+  .prow .pvs { font-size: 11.5px; line-height: 1.3; color: var(--muted); text-align: right; white-space: nowrap; }
   .prow .pv { text-align: right; white-space: nowrap; }
   .prow .pv b { font: 600 19px/1 var(--display); }
   .prow .pv small { display: block; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
@@ -277,13 +279,14 @@
   .rules td:last-child { text-align: right; width: 48px; }
 
   /* Туры */
-  .trow { display: grid; width: 100%; border: 0; background: none; text-align: left; cursor: pointer; padding: 10px 12px; border-top: 1px solid var(--line); }
-  .tl b { display: block; font: 600 15px/1.2 var(--display); letter-spacing: -.01em; }
-  .tl span { font-size: 12px; color: var(--muted); }
-  .tl .live { font-style: normal; color: var(--live); font-weight: 600; }
-  .tc .a { display: block; font-weight: 600; font-size: 16px; }
-  .tc .b { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
-  .tc.win .b { color: var(--gold); font-weight: 700; }
+  .trow { display: grid; width: 100%; border: 0; background: none; text-align: left; cursor: pointer; padding: 10px 12px; border-top: 1px solid var(--line); align-items: baseline; row-gap: 3px; }
+  .trow .chev { align-self: center; }
+  .tlb { font: 600 15px/1.2 var(--display); letter-spacing: -.01em; }
+  .tld { min-width: 0; font-size: 12px; line-height: 1.2; color: var(--muted); }
+  .tld .live { font-style: normal; color: var(--live); font-weight: 600; }
+  .tc.a { font-weight: 600; font-size: 16px; line-height: 1.2; }
+  .tc.b { font-size: 12px; line-height: 1.2; color: var(--muted); }
+  .tc.b.win { color: var(--gold); font-weight: 700; }
   /* Сдвиг в таблице после тура: стрелка рядом с очками */
   .tc .bn { position: relative; }
   /* Выбор сезона — в клетке над списком туров */
@@ -668,6 +671,12 @@ function renderPred(kind) {
   }).join('');
 }
 
+// Строка профиля: название и значение — первый ряд сетки, пояснения — второй; у рядов общие базовые линии
+function prow(k, note, v, sub) {
+  return '<div class="prow"><span class="pk" style="grid-area:1/1">' + k + '</span><span class="pv" style="grid-area:1/2"><b>' + v + '</b></span>' +
+    (note ? '<small class="pkn" style="grid-area:2/1">' + note + '</small>' : '') + (sub ? '<small class="pvs" style="grid-area:2/2">' + sub + '</small>' : '') + '</div>';
+}
+
 // ---------- Таблица ----------
 function tblMode(c0) { return S.tbl === 'league' || (S.tbl === 'mine' && c0 && c0.me) ? S.tbl : 'ours'; }
 function renderTable(kind) {
@@ -691,11 +700,14 @@ function renderTable(kind) {
   c.standings.forEach(function (s) {
     var oc = outcomes(c, c.players.indexOf(s.name));
     var mv = s.dplace > 0 ? '<span class="mv up">▲' + s.dplace + '</span>' : s.dplace < 0 ? '<span class="mv down">▼' + (-s.dplace) + '</span>' : '';
-    h += '<button class="srow' + (s.me ? ' me' : '') + '" data-player="' + esc(s.name) + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '">' + s.place + '</span>' +
-      '<span class="nm">' + esc(s.name) + mv + (oc.n ? '<small>' + oc.pct + '% исходов</small>' : '') + '</span>' +
-      '<span class="num tp">' + num(s.tp) + (c.live.length ? '<small class="' + (s.dtp > 0 ? 'up' : '') + '">' + signed(s.dtp) + ' в туре</small>' : '') + '</span>' +
-      '<span class="num pp">' + num(s.pp) + (c.live.length ? '<small>' + signed(s.dpp) + '</small>' : '') + '</span>' +
-      '<span class="num ex">' + num(s.ex) + (c.live.length ? '<small>&nbsp;</small>' : '') + '</span></button>';
+    // Первый ряд — место, имя и числа, второй — подписи: у каждого ряда своя базовая линия, кегль соседей её не сдвигает
+    h += '<button class="srow' + (s.me ? ' me' : '') + '" data-player="' + esc(s.name) + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '" style="grid-area:1/1">' + s.place + '</span>' +
+      '<span class="nm" style="grid-area:1/2">' + esc(s.name) + mv + '</span>' +
+      '<span class="num tp" style="grid-area:1/3">' + num(s.tp) + '</span>' +
+      '<span class="num pp" style="grid-area:1/4">' + num(s.pp) + '</span>' +
+      '<span class="num ex" style="grid-area:1/5">' + num(s.ex) + '</span>' +
+      (oc.n ? '<small style="grid-area:2/2">' + oc.pct + '% исходов</small>' : '') +
+      (c.live.length ? '<small class="num' + (s.dtp > 0 ? ' up' : '') + '" style="grid-area:2/3">' + signed(s.dtp) + ' в туре</small><small class="num" style="grid-area:2/4">' + signed(s.dpp) + '</small>' : '') + '</button>';
   });
   h += '<div class="hint">Нажми на игрока, чтобы увидеть его профиль.</div></section>';
   return h + renderRecords(c) + renderTeams(c);
@@ -852,7 +864,7 @@ function profileSection(c, name) {
   var st = c.standings.filter(function (x) { return x.name === name; })[0];
   var S = season(c), p = S.players.filter(function (x) { return x.name === name; })[0];
   if (!st || !p) return '';
-  function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
+  function row(k, note, v, sub) { return prow(k, note, v, sub); }
   var h = '<div class="psec">' + esc(c.title) + (c.season ? '<small>сезон ' + esc(c.season) + '</small>' : '') + '</div>';
   h += '<div class="kpis"><div><b class="' + (st.place === 1 ? 'p1' : '') + '">' + st.place + '</b><span>место</span></div>' +
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
@@ -907,7 +919,7 @@ function allSection(c0, name) {
   if (errs.length) h += '<div class="tnote">Не все прошлые сезоны загрузились: ' + esc(errs[0].error) + retryBtn({ retry: errs.map(function (r) { return r.retry; }).join(',') }) + '</div>';
   list = list.filter(function (c) { return c.players.indexOf(name) >= 0 && c.standings.some(function (x) { return x.name === name; }); });
   if (!list.length) return h + '<div class="tnote">Не играл.</div>';
-  function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
+  function row(k, note, v, sub) { return prow(k, note, v, sub); }
   var st = list.map(function (c) { return c.standings.filter(function (x) { return x.name === name; })[0]; });
   var tot = function (k) { return st.reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); };
   var titles = list.filter(function (c, i) { return c.past && st[i].place === 1; }).length;
@@ -1173,10 +1185,13 @@ function teamMatchRow(c, m, name) {
   var o = outcome(f, g, null, false), w = { W: 'В', D: 'Н', L: 'П' }, x = myCell(c, m);
   var date = m.when ? m.when.split(' ').slice(0, 2).join(' ') : m.dates;
   var my = x ? 'мой прогноз ' + x.h + ':' + x.a + (x.pts !== null && x.pts !== undefined ? ' · ' + ptsWord(x.pts) : '') : meOf(c) >= 0 ? 'без моего прогноза' : '';
-  return '<div class="tm"><span class="op"><b>' + fixture(m.h, m.a, name) + '</b><small>' + esc([m.label, date].filter(Boolean).join(' · ')) + '</small>' +
-    (my ? '<small class="my' + (x && x.pts === 4 ? ' ex' : '') + '">' + esc(my) + '</small>' : '') + '</span>' +
-    '<span class="sc">' + m.hs + ':' + m.as + (m.pen ? '<small>пен. ' + esc(m.pen) + '</small>' : '') + '</span>' +
-    (m.live ? '<span class="rs LV">идёт</span>' : '<span class="rs ' + o.res + '" aria-label="' + ({ W: 'победа', D: 'ничья', L: 'поражение' })[o.res] + '">' + w[o.res] + '</span>') + '</div>';
+  // Сетка из рядов: матч, счёт и итог — первый ряд, тур с датой и пенальти — второй, мой прогноз — третий
+  return '<div class="tm"><b class="op" style="grid-area:1/1">' + fixture(m.h, m.a, name) + '</b>' +
+    '<span class="sc" style="grid-area:1/2">' + m.hs + ':' + m.as + '</span>' +
+    (m.live ? '<span class="rs LV" style="grid-area:1/3">идёт</span>' : '<span class="rs ' + o.res + '" style="grid-area:1/3" aria-label="' + ({ W: 'победа', D: 'ничья', L: 'поражение' })[o.res] + '">' + w[o.res] + '</span>') +
+    '<small class="tmd" style="grid-area:2/1">' + esc([m.label, date].filter(Boolean).join(' · ')) + '</small>' +
+    (m.pen ? '<small class="tmp" style="grid-area:2/2">пен. ' + esc(m.pen) + '</small>' : '') +
+    (my ? '<small class="tmd my' + (x && x.pts === 4 ? ' ex' : '') + '" style="grid-area:3/1">' + esc(my) + '</small>' : '') + '</div>';
 }
 function teamCard(name, from) {
   var kind = S.comp, L = leagueData(kind); if (!L) return;
@@ -1205,9 +1220,9 @@ function teamCard(name, from) {
     if (!m.started && ((m.hn || m.home) === name || (m.an || m.away) === name) && (!next || m.start < next.start)) next = { m: m, g: g }; }); });
   if (next) {
     var nm = next.m, cur = current(nm);
-    h += '<div class="tsec">Следующий матч</div><div class="tm"><span class="op"><b>' + fixture(nm.hn || nm.home, nm.an || nm.away, name) + '</b><small>' +
-      esc([next.g.label, nm.when].filter(Boolean).join(' · ')) + '</small>' +
-      (next.g.me ? '<small class="my">' + (cur.h !== null ? 'мой прогноз ' + cur.h + ':' + cur.a : 'прогноза пока нет') + '</small>' : '') + '</span><span></span><span></span></div>';
+    h += '<div class="tsec">Следующий матч</div><div class="tm"><b class="op" style="grid-area:1/1">' + fixture(nm.hn || nm.home, nm.an || nm.away, name) + '</b>' +
+      '<small class="tmd" style="grid-area:2/1">' + esc([next.g.label, nm.when].filter(Boolean).join(' · ')) + '</small>' +
+      (next.g.me ? '<small class="tmd my" style="grid-area:3/1">' + (cur.h !== null ? 'мой прогноз ' + cur.h + ':' + cur.a : 'прогноза пока нет') + '</small>' : '') + '</div>';
   }
   $('team-h').textContent = name;
   $('teambody').innerHTML = h;
@@ -1347,15 +1362,17 @@ function renderTours(kind) {
     var mv = moves(c, t.label, P);
     var key = kind + ':' + c.season + ':' + t.label, open = !!S.open[key];
     var w = winners(t.tp);
+    // Два ряда сетки: тур и баллы — на одной базовой линии, даты и очки — на другой
     h += '<div class="tour' + (open ? ' open' : '') + '"><button class="trow g" style="--cols:' + gc + '" data-tour="' + esc(key) + '" aria-expanded="' + open + '">' +
-      '<span class="tl"><b>' + esc(t.label) + '</b><span>' + (t.state === 'live' ? '<i class="live">идёт</i>' + (t.dates ? ', ' : '') : '') + esc(t.dates || '') + '</span></span>';
+      '<b class="tlb" style="grid-area:1/1">' + esc(t.label) + '</b><span class="tld" style="grid-area:2/1">' + (t.state === 'live' ? '<i class="live">идёт</i>' + (t.dates ? ', ' : '') : '') + esc(t.dates || '') + '</span>';
     for (var j = 0; j < n; j++) {
       var d = mv ? mv[j] : 0;
       var arrow = d > 0 ? '<i class="tmv" title="поднялся на ' + d + '">▲' + (d > 1 ? d : '') + '</i>'
         : d < 0 ? '<i class="tmv down" title="опустился на ' + (-d) + '">▼' + (d < -1 ? -d : '') + '</i>' : '';
-      h += '<span class="c tc' + (w[j] ? ' win' : '') + '"><span class="a">' + num(t.pp ? t.pp[j] : null) + '</span><span class="b"><span class="bn">' + num(t.tp ? t.tp[j] : null) + arrow + '</span></span></span>';
+      h += '<span class="c tc a" style="grid-area:1/' + (j + 2) + '">' + num(t.pp ? t.pp[j] : null) + '</span>' +
+        '<span class="c tc b' + (w[j] ? ' win' : '') + '" style="grid-area:2/' + (j + 2) + '"><span class="bn">' + num(t.tp ? t.tp[j] : null) + arrow + '</span></span>';
     }
-    h += '<span class="chev">›</span></button>';
+    h += '<span class="chev" style="grid-area:1/' + (n + 2) + '/span 2/auto">›</span></button>';
     if (open) {
       h += '<div class="tbody">' + t.matches.map(function (m) { return matchRow({ me: c.me, meIdx: c.meIdx }, m, gc, false); }).join('') + '</div>';
     }
