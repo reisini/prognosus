@@ -187,6 +187,16 @@
   .tc .a { display: block; font-weight: 600; font-size: 16px; }
   .tc .b { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
   .tc.win .b { color: var(--gold); font-weight: 700; }
+  /* Сдвиг в таблице после тура: стрелка рядом с очками */
+  .tc .bn { position: relative; }
+  .tmv { position: absolute; left: 100%; bottom: 1px; margin-left: 3px; font-style: normal; font-size: 10px; line-height: 1; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .tmv.down { color: var(--muted); }
+  .leg .arr { font-size: 10.5px; }
+  /* Перестановка мест при открытии таблицы */
+  .srow.moving { position: relative; background: var(--surface); transition: transform .75s cubic-bezier(.22, .8, .24, 1); }
+  .srow.moving.up { z-index: 2; box-shadow: 0 6px 18px rgba(28, 25, 64, .12); }
+  .srow .pl.swap { animation: plswap .4s ease; }
+  @keyframes plswap { 0% { opacity: .2; transform: scale(.7); } 100% { opacity: 1; transform: none; } }
   .chev { text-align: center; color: var(--muted); transition: transform .15s; }
   .tour.open .chev { transform: rotate(90deg); }
   .tour.open .trow { background: var(--soft); }
@@ -277,6 +287,7 @@
     </ul>
     <h3>Таблица</h3>
     <p>Место в таблице считается по сумме очков, при равенстве очков — по сумме баллов, при равенстве и по этому показателю — по количеству точно угаданных результатов. У Чемпионата и Кубка таблицы отдельные.</p>
+    <p>В «Турах» стрелки рядом с очками показывают, кто после этого тура поднялся в таблице (▲), а кто опустился (▼).</p>
     <h3>Угаданные исходы</h3>
     <p>Процент сыгранных матчей, в которых прогнозист угадал исход: победу хозяев, ничью или победу гостей. Счёт и разница мячей не важны. Матчи без прогноза не считаются.</p>
     <h3>Рекорды и серии</h3>
@@ -526,6 +537,31 @@ function spansText(spans) {
   return (many ? 'туры ' : 'тур ') + (parts.length > 1 ? parts.slice(0, -1).join(', ') + ' и ' + parts[parts.length - 1] : parts[0]);
 }
 
+// Места в таблице после каждого завершённого тура: по сумме очков, затем баллов, затем точных
+function placesByTour(c) {
+  var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).slice().reverse();
+  var n = c.players.length, tp = [], pp = [], ex = [], out = {}, order = [];
+  for (var j = 0; j < n; j++) { tp[j] = 0; pp[j] = 0; ex[j] = 0; }
+  done.forEach(function (t) {
+    for (var j = 0; j < n; j++) { tp[j] += t.tp[j] || 0; pp[j] += t.pp[j] || 0; ex[j] += (t.ex ? t.ex[j] : 0) || 0; }
+    out[t.label] = tp.map(function (_, j) {
+      return 1 + tp.filter(function (_, k) {
+        return tp[k] > tp[j] || (tp[k] === tp[j] && (pp[k] > pp[j] || (pp[k] === pp[j] && ex[k] > ex[j])));
+      }).length;
+    });
+    order.push(t.label);
+  });
+  return { order: order, places: out };
+}
+// Сдвиг каждого игрока после тура: >0 — поднялся, <0 — опустился; null для первого тура
+function moves(c, label, P) {
+  P = P || placesByTour(c);
+  var k = P.order.indexOf(label);
+  if (k < 1) return null;
+  var a = P.places[P.order[k - 1]], b = P.places[label];
+  return b.map(function (p, j) { return a[j] - p; });
+}
+
 // Сезон по завершённым турам: победы, серии, лучший тур каждого игрока
 function season(c) {
   var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp; }).slice().reverse();
@@ -635,13 +671,20 @@ function renderTours(kind) {
   if (!c || !c.tours.length) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
   var h = '<section class="panel tlist"><div class="ptitle"><h2>Туры</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
-  h += '<div style="height:10px"></div>' + namesRow(c.players, meOf(c), gc, '', '<span class="leg">баллы<br><span>очки</span></span>');
+  h += '<div style="height:10px"></div>' + namesRow(c.players, meOf(c), gc, '', '<span class="leg">баллы<br><span>очки и место <span class="arr">▲▼</span></span></span>');
+  var P = placesByTour(c);
   c.tours.forEach(function (t) {
+    var mv = moves(c, t.label, P);
     var key = kind + ':' + t.label, open = !!S.open[key];
     var w = winners(t.tp);
     h += '<div class="tour' + (open ? ' open' : '') + '"><button class="trow g" style="--cols:' + gc + '" data-tour="' + esc(key) + '" aria-expanded="' + open + '">' +
       '<span class="tl"><b>' + esc(t.label) + '</b><span' + (t.state === 'live' ? ' class="live">идёт' : '>' + esc(t.dates)) + '</span></span>';
-    for (var j = 0; j < n; j++) h += '<span class="c tc' + (w[j] ? ' win' : '') + '"><span class="a">' + num(t.pp ? t.pp[j] : null) + '</span><span class="b">' + num(t.tp ? t.tp[j] : null) + '</span></span>';
+    for (var j = 0; j < n; j++) {
+      var d = mv ? mv[j] : 0;
+      var arrow = d > 0 ? '<i class="tmv" title="поднялся на ' + d + '">▲' + (d > 1 ? d : '') + '</i>'
+        : d < 0 ? '<i class="tmv down" title="опустился на ' + (-d) + '">▼' + (d < -1 ? -d : '') + '</i>' : '';
+      h += '<span class="c tc' + (w[j] ? ' win' : '') + '"><span class="a">' + num(t.pp ? t.pp[j] : null) + '</span><span class="b"><span class="bn">' + num(t.tp ? t.tp[j] : null) + arrow + '</span></span></span>';
+    }
     h += '<span class="chev">›</span></button>';
     if (open) {
       h += '<div class="tbody">' + t.matches.map(function (m) { return matchRow({ me: c.me, meIdx: c.meIdx }, m, gc, false); }).join('') + '</div>';
@@ -649,6 +692,55 @@ function renderTours(kind) {
     h += '</div>';
   });
   return h + '</section>';
+}
+
+// ---------- Перестановка мест при открытии таблицы ----------
+// Сравниваем с порядком, который этот зритель видел в прошлый раз (хранится в браузере).
+// Если раньше не видел — с порядком до последнего тура.
+var animated = {};
+function orderKey(kind) { return 'prognozus.order.' + kind; }
+function animateTable(c) {
+  if (!c || animated[c.kind]) return;
+  animated[c.kind] = true;
+  var now = c.standings.map(function (s) { return { n: s.name, p: s.place }; });
+  var before = null;
+  try { before = JSON.parse(localStorage.getItem(orderKey(c.kind)) || 'null'); } catch (e) { before = null; }
+  if (!before) {
+    var P = placesByTour(c), L = P.order, base = L[L.length - (c.live.length ? 1 : 2)];
+    if (base) before = c.players.map(function (n, j) { return { n: n, p: P.places[base][j] }; })
+      .sort(function (a, b) { return a.p - b.p; });
+  }
+  try { localStorage.setItem(orderKey(c.kind), JSON.stringify(now)); } catch (e) {}
+  if (!before || before.length !== now.length) return;
+  var bi = {}, bp = {};
+  before.forEach(function (x, i) { bi[x.n] = i; bp[x.n] = x.p; });
+  if (now.every(function (x, i) { return bi[x.n] === i; })) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var rows = [].slice.call(document.querySelectorAll('button.srow'));
+  if (rows.length !== now.length) return;
+  var tops = rows.map(function (r) { return r.offsetTop; });
+  rows.forEach(function (r, i) {
+    var from = bi[now[i].n]; if (from === undefined) return;
+    var pl = r.querySelector('.pl');
+    r.dataset.place = pl.textContent;
+    pl.textContent = bp[now[i].n];
+    pl.classList.toggle('p1', bp[now[i].n] === 1);
+    r.classList.add('moving'); if (from > i) r.classList.add('up');
+    r.style.transition = 'none';
+    r.style.transform = 'translateY(' + (tops[from] - tops[i]) + 'px)';
+  });
+  rows[0].offsetHeight; // зафиксировать исходное положение
+  setTimeout(function () {
+    rows.forEach(function (r) { r.style.transition = ''; r.style.transform = ''; });
+    setTimeout(function () {
+      rows.forEach(function (r) {
+        var pl = r.querySelector('.pl');
+        if (r.dataset.place && pl.textContent !== r.dataset.place) { pl.textContent = r.dataset.place; pl.classList.add('swap'); }
+        pl.classList.toggle('p1', r.dataset.place === '1');
+        r.classList.remove('moving', 'up');
+      });
+    }, 780);
+  }, 450);
 }
 
 // ---------- каркас ----------
@@ -674,6 +766,7 @@ function render() {
   }).join('');
   [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
+  if (S.view === 'table') animateTable(comp(S.comp));
   var n = Object.keys(edits).length;
   $('savebar').hidden = !(S.view === 'pred' && n);
   var late = Object.keys(edits).filter(function (k) { return find(k).started; }).length;
