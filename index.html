@@ -263,8 +263,8 @@
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .pmark svg { mix-blend-mode: multiply; } }
   :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .pmark svg { mix-blend-mode: multiply; }
   /* Поздравления. Тур — плашка сверху; сезон — экран-«стадион» в одной тёмной гамме при любой теме */
-  .vbanner { position: fixed; z-index: 90; left: 50%; top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; width: min(92vw, 400px);
-    padding: 12px 16px 12px 12px; border-radius: 16px; background: #14231b; color: #e7f2eb; box-shadow: 0 10px 30px rgba(8, 20, 14, .35);
+  .vbanner { position: fixed; z-index: 90; left: 50%; top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; width: max-content; max-width: 92vw;
+    padding: 12px 22px 12px 12px; border-radius: 16px; background: #14231b; color: #e7f2eb; box-shadow: 0 10px 30px rgba(8, 20, 14, .35);
     transform: translate(-50%, -140%); transition: transform .5s cubic-bezier(.2, 1.3, .4, 1); cursor: pointer; }
   .vbanner.in { transform: translate(-50%, 0); }
   .vbanner.out { transform: translate(-50%, -140%); transition-timing-function: cubic-bezier(.5, 0, .9, .4); transition-duration: .4s; }
@@ -292,11 +292,11 @@
   .vwin.in .vw-rays { animation: vwrays 24s linear infinite, vwfade 1s .7s forwards; }
   .vw-seal { position: relative; width: 210px; height: 210px; color: #f2c14e; filter: drop-shadow(0 6px 24px rgba(242, 193, 78, .25)); opacity: 0; }
   .vw-seal svg { display: block; width: 100%; height: 100%; }
-  .vwin.champ.in .vw-seal { animation: vwslam .62s .15s cubic-bezier(.55, 0, .7, .2) forwards; }
-  .vwin.cup.in .vw-seal { animation: vwspin 1.05s .1s cubic-bezier(.2, .7, .3, 1) forwards; }
-  .vwin.champ.in .vw-card { animation: vwthud .35s .7s ease-out; }
+  .vwin.champ.in .vw-seal { animation: vwspin 1.05s .1s cubic-bezier(.2, .7, .3, 1) forwards; }
+  .vwin.cup.in .vw-seal { animation: vwslam .62s .15s cubic-bezier(.55, 0, .7, .2) forwards; }
+  .vwin.cup.in .vw-card { animation: vwthud .35s .7s ease-out; }
   .vwin h2 { margin: 0; font: 600 34px/1.1 var(--display); letter-spacing: -.01em; color: #f2c14e; opacity: 0; }
-  .vw-sub { margin: 10px 0 0; font-size: 14px; color: #b6c8bd; opacity: 0; }
+  .vw-sub { margin: 8px 0 0; font: 600 17px/1.2 var(--display); letter-spacing: .02em; color: #b6c8bd; opacity: 0; }
   .vw-tag { margin: 6px 0 0; font: 600 16px/1.3 var(--display); color: #e7f2eb; opacity: 0; }
   .vwin.in h2 { animation: vwup .5s 1s forwards; }
   .vwin.in .vw-sub { animation: vwup .5s 1.15s forwards; }
@@ -312,8 +312,8 @@
   @keyframes vwup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     .vbanner, .vbanner.out { transition: none; } .vbanner.in .vb-ico svg, .vbanner.in .vb-ico i { animation: none; }
-    .vwin.in .vw-seal, .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.in .vw-rays, .vwin.champ.in .vw-card { animation: none; opacity: 1; transform: rotate(-8deg); }
-    .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.champ.in .vw-card { transform: none; }
+    .vwin.in .vw-seal, .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.in .vw-rays, .vwin.cup.in .vw-card { animation: none; opacity: 1; transform: rotate(-8deg); }
+    .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.cup.in .vw-card { transform: none; }
   }
   /* Тонкое подчёркивание — намёк, что имя нажимается: команды в таблицах, игроки в нашей таблице */
   .lrow:not(.head) .ln b, button.srow .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
@@ -606,7 +606,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw93yvwg";
+var BUILD = "mw947eak";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -2052,7 +2052,7 @@ function tourBanner(x, done) {
   for (var i = 0; i < 8; i++) sparks += '<i style="--a:' + (i * 45 + 20) + 'deg;--d:' + (26 + (i % 3) * 8) + 'px"></i>';
   el.innerHTML = '<span class="vb-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.3 2.5Q13.42 8.38 19.3 9.5Q13.42 10.62 12.3 16.5Q11.18 10.62 5.3 9.5Q11.18 8.38 12.3 2.5Z"/>' +
     '<path d="M4.7 12.1Q5.37 15.63 8.9 16.3Q5.37 16.97 4.7 20.5Q4.03 16.97 0.5 16.3Q4.03 15.63 4.7 12.1Z"/><path d="M20.1 14.7Q20.64 17.56 23.5 18.1Q20.64 18.64 20.1 21.5Q19.56 18.64 16.7 18.1Q19.56 17.56 20.1 14.7Z"/></svg>' + sparks + '</span>' +
-    '<span class="vb-txt"><b>Победа в туре!</b><small>' + esc(x.c.title) + ' · ' + esc(x.t.label) + ' · ' + ptsWord(x.pts) + (x.co.length ? ', поровну с ' + esc(x.co.join(' и ')) : '') + '</small></span>';
+    '<span class="vb-txt"><b>Победа в туре!</b></span>';
   document.body.appendChild(el);
   requestAnimationFrame(function () { el.classList.add('in'); });
   setTimeout(function () { haptic('success'); }, 350);
@@ -2061,8 +2061,10 @@ function tourBanner(x, done) {
   el.addEventListener('click', close);
   setTimeout(close, 6500);
 }
-// Роскошно: тёмный «стадион», за печатью вращаются лучи. Чемпионат — печать с ударом опускается, сверху сыплется
-// конфетти; Кубок — печать влетает с вращением, вокруг салют
+// Роскошно: тёмный «стадион», за печатью вращаются лучи. Чемпионат — печать влетает с вращением, вокруг салют;
+// Кубок — печать с ударом опускается, сверху сыплется конфетти
+// «26/27» → «2026/2027»
+function fullSeason(s) { return String(s || '').split('/').map(function (y) { return y.length === 2 ? '20' + y : y; }).join('/'); }
 function seasonWin(x, done) {
   if (!x.demo) celeSeen(x.key, true);
   var cup = x.type === 'cup', st = x.st, el = document.createElement('div');
@@ -2070,7 +2072,7 @@ function seasonWin(x, done) {
   el.innerHTML = '<canvas class="vw-fx" aria-hidden="true"></canvas><div class="vw-card"><div class="vw-stage"><div class="vw-rays" aria-hidden="true"></div>' +
     '<div class="vw-seal">' + sealSVG(x.type, x.c.season) + '</div></div>' +
     '<h2 id="vw-h">' + (cup ? 'Кубок твой!' : 'Чемпион!') + '</h2>' +
-    '<p class="vw-sub">' + esc(x.c.title) + ' ' + esc(x.c.season) + ' · ' + num(st.tp) + '&nbsp;' + (st.tp % 1 ? 'очка' : plural(st.tp, 'очко', 'очка', 'очков')) + ' · ' + ptsWord(st.pp).replace(' ', '&nbsp;') + '</p>' +
+    '<p class="vw-sub">' + esc(fullSeason(x.c.season)) + '</p>' +
     '<p class="vw-tag">' + (cup ? 'Знал заранее.' : 'Прогноз верен.') + '</p>' +
     '<button type="button" class="vw-ok">Ура!</button></div>';
   document.body.appendChild(el);
@@ -2078,10 +2080,10 @@ function seasonWin(x, done) {
   var stop = function () {};
   requestAnimationFrame(function () {
     el.classList.add('in');
-    if (!CALM()) stop = (cup ? fireworks : confetti)(el.querySelector('canvas'));
+    if (!CALM()) stop = (cup ? confetti : fireworks)(el.querySelector('canvas'));
   });
-  setTimeout(function () { haptic('heavy'); }, cup ? 900 : 620);
-  setTimeout(function () { haptic('success'); }, cup ? 1150 : 900);
+  setTimeout(function () { haptic('heavy'); }, cup ? 620 : 900);
+  setTimeout(function () { haptic('success'); }, cup ? 900 : 1150);
   var gone = false;
   function close() {
     if (gone) return; gone = true; stop(); el.classList.add('out'); document.body.style.overflow = '';
