@@ -156,7 +156,7 @@
   .tsw button:focus { outline: none; }
   .tsw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   /* Турнирная таблица: место, команда с формой, И В Н П, мячи, разница, очки */
-  .lg { --lcols: 20px minmax(0, 1fr) repeat(4, 20px) 50px 26px 26px; }
+  .lg { --lcols: 20px minmax(0, 1fr) repeat(4, 20px) 56px 26px 26px; }
   .lg.cup { --lcols: 20px minmax(0, 1fr) 20px 20px 24px 24px 20px 46px 26px; }
   .lrow { display: grid; grid-template-columns: var(--lcols); column-gap: 2px; align-items: center; width: 100%; padding: 8px 14px 8px 12px; border: 0; border-top: 1px solid var(--line);
     background: none; color: var(--ink); text-align: left; font: 500 13.5px/1.2 var(--text); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -179,7 +179,7 @@
   .fm { display: flex; gap: 3px; height: 7px; margin-top: 5px; align-items: center; }
   .fm i { width: 7px; height: 7px; border-radius: 2px; }
   .fm .W { background: var(--accent); }
-  .fm .D { height: 2px; border-radius: 1px; background: var(--faint); }
+  .fm .D { box-shadow: inset 0 0 0 1.5px var(--faint); }
   .fm .L { box-shadow: inset 0 0 0 1.5px var(--red); }
   .lleg { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 14px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
   .lleg span { display: inline-flex; align-items: center; gap: 6px; }
@@ -189,7 +189,22 @@
   /* Карточка команды: последние матчи */
   .tsum { display: flex; gap: 18px; padding: 2px 16px 12px; color: var(--muted); font-size: 13px; }
   .tsum b { display: block; color: var(--ink); font: 600 20px/1.1 var(--display); }
-  .tm { display: grid; grid-template-columns: minmax(0, 1fr) auto 24px; align-items: center; column-gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); }
+  .tm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(24px, auto); align-items: center; column-gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); }
+  .tm .op .self { color: var(--muted); font-weight: 500; }
+  .tm .op small.my { color: var(--ink); }
+  .tm .op small.my.ex { color: var(--gold); font-weight: 600; }
+  .rs.LV { width: auto; padding: 0 6px; color: var(--live); box-shadow: inset 0 0 0 1px var(--live); font-size: 11px; font-weight: 600; }
+  .tgo { padding: 0 16px 6px; }
+  .tgo .retry { margin-top: 0; }
+  .tsub2 { padding: 14px 16px 6px; font-size: 12.5px; color: var(--muted); }
+  .tnote.tk { padding-top: 0; }
+  .ldot { display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--live); vertical-align: 2px; animation: pulse 1.6s ease-in-out infinite; }
+  .lrow.hl { background: var(--accent-soft); }
+  .lrow { transition: background .8s; }
+  .lg.my { --lcols: 20px minmax(0, 1fr) 24px repeat(4, 22px) 38px; }
+  .lg.my .lrow { column-gap: 5px; }
+  button.team { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; font-size: 15px; line-height: 28px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button.team:active { color: var(--accent); }
   .tm .op { min-width: 0; }
   .tm .op b { display: block; font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tm .op small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
@@ -495,7 +510,7 @@ var API = {
 };
 var edits = {};      // key -> {h, a}
 var lateOpen = {};   // key -> true
-var S = { comp: null, view: null, open: {}, tbl: remember('tbl') === 'league' ? 'league' : 'ours' };
+var S = { comp: null, view: null, open: {}, tbl: /^(league|mine)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours' };
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -574,7 +589,7 @@ function matchRow(g, m, gridCols, editable) {
   var cls = 'm' + (m.phase === 'live' ? ' is-live' : '') + (dirty ? (m.started ? ' late' : ' dirty') : '');
   var h = '<div class="' + cls + '"><div class="mt"><span>' + esc(m.when) + '</span><span>' + right + '</span></div>';
   ['h', 'a'].forEach(function (side) {
-    h += '<div class="g" style="--cols:' + gridCols + '"><div class="team">' + esc(side === 'h' ? m.home : m.away) + '</div>';
+    h += '<div class="g" style="--cols:' + gridCols + '"><button class="team" data-team="' + esc(side === 'h' ? m.hn || m.home : m.an || m.away) + '">' + esc(side === 'h' ? m.home : m.away) + '</button>';
     for (var j = 0; j < m.cells.length; j++) h += cell(g, m, j, side, editable);
     h += '<div class="sc">' + (m.started ? v(side === 'h' ? m.hs : m.as) : '') + '</div></div>';
   });
@@ -654,21 +669,19 @@ function renderPred(kind) {
 }
 
 // ---------- Таблица ----------
+function tblMode(c0) { return S.tbl === 'league' || (S.tbl === 'mine' && c0 && c0.me) ? S.tbl : 'ours'; }
 function renderTable(kind) {
   var c0 = comp(kind);
   if (!c0) return '<div class="panel blank">Нет данных.</div>';
   var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
-  var lg = S.tbl === 'league';
-  var head = '<section class="panel"><div class="ptitle"><h2 class="tsw">' +
-    '<button data-tbl="ours" class="' + (lg ? '' : 'on') + '" aria-pressed="' + !lg + '">Наша</button>' +
-    '<button data-tbl="league" class="' + (lg ? 'on' : '') + '" aria-pressed="' + lg + '">' + (kind === 'cup' ? 'Группы' : 'РПЛ') + '</button></h2>' +
-    (lg ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0)) + '</div>';
-  // Турнирная таблица — только текущего сезона
-  if (lg) {
-    var lsub = c0.after ? 'После тура ' + esc(c0.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
-    if (c0.live.length) lsub += ', идёт ' + esc(c0.live.join(', ').toLowerCase());
-    return renderLeague(c0, c0, head, lsub);
-  }
+  // Наша таблица, таблица турнира и моя (команды по баллам, которые мне приносят мои прогнозы); две последние — только текущий сезон
+  var mode = tblMode(c0);
+  var tabs = [['ours', 'Наша'], ['league', kind === 'cup' ? 'Кубок' : 'РПЛ']].concat(c0.me ? [['mine', 'Моя']] : []);
+  var head = '<section class="panel"><div class="ptitle"><h2 class="tsw">' + tabs.map(function (t) {
+    return '<button data-tbl="' + t[0] + '" class="' + (mode === t[0] ? 'on' : '') + '" aria-pressed="' + (mode === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</h2>' +
+    (mode !== 'ours' ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0)) + '</div>';
+  if (mode === 'league') return renderLeague(kind, head);
+  if (mode === 'mine') return renderMine(kind, head);
   if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   var sub = c.past ? 'Итоговая таблица сезона' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
@@ -999,21 +1012,26 @@ function renderTeams(c) {
 }
 
 // ---------- Таблицы РПЛ и Кубка ----------
-// Считаем по завершённым матчам из нашей таблицы. Кубок — только групповой этап («Тур N»);
-// ничья в группе — серия пенальти: победа 2 очка, поражение 1 (счёт серии — с rfs.ru).
-function leagueMatches(c) {
+// Считаем по матчам из нашей таблицы, идущие — по текущему счёту («результаты live»).
+// Кубок: в таблицу групп идёт только групповой этап («Тур N»); ничья в группе — серия пенальти:
+// победа 2 очка, поражение 1 (счёт серии — с rfs.ru). В наш зачёт идёт только основное время.
+// Все начавшиеся матчи турнира по порядку: дата матча, а у старых туров без времени — порядок туров
+function allMatches(c) {
   var chron = (c.tours || []).slice().reverse(), last = 0, out = [];
   chron.forEach(function (t, ti) {
-    if (c.kind === 'cup' && !/^тур\s*\d/i.test(t.label)) return;
     var ss = (t.matches || []).map(function (m) { return m.start; }).filter(Boolean);
     var tk = ss.length ? Math.min.apply(null, ss) : last + 1; last = Math.max(last, tk);
     (t.matches || []).forEach(function (m, mi) {
-      if (m.phase !== 'ft' || m.hs === null || m.hs === undefined) return;
-      out.push({ h: m.hn || m.home, a: m.an || m.away, hs: m.hs, as: m.as, pen: m.pen || null, label: t.label, when: m.when || '', k: m.start || tk, o: ti * 100 + mi });
+      var live = m.phase === 'live', done = m.phase === 'ft';
+      if ((!live && !done) || m.hs === null || m.hs === undefined) return;
+      out.push({ h: m.hn || m.home, a: m.an || m.away, hs: m.hs, as: m.as, pen: done && m.pen || null, live: live, status: m.status || '',
+        label: t.label, dates: t.dates || '', when: m.when || '', cells: m.cells || [], k: m.start || tk, o: ti * 100 + mi });
     });
   });
   return out.sort(function (x, y) { return x.k - y.k || x.o - y.o; });
 }
+function groupStage(c, m) { return c.kind !== 'cup' || /^тур\s*\d/i.test(m.label); }
+function leagueMatches(c) { return allMatches(c).filter(function (m) { return groupStage(c, m); }); }
 // Исход для команды: f — свои мячи, g — чужие, pen — серия [свои, чужие] или null
 function outcome(f, g, pen, cup) {
   if (f !== g) return { res: f > g ? 'W' : 'L', pts: f > g ? 3 : 0 };
@@ -1023,14 +1041,14 @@ function outcome(f, g, pen, cup) {
 function penOf(m, home) { if (!m.pen) return null; var p = m.pen.split(':').map(Number); return home ? p : [p[1], p[0]]; }
 function leagueRows(c, ms) {
   var cup = c.kind === 'cup', T = {};
-  function row(n) { return T[n] || (T[n] = { name: n, p: 0, w: 0, d: 0, l: 0, wp: 0, lp: 0, gf: 0, ga: 0, pts: 0, res: [], wait: 0 }); }
+  function row(n) { return T[n] || (T[n] = { name: n, p: 0, w: 0, d: 0, l: 0, wp: 0, lp: 0, gf: 0, ga: 0, pts: 0, res: [], wait: 0, live: false }); }
   ms.forEach(function (m) {
     [[m.h, m.a, m.hs, m.as, true], [m.a, m.h, m.as, m.hs, false]].forEach(function (x) {
       var r = row(x[0]), pen = cup ? penOf(m, x[4]) : null, o = outcome(x[2], x[3], pen, cup);
       r.p++; r.gf += x[2]; r.ga += x[3]; r.pts += o.pts;
       if (o.res === 'W') r.w++; else if (o.res === 'L') r.l++;
-      else if (pen) { if (o.pw) r.wp++; else r.lp++; } else { r.d++; if (cup) r.wait++; }
-      r.res.push({ opp: x[1], home: x[4], f: x[2], g: x[3], res: o.res, pen: pen, label: m.label, when: m.when });
+      else if (pen) { if (o.pw) r.wp++; else r.lp++; } else { r.d++; if (cup && !m.live) r.wait++; }
+      if (m.live) r.live = true; else r.res.push({ res: o.res });
     });
   });
   return T;
@@ -1059,9 +1077,8 @@ function leagueRank(rows, ms, cup) {
   return out;
 }
 // Группы Кубка: с rfs.ru, а если их нет — делим команды по сыгранным матчам (в группе играют только между собой)
-function cupGroups(c, c0, ms, T) {
-  var g = c === c0 && c0.groups && c0.groups.length ? c0.groups : null;
-  if (g) return g.map(function (x) { return { name: 'Группа ' + x.name, teams: x.teams.filter(function (n) { return T[n]; }) }; });
+function cupGroups(c, ms, T) {
+  if (c.groups && c.groups.length) return c.groups.map(function (x) { return { name: 'Группа ' + x.name, teams: x.teams.filter(function (n) { return T[n]; }) }; });
   var par = {};
   function f(x) { while (par[x] !== x) x = par[x] = par[par[x]]; return x; }
   Object.keys(T).forEach(function (n) { par[n] = n; });
@@ -1071,71 +1088,141 @@ function cupGroups(c, c0, ms, T) {
   return Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a[0].localeCompare(b[0], 'ru'); })
     .map(function (teams, i) { return { name: 'Группа ' + (i + 1), teams: teams }; });
 }
+// Турнир текущего сезона: матчи, строки и места; пересчитываем, только когда пришли новые данные
+var LGC = { d: null, k: {} };
+function leagueData(kind) {
+  if (LGC.d !== DATA) LGC = { d: DATA, k: {} };
+  if (LGC.k[kind]) return LGC.k[kind];
+  var c = comp(kind); if (!c) return null;
+  var all = allMatches(c), ms = all.filter(function (m) { return groupStage(c, m); }), T = leagueRows(c, ms), cup = kind === 'cup', place = {};
+  var groups = cup ? cupGroups(c, ms, T).map(function (g) { return { name: g.name, rows: leagueRank(g.teams.map(function (n) { return T[n]; }), ms, true) }; })
+    : [{ name: '', rows: leagueRank(Object.keys(T).map(function (n) { return T[n]; }), ms, false) }];
+  groups.forEach(function (g) { g.rows.forEach(function (r, i) { place[r.name] = { n: i + 1, group: g.name }; }); });
+  return LGC.k[kind] = { c: c, all: all, ms: ms, T: T, groups: groups, place: place };
+}
 function formMarks(res) {
   var w = { W: 'В', D: 'Н', L: 'П' };
   return '<span class="fm" aria-label="последние матчи: ' + res.map(function (x) { return w[x.res]; }).join(' ') + '">' +
     res.map(function (x) { return '<i class="' + x.res + '"></i>'; }).join('') + '</span>';
 }
-var LEAGUE = null;
-function renderLeague(c, c0, head, sub) {
-  var cup = c.kind === 'cup', ms = leagueMatches(c), T = leagueRows(c, ms), h = head;
-  LEAGUE = { c: c, c0: c0, T: T };
-  if (!ms.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых сыгранных матчей.</div></section>';
+function liveDot(on) { return on ? '<i class="ldot" title="идёт матч"></i>' : ''; }
+var TAP_TEAM = '<span>Нажми на команду, чтобы увидеть её последние матчи.</span>';
+function renderLeague(kind, head) {
+  var L = leagueData(kind), cup = kind === 'cup', h = head;
+  if (!L || !L.ms.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых сыгранных матчей.</div></section>';
   var cols = cup ? ['И', 'В', 'ВП', 'ПП', 'П', 'М', 'О'] : ['И', 'В', 'Н', 'П', 'М', '±', 'О'];
   var full = { 'И': 'игры', 'В': 'победы', 'Н': 'ничьи', 'П': 'поражения', 'ВП': 'победы по пенальти', 'ПП': 'поражения по пенальти', 'М': 'мячи', '±': 'разница мячей', 'О': 'очки' };
   var headRow = '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' + cols.map(function (x) { return '<span title="' + full[x] + '"' + (x === 'М' ? ' class="lm"' : '') + '>' + x + '</span>'; }).join('') + '</div>';
-  function rowHtml(r, k, n) {
-    var zone = !cup && n === 16 ? (k >= 14 ? ' rel' : k >= 12 ? ' po' : '') : '';
+  var wait = false, n16 = !cup && Object.keys(L.T).length === 16;
+  function rowHtml(r, k) {
+    var zone = n16 ? (k >= 14 ? ' rel' : k >= 12 ? ' po' : '') : '', gd = r.gf - r.ga;
     var nums = cup ? [r.p, r.w, r.wp, r.lp, r.l] : [r.p, r.w, r.d, r.l];
-    var gd = r.gf - r.ga;
-    return '<button class="lrow' + zone + '" data-team="' + esc(r.name) + '"><span class="lp">' + (k + 1) + '</span>' +
-      '<span class="ln"><b>' + esc(r.name) + '</b>' + formMarks(r.res.slice(-5)) + '</span>' +
+    if (r.wait) wait = true;
+    return '<button class="lrow' + zone + '" data-team="' + esc(r.name) + '" data-from="table"><span class="lp">' + (k + 1) + '</span>' +
+      '<span class="ln"><b>' + esc(r.name) + liveDot(r.live) + '</b>' + formMarks(r.res.slice(-5)) + '</span>' +
       nums.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '<span class="lm">' + r.gf + '–' + r.ga + '</span>' +
       (cup ? '' : '<span class="lgd">' + (gd > 0 ? '+' : gd < 0 ? '−' : '') + Math.abs(gd) + '</span>') +
       '<span class="lpts">' + r.pts + (r.wait ? '*' : '') + '</span></button>';
   }
-  h += '<div class="pnote">' + (cup ? 'Групповой этап Пути РПЛ. ' : '') + sub + '</div><div class="lg' + (cup ? ' cup' : '') + '">';
-  var wait = false;
-  if (cup) {
-    cupGroups(c, c0, ms, T).forEach(function (g) {
-      var rows = leagueRank(g.teams.map(function (n) { return T[n]; }), ms, true);
-      rows.forEach(function (r) { if (r.wait) wait = true; });
-      h += '<div class="lgrp">' + esc(g.name) + '</div>' + headRow + rows.map(function (r, k) { return rowHtml(r, k, rows.length); }).join('');
-    });
-  } else {
-    var rows = leagueRank(Object.keys(T).map(function (n) { return T[n]; }), ms, false);
-    h += headRow + rows.map(function (r, k) { return rowHtml(r, k, rows.length); }).join('');
-  }
+  h += '<div class="pnote">' + (cup ? 'Групповой этап, результаты live' : 'Результаты live') + '</div><div class="lg' + (cup ? ' cup' : '') + '">';
+  L.groups.forEach(function (g) { h += (g.name ? '<div class="lgrp">' + esc(g.name) + '</div>' : '') + headRow + g.rows.map(rowHtml).join(''); });
   h += '</div><div class="lleg"><span>' + formMarks([{ res: 'W' }]) + 'победа</span><span>' + formMarks([{ res: 'D' }]) + 'ничья</span><span>' + formMarks([{ res: 'L' }]) + 'поражение</span>' +
-    (cup ? '<span>ВП и ПП — победа (2 очка) и поражение (1 очко) в серии пенальти</span>' + (wait ? '<span>* ждём счёт серии пенальти</span>' : '')
-      : Object.keys(T).length === 16 ? '<span><i class="zbar po"></i>стыковые матчи</span><span><i class="zbar"></i>вылет</span>' : '') +
-    '<span>Нажми на команду — её последние матчи</span></div></section>';
+    (cup ? '<span>ВП и ПП: победа (2 очка) и поражение (1 очко) в серии пенальти</span>' + (wait ? '<span>* ждём счёт серии пенальти</span>' : '')
+      : n16 ? '<span><i class="zbar po"></i>стыковые матчи</span><span><i class="zbar"></i>вылет</span>' : '') + TAP_TEAM + '</div></section>';
   return h;
 }
-// Карточка команды: очки, игры, мячи и последние пять матчей в турнире
-function teamCard(name) {
-  if (!LEAGUE || !LEAGUE.T[name]) return;
-  var c = LEAGUE.c, r = LEAGUE.T[name], cup = c.kind === 'cup', w = { W: 'В', D: 'Н', L: 'П' };
-  var h = '<div class="tsum"><span><b>' + r.pts + '</b>' + plural(r.pts, 'очко', 'очка', 'очков') + '</span><span><b>' + r.p + '</b>' + plural(r.p, 'игра', 'игры', 'игр') + '</span>' +
-    '<span><b>' + r.gf + '–' + r.ga + '</b>мячи</span></div>';
-  h += '<div class="tsec">Последние матчи' + (cup ? ' в группе' : '') + '</div>';
-  h += r.res.slice(-5).reverse().map(function (x) {
-    return '<div class="tm"><span class="op"><b>' + esc(x.opp) + '</b><small>' + (x.home ? 'дома' : 'в гостях') + ' · ' + esc(x.when ? x.when.split(' ').slice(0, 2).join(' ') : x.label) + '</small></span>' +
-      '<span class="sc">' + x.f + ':' + x.g + (x.pen ? '<small>пен. ' + x.pen[0] + ':' + x.pen[1] + '</small>' : '') + '</span>' +
-      '<span class="rs ' + x.res + '" aria-label="' + ({ W: 'победа', D: 'ничья', L: 'поражение' })[x.res] + '">' + w[x.res] + '</span></div>';
+
+// ---------- Моя таблица: сколько баллов приносят мне мои прогнозы на матчи команд ----------
+function myCell(c, m) {
+  var j = meOf(c), x = j >= 0 && m.cells ? m.cells[j] : null;
+  return x && x.h !== null && x.h !== undefined && x.a !== null && x.a !== undefined ? x : null;
+}
+function myRows(kind) {
+  var L = leagueData(kind); if (!L || meOf(L.c) < 0) return null;
+  var T = {};
+  L.all.forEach(function (m) {
+    var x = myCell(L.c, m); if (!x || x.pts === null || x.pts === undefined) return;
+    [m.h, m.a].forEach(function (n) {
+      var r = T[n] || (T[n] = { name: n, p: 0, k: { 4: 0, 3: 0, 2: 0, 0: 0 }, pts: 0, live: false });
+      r.p++; r.k[x.pts]++; r.pts += x.pts / 2; if (m.live) r.live = true;
+    });
+  });
+  return Object.keys(T).map(function (n) { return T[n]; })
+    .sort(function (a, b) { return b.pts - a.pts || b.pts / b.p - a.pts / a.p || a.name.localeCompare(b.name, 'ru'); });
+}
+function renderMine(kind, head) {
+  var rows = myRows(kind), h = head;
+  if (!rows || !rows.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых матчей с твоими прогнозами.</div></section>';
+  var full = { 'М': 'матчи с прогнозом', '4': 'точный счёт', '3': 'разница мячей', '2': 'исход', '0': 'мимо', 'Б': 'баллы' };
+  h += '<div class="pnote">Баллы по моим прогнозам, результаты live</div><div class="lg my">' +
+    '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' +
+    ['М', '4', '3', '2', '0', 'Б'].map(function (x) { return '<span title="' + full[x] + '">' + x + '</span>'; }).join('') + '</div>';
+  h += rows.map(function (r, k) {
+    return '<button class="lrow" data-team="' + esc(r.name) + '"><span class="lp">' + (k + 1) + '</span><span class="ln"><b>' + esc(r.name) + liveDot(r.live) + '</b></span>' +
+      [r.p, r.k[4], r.k[3], r.k[2], r.k[0]].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '<span class="lpts">' + num(r.pts) + '</span></button>';
   }).join('');
+  return h + '</div><div class="lleg"><span>4, 3, 2 и 0: сколько прогнозов принесли столько баллов</span><span>Б: сумма, баллы матча делятся поровну между соперниками</span>' + TAP_TEAM + '</div></section>';
+}
+
+// ---------- Карточка команды: место, последние матчи, мои прогнозы на её матчи ----------
+function ptsWord(x) { return num(x) + ' ' + (x % 1 ? 'балла' : plural(x, 'балл', 'балла', 'баллов')); }
+// Матч как в расписании: хозяева — гости, счёт и прогноз в том же порядке; итог (В, Н, П) — для этой команды
+function fixture(h, a, name) { return [h, a].map(function (n) { return n === name ? '<span class="self">' + esc(n) + '</span>' : esc(n); }).join(' — '); }
+function teamMatchRow(c, m, name) {
+  var home = m.h === name, f = home ? m.hs : m.as, g = home ? m.as : m.hs;
+  var o = outcome(f, g, null, false), w = { W: 'В', D: 'Н', L: 'П' }, x = myCell(c, m);
+  var date = m.when ? m.when.split(' ').slice(0, 2).join(' ') : m.dates;
+  var my = x ? 'мой прогноз ' + x.h + ':' + x.a + (x.pts !== null && x.pts !== undefined ? ' · ' + ptsWord(x.pts) : '') : meOf(c) >= 0 ? 'без моего прогноза' : '';
+  return '<div class="tm"><span class="op"><b>' + fixture(m.h, m.a, name) + '</b><small>' + esc([m.label, date].filter(Boolean).join(' · ')) + '</small>' +
+    (my ? '<small class="my' + (x && x.pts === 4 ? ' ex' : '') + '">' + esc(my) + '</small>' : '') + '</span>' +
+    '<span class="sc">' + m.hs + ':' + m.as + (m.pen ? '<small>пен. ' + esc(m.pen) + '</small>' : '') + '</span>' +
+    (m.live ? '<span class="rs LV">идёт</span>' : '<span class="rs ' + o.res + '" aria-label="' + ({ W: 'победа', D: 'ничья', L: 'поражение' })[o.res] + '">' + w[o.res] + '</span>') + '</div>';
+}
+function teamCard(name, from) {
+  var kind = S.comp, L = leagueData(kind); if (!L) return;
+  var c = L.c, cup = kind === 'cup', r = L.T[name], pl = L.place[name];
+  var ms = L.all.filter(function (m) { return m.h === name || m.a === name; });
+  var h = '<div class="tsum">' + (pl ? '<span><b>' + pl.n + '</b>' + (pl.group ? 'место в группе ' + esc(pl.group.replace(/^Группа\s*/, '')) : 'место') + '</span>' : '') +
+    (r ? '<span><b>' + r.pts + '</b>' + plural(r.pts, 'очко', 'очка', 'очков') + '</span><span><b>' + r.p + '</b>' + plural(r.p, 'игра', 'игры', 'игр') + '</span><span><b>' + r.gf + '–' + r.ga + '</b>мячи</span>' : '') + '</div>';
+  if (from !== 'table' && r) h += '<div class="tgo"><button class="retry" data-goleague="' + esc(name) + '">Таблица ' + (cup ? 'Кубка' : 'РПЛ') + '</button></div>';
+  var last = ms.slice(-5).reverse(), older = ms.slice(0, -5).reverse();
+  h += '<div class="tsec">Последние матчи</div>' + (last.length ? last.map(function (m) { return teamMatchRow(c, m, name); }).join('') : '<div class="tnote">Матчей пока нет.</div>');
+  // Мои прогнозы на все её матчи: итог и всё, что раньше последних пяти
+  if (meOf(c) >= 0) {
+    var mine = ms.map(function (m) { return myCell(c, m); }).filter(function (x) { return x && x.pts !== null && x.pts !== undefined; });
+    if (mine.length) {
+      var sum = mine.reduce(function (s, x) { return s + x.pts; }, 0), k = { 4: 0, 3: 0, 2: 0, 0: 0 };
+      mine.forEach(function (x) { k[x.pts]++; });
+      h += '<div class="tsec">Мои прогнозы на её матчи</div><div class="tsum"><span><b>' + mine.length + '</b>' + plural(mine.length, 'прогноз', 'прогноза', 'прогнозов') + '</span>' +
+        '<span><b>' + num(sum / 2) + '</b>' + (sum / 2 % 1 ? 'балла' : plural(sum / 2, 'балл', 'балла', 'баллов')) + '</span><span><b>' + num(Math.round(10 * sum / mine.length) / 10) + '</b>в среднем</span></div>' +
+        '<div class="tnote tk">точный счёт ' + k[4] + ' · разница ' + k[3] + ' · исход ' + k[2] + ' · мимо ' + k[0] + '</div>';
+      if (older.length) h += '<div class="tsub2">Раньше</div>' + older.map(function (m) { return teamMatchRow(c, m, name); }).join('');
+    }
+  }
   // Ближайший матч — если он уже есть в прогнозах
   var next = null;
-  if (!c.past) (DATA.groups || []).forEach(function (g) { if (g.kind !== c.kind) return; g.matches.forEach(function (m) {
-    if (!m.started && ((m.hn || m.home) === name || (m.an || m.away) === name) && (!next || m.start < next.start)) next = m; }); });
+  (DATA.groups || []).forEach(function (g) { if (g.kind !== kind) return; g.matches.forEach(function (m) {
+    if (!m.started && ((m.hn || m.home) === name || (m.an || m.away) === name) && (!next || m.start < next.start)) next = { m: m, g: g }; }); });
   if (next) {
-    var home = (next.hn || next.home) === name;
-    h += '<div class="tsec">Следующий матч</div><div class="tm"><span class="op"><b>' + esc(home ? next.an || next.away : next.hn || next.home) + '</b><small>' +
-      (home ? 'дома' : 'в гостях') + (next.when ? ' · ' + esc(next.when) : '') + '</small></span><span></span><span></span></div>';
+    var nm = next.m, cur = current(nm);
+    h += '<div class="tsec">Следующий матч</div><div class="tm"><span class="op"><b>' + fixture(nm.hn || nm.home, nm.an || nm.away, name) + '</b><small>' +
+      esc([next.g.label, nm.when].filter(Boolean).join(' · ')) + '</small>' +
+      (next.g.me ? '<small class="my">' + (cur.h !== null ? 'мой прогноз ' + cur.h + ':' + cur.a : 'прогноза пока нет') + '</small>' : '') + '</span><span></span><span></span></div>';
   }
   $('team-h').textContent = name;
   $('teambody').innerHTML = h;
-  sheet('team', true);
+  if ($('team').hidden) sheet('team', true); else $('team').querySelector('.sheet-in').scrollTop = 0;
+}
+// Из карточки — в таблицу турнира, к строке команды
+function goLeague(name) {
+  closeSheet('team');
+  S.tbl = 'league'; remember('tbl', 'league');
+  setView('table');
+  // прокручиваем, когда лист уже закрылся (пока он открыт, страница не прокручивается)
+  setTimeout(function () {
+    var row = [].filter.call(document.querySelectorAll('.lrow[data-team]'), function (x) { return x.dataset.team === name; })[0];
+    if (row) { row.scrollIntoView({ block: 'center', behavior: 'smooth' }); row.classList.add('hl'); setTimeout(function () { row.classList.remove('hl'); }, 1800); }
+  }, 650);
 }
 
 // ---------- Туры ----------
@@ -1344,7 +1431,7 @@ function render() {
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
   var key = S.view + '|' + S.comp;
   var cur = comp(S.comp), sel = S.season[S.comp];
-  if (S.view === 'table' && S.tbl !== 'league' && key !== shownKey && (!sel || !cur || sel === cur.season)) animateTable(cur);
+  if (S.view === 'table' && tblMode(cur) === 'ours' && key !== shownKey && (!sel || !cur || sel === cur.season)) animateTable(cur);
   shownKey = key;
   var n = Object.keys(edits).length;
   $('savebar').hidden = !(S.view === 'pred' && n);
@@ -1387,7 +1474,8 @@ document.addEventListener('click', function (e) {
   if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { gotData(d); startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
   if (b.dataset.pick) return openPick(b);
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
-  if (b.dataset.team) return teamCard(b.dataset.team);
+  if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
+  if (b.dataset.goleague) return goLeague(b.dataset.goleague);
   if (b.dataset.reseason) { b.dataset.reseason.split(',').forEach(function (id) { delete SEASONS[id]; }); render(); return refreshProfile(); }
   if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
