@@ -247,11 +247,13 @@
   .awards svg { display: block; width: 100%; height: 100%; }
   .sealw.mp svg, .awards i.mp { color: var(--silver); }
   .gbcap { margin: 8px 16px 2px; font-size: 12.5px; color: var(--muted); }
-  .gballs { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 2px 16px 4px; }
-  .gb { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .gb .gball { width: 26px; height: 26px; flex: none; }
-  .gb b { font: 600 17px/1 var(--display); }
+  .gballs { display: flex; flex-direction: column; gap: 8px; padding: 4px 16px 4px; }
+  .gb { display: flex; align-items: center; gap: 10px; }
+  .gstack { display: inline-flex; flex: none; }
+  .gstack .gball { width: 28px; height: 28px; margin-left: -19px; filter: drop-shadow(-1.5px 0 1px rgba(60, 40, 0, .35)); }
+  .gstack .gball:first-child { margin-left: 0; filter: none; }
   .gb small { font-size: 12.5px; color: var(--muted); }
+  .gb small b { font: 600 15px/1 var(--display); color: var(--ink); }
   /* Серебряная печать Матч Премьер нарочно поставлена небрежно: правее, сильнее и в другую сторону наклонена,
      краски меньше — как будто нехотя; и не наезжает на золотую */
   .sealw.mp svg { left: 18px; top: -10px; width: 76px; height: 76px; transform: rotate(19deg); opacity: .78; }
@@ -269,21 +271,24 @@
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .pmark svg { mix-blend-mode: multiply; } }
   :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .pmark svg { mix-blend-mode: multiply; }
   /* Поздравления. Тур — плашка сверху; сезон — экран-«стадион» в одной тёмной гамме при любой теме */
-  .vbanner { position: fixed; z-index: 90; left: 50%; top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; width: max-content; max-width: 92vw;
-    padding: 12px 22px 12px 12px; border-radius: 16px; background: #14231b; color: #e7f2eb; box-shadow: 0 10px 30px rgba(8, 20, 14, .35);
-    transform: translate(-50%, -140%); transition: transform .5s cubic-bezier(.2, 1.3, .4, 1); cursor: pointer; }
-  .vbanner.in { transform: translate(-50%, 0); }
-  .vbanner.out { transform: translate(-50%, -140%); transition-timing-function: cubic-bezier(.5, 0, .9, .4); transition-duration: .4s; }
-  .vb-ico { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(242, 193, 78, .14); }
-  .vb-ico svg { width: 32px; height: 32px; }
-  .vbanner.in .vb-ico svg { animation: vbroll .7s .25s cubic-bezier(.2, 1.4, .4, 1) both; }
+  /* Золотой мяч: блок над завершённым туром, в золотом тоне; при первом показе мяч вкатывается и разлетаются искры */
+  .gbnote { position: relative; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding: 12px 52px 12px 14px; border-radius: 16px;
+    background: var(--gold-bg); color: var(--gold); transition: opacity .25s, transform .25s; }
+  .gbnote > b { font: 600 17px/1.25 var(--display); letter-spacing: -.005em; }
+  .gbnote.fresh { animation: gbin .45s cubic-bezier(.2, 1.2, .4, 1) both; }
+  .gbnote.gone { opacity: 0; transform: scale(.97); }
+  @keyframes gbin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .gbx { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--gold); cursor: pointer; }
+  .gbx svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  .gbx:active { background: rgba(143, 99, 0, .12); }
+  .vb-ico { position: relative; flex: none; display: grid; place-items: center; width: 40px; height: 40px; }
+  .vb-ico svg { width: 36px; height: 36px; }
+  .gbnote.fresh .vb-ico svg { animation: vbroll .7s .2s cubic-bezier(.2, 1.4, .4, 1) both; }
   .vb-ico i { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; background: #f2c14e; opacity: 0;
     clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
-  .vbanner.in .vb-ico i { animation: vbspark .8s .35s ease-out forwards; }
+  .gbnote.fresh .vb-ico i { animation: vbspark .8s .55s ease-out forwards; }
   @keyframes vbroll { 0% { transform: translateX(-26px) rotate(-300deg) scale(.6); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
   @keyframes vbspark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(.6); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1.2); } }
-  .vb-txt b { display: block; font: 600 17px/1.2 var(--display); color: #f2c14e; }
-  .vb-txt small { display: block; margin-top: 2px; font-size: 13px; color: #b6c8bd; }
   .vwin { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; color: #e7f2eb; opacity: 0; transition: opacity .35s;
     background: radial-gradient(120% 80% at 50% 38%, #1d3a29 0%, #0c1611 62%, #070d0a 100%); }
   .vwin.in { opacity: 1; }
@@ -317,7 +322,7 @@
   @keyframes vwthud { 0%, 100% { transform: none; } 30% { transform: translateY(3px); } 60% { transform: translateY(-1px); } }
   @keyframes vwup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
-    .vbanner, .vbanner.out { transition: none; } .vbanner.in .vb-ico svg, .vbanner.in .vb-ico i { animation: none; }
+    .gbnote, .gbnote.fresh, .gbnote.fresh .vb-ico svg, .gbnote.fresh .vb-ico i { animation: none; transition: none; }
     .vwin.in .vw-seal, .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.in .vw-rays, .vwin.cup.in .vw-card { animation: none; opacity: 1; transform: rotate(-8deg); }
     .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.cup.in .vw-card { transform: none; }
   }
@@ -612,7 +617,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw94aija";
+var BUILD = "mw94srfb";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -799,8 +804,9 @@ function renderPred(kind) {
       ? '<div class="ptitle done"><h2>' + esc(g.label) + postmark(g) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>'
       : '<div class="ptitle"><h2>' + esc(g.label) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>' + '<div class="pnote">' + (note || '&nbsp;') + '</div>';
     if (g.state === 'open') title = '<button class="fold" data-ptour="' + esc(key) + '" aria-expanded="' + unfolded + '">' + title + '<span class="chev">›</span></button>';
-    if (!unfolded) return '<section class="panel">' + title + '</section>';
-    var h = '<section class="panel open">' + title;
+    var gold = g.state === 'done' || (GB_DEMO && i === 0 && !gs.some(function (x) { return x.state === 'done'; })) ? goldNote(g) : '';
+    if (!unfolded) return gold + '<section class="panel">' + title + '</section>';
+    var h = gold + '<section class="panel open">' + title;
     h += namesRow(g.players, meOf(g), gc, 'счёт', '<span class="stk">' + esc(g.label) + '</span>');
     var s = g.strip, w = winners(s.tp);
     h += '<div class="stats">';
@@ -927,6 +933,7 @@ function stampSeen(key, set) {
 // Новые штемпели оживают, когда видны на экране: падают, слегка пружинят, телефон отзывается лёгким толчком
 var stampObs = null;
 function animateStamps() {
+  if (document.querySelector('.gbnote.fresh:not(.buzzed)')) { document.querySelector('.gbnote.fresh').classList.add('buzzed'); setTimeout(function () { haptic('success'); }, 380); }
   var fresh = document.querySelectorAll('.pmark.fresh:not(.go)');
   if (!fresh.length) return;
   var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1235,8 +1242,10 @@ function awardsBlock(name) {
       '<figcaption>' + ({ champ: 'Чемпион', cup: 'Обладатель Кубка', mp: 'Кубок Матч Премьер' })[x.kind] + '<br>' + esc(x.season) + '</figcaption></figure>';
   }).join('') + '</div>';
   // Золотые мячи: сколько туров выиграл, по турнирам и сезонам
+  // Мячи складываются стопкой, каждый следующий накрывает предыдущий на две трети
   if (a.balls.length) h += '<div class="gbcap">Золотые мячи за победы в турах</div><div class="gballs">' + a.balls.map(function (x) {
-    return '<span class="gb">' + goldBall() + '<b>×' + x.n + '</b><small>' + esc(x.title) + ' ' + esc(x.season) + '</small></span>';
+    var st = ''; for (var i = 0; i < x.n; i++) st += goldBall();
+    return '<span class="gb"><span class="gstack">' + st + '</span><small><b>' + x.n + '</b> · ' + esc(x.title) + ' ' + esc(x.season) + '</small></span>';
   }).join('') + '</div>';
   return h + (a.wait ? '<div class="tnote">Загружаю прошлые сезоны…</div>' : '');
 }
@@ -1897,6 +1906,11 @@ document.addEventListener('click', function (e) {
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
   if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
+  if (b.dataset.gbclose) {
+    if (GB_DEMO) GB_DEMO = false; else celeSeen(b.dataset.gbclose, true);
+    var gn = b.closest('.gbnote'); if (gn) gn.classList.add('gone');
+    return setTimeout(render, 260);
+  }
   if (b.dataset.ptab) { if (PROF && PROF.kind !== b.dataset.ptab) profile(b.dataset.ptab, PROF.name, true); return; }
   if (b.dataset.tctab) { if (TC && TC.kind !== b.dataset.tctab) { TC.kind = b.dataset.tctab; TC.more = false; drawTeamCard(); $('team').querySelector('.sheet-in').scrollTop = 0; } return; }
   if (b.dataset.tcmore) { if (TC) { TC.more = true; drawTeamCard(); } return; }
@@ -2021,22 +2035,15 @@ function celebrations() {
       var st = c.standings.filter(function (x) { return x.name === name; })[0];
       if (st && st.place === 1) out.push({ type: c.kind === 'cup' ? 'cup' : 'champ', key: 'season|' + c.kind + '|' + c.season, c: c, st: st });
     }
-    var t = (c.tours || []).filter(function (x) { return x.state === 'done' && x.pp; })[0];
-    if (!t) return;
-    var pp = t.pp.map(Number), mx = Math.max.apply(null, pp), tie = pp.every(function (x) { return x === mx; });
-    var end = Math.max.apply(null, (t.matches || []).map(function (m) { return m.start || 0; }).concat([0]));
-    if (tie || pp[me] !== mx || (end && now - end > 7 * 864e5)) return;
-    out.push({ type: 'tour', key: 'tour|' + c.kind + '|' + c.season + '|' + t.label, c: c, t: t, pts: mx,
-      co: c.players.filter(function (p, j) { return j !== me && pp[j] === mx; }) });
   });
-  var ord = { champ: 0, cup: 1, tour: 2 };
+  var ord = { champ: 0, cup: 1 };
   return out.filter(function (x) { return !celeSeen(x.key); }).sort(function (a, b) { return ord[a.type] - ord[b.type]; });
 }
 function celebrate() {
   if (CELE_STARTED || !DATA.comps) return;
   CELE_STARTED = true;
   var q = celebrations();
-  (function next() { var x = q.shift(); if (x) (x.type === 'tour' ? tourBanner : seasonWin)(x, next); })();
+  (function next() { var x = q.shift(); if (x) seasonWin(x, next); })();
 }
 function haptic(kind) {
   try { if (TG && TG.HapticFeedback) kind === 'success' ? TG.HapticFeedback.notificationOccurred('success') : TG.HapticFeedback.impactOccurred(kind); } catch (e) {}
@@ -2061,31 +2068,31 @@ function celeDemo() {
     var c = z[0], me = meOf(c), st = c && c.standings.filter(function (x) { return x.name === c.players[Math.max(0, me)]; })[0];
     if (st) q.push({ type: z[1], c: c, st: st, demo: true });
   });
-  var t = champ && (champ.tours || []).filter(function (x) { return x.state === 'done' && x.pp; })[0];
-  if (t) q.push({ type: 'tour', c: champ, t: t, pts: Math.max.apply(null, t.pp.map(Number)), co: [], demo: true });
-  (function next() { var x = q.shift(); if (x) (x.type === 'tour' ? tourBanner : seasonWin)(x, next); })();
+  // После печатей — блок Золотого мяча над туром в «Прогнозах»
+  (function next() { var x = q.shift(); if (x) return seasonWin(x, next); GB_DEMO = true; S.view = 'pred'; render(); scrollTo(0, 0); })();
 }
 var logoTaps = [];
 document.querySelector('.brand').addEventListener('click', function () {
   var now = Date.now(); logoTaps = logoTaps.filter(function (t) { return now - t < 2500; }).concat([now]);
-  if (logoTaps.length >= 5 && DATA.comps && !document.querySelector('.vwin, .vbanner')) { logoTaps = []; celeDemo(); }
+  if (logoTaps.length >= 5 && DATA.comps && !document.querySelector('.vwin')) { logoTaps = []; celeDemo(); }
 });
-// Скромно: плашка сверху — Золотой мяч вкатывается, вокруг разлетаются искры; сама уходит через 6 с или по нажатию
-function tourBanner(x, done) {
-  if (!x.demo) celeSeen(x.key, true);
-  var el = document.createElement('div');
-  el.className = 'vbanner'; el.setAttribute('role', 'status');
-  var sparks = '';
+// Золотой мяч за победу в туре: блок над завершённым туром в «Прогнозах», той же ширины; закрывается крестиком.
+// Виден победителю, пока тур в «Прогнозах» и пока не закрыл. Мяч вкатывается при первом показе за сессию
+var GB_DEMO = false, GB_ANIM = {};
+function goldNote(g) {
+  var me = meOf(g), pp = ((g.strip || {}).pp || []).map(Number);
+  var key = 'tour|' + g.kind + '|' + ((comp(g.kind) || {}).season || '') + '|' + g.label;
+  if (!GB_DEMO) {
+    if (me < 0 || !pp.length || celeSeen(key)) return '';
+    var mx = Math.max.apply(null, pp);
+    if (pp.every(function (x) { return x === mx; }) || pp[me] !== mx) return '';
+  }
+  var fresh = !GB_ANIM[key], sparks = '';
+  GB_ANIM[key] = true;
   for (var i = 0; i < 8; i++) sparks += '<i style="--a:' + (i * 45 + 20) + 'deg;--d:' + (26 + (i % 3) * 8) + 'px"></i>';
-  el.innerHTML = '<span class="vb-ico" aria-hidden="true">' + goldBall() + sparks + '</span>' +
-    '<span class="vb-txt"><b>Золотой мяч за тур!</b></span>';
-  document.body.appendChild(el);
-  requestAnimationFrame(function () { el.classList.add('in'); });
-  setTimeout(function () { haptic('success'); }, 350);
-  var gone = false;
-  function close() { if (gone) return; gone = true; el.classList.remove('in'); el.classList.add('out'); setTimeout(function () { el.remove(); done(); }, 420); }
-  el.addEventListener('click', close);
-  setTimeout(close, 6500);
+  return '<section class="gbnote' + (fresh ? ' fresh' : '') + '" role="status"><span class="vb-ico" aria-hidden="true">' + goldBall() + sparks + '</span>' +
+    '<b>Золотой мяч<br>за победу в туре!</b><button type="button" class="gbx" data-gbclose="' + esc(key) + '" aria-label="Закрыть">' +
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></section>';
 }
 // Роскошно: тёмный «стадион», за печатью вращаются лучи. Чемпионат — печать влетает с вращением, вокруг салют;
 // Кубок — печать с ударом опускается, сверху сыплется конфетти
