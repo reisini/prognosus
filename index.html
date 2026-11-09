@@ -168,7 +168,7 @@
   .lrow .lm { text-align: center; }
   .lrow .lp { text-align: left; font: 600 14px/1 var(--display); color: var(--muted); }
   .lrow .ln { min-width: 0; text-align: left; }
-  .lrow .ln b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 14.5px; }
+  .lrow .ln b { display: block; overflow-wrap: break-word; font-weight: 600; font-size: 14.5px; line-height: 1.2; }
   .lrow .lpts { font: 600 15px/1 var(--display); }
   .lrow .lgd { color: var(--muted); }
   .lrow.po { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--red) 45%, transparent); }
@@ -497,7 +497,7 @@
     <p>Победы подряд — туры подряд с победой. Беспроигрышная серия — туры подряд, в которых игрок получил хотя бы 0,5 очка. Считаются только завершённые туры сезона.</p>
     <h3>Команды</h3>
     <p>Доверие — как часто игрок ставит на победу команды: прогноз её победы — 1, ничьей — ½, поражения — 0. Процент — среднее по её матчам.</p>
-    <p>Кормильцы и обманщики — команды, в матчах которых прогнозы приносят больше и меньше всего баллов за матч. Сколько всего принесла команда: баллы за матч делятся пополам между двумя командами, поэтому сумма по всем командам равна баллам игрока.</p>
+    <p>Кормильцы и обманщики — команды, в матчах которых прогнозы приносят больше и меньше всего баллов за матч. Сколько всего принесла команда: баллы за матч делятся поровну между игравшими командами, поэтому сумма по всем командам равна баллам игрока.</p>
     <p>В этих списках учитываются только доигранные матчи. Команда попадает в них, когда у неё набралось хотя бы три матча с прогнозами, в Кубке хотя бы два: по одному матчу выводов не сделать.</p>
     <p>Прошлые сезоны открываются выбором сезона в «Таблице» и в профиле игрока; в профиле есть ещё «все сезоны».</p>
   </div>
@@ -505,7 +505,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw90sot3";
+var BUILD = "mw90wt7b";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1042,7 +1042,7 @@ function teamBlock(list, name, kind) {
     return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
-  if (fe[0].length) h += '<div class="tcap">Средний балл за прогноз на матч команды и сумма; баллы матча делятся поровну между двумя командами.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+  if (fe[0].length) h += '<div class="tcap">Средний балл за прогноз на матч команды и сумма; баллы матча делятся поровну между игравшими командами.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   });
   return h;
@@ -1053,7 +1053,7 @@ function renderTeams(c) {
   var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
   if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
-  h += '<div class="pnote">Средний балл за прогноз на матч команды и сумма на всех; баллы матча делятся поровну между двумя командами.</div>';
+  h += '<div class="pnote">Средний балл за прогноз на матч команды и сумма на всех; баллы матча делятся поровну между игравшими командами.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
@@ -1212,7 +1212,7 @@ function renderMine(kind, head) {
       [r.p, r.k[4], r.k[3], r.k[2], r.k[0]].map(function (x) { return '<span>' + x + '</span>'; }).join('') +
       '<span class="lwl">' + num(r.win) + '</span><span class="lwl">' + num(r.lose) + '</span><span class="lpts">' + num(r.pts) + '</span></button>';
   }).join('');
-  return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между двумя командами.</span>' + TAP_TEAM + '</div></section>';
+  return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между игравшими командами.</span>' + TAP_TEAM + '</div></section>';
 }
 
 // ---------- Карточка команды: место, последние матчи, мои прогнозы на её матчи ----------
@@ -1381,7 +1381,7 @@ function seasonPick(c) {
 }
 // Прошлые сезоны не меняются: загруженный хранится на устройстве, со второго раза открывается сразу.
 // Свой столбец считаем здесь — сохранённый сезон годится любому игроку на этом устройстве.
-var SEASON_V = 1;
+var SEASON_V = 2; // 2: полное «Крылья Советов» в сохранённых сезонах
 function seasonKey(id) { return 'prognozus.season.v' + SEASON_V + '.' + id; }
 function mine(d) { var i = d.players.indexOf(DATA.name); d.me = i >= 0; d.meIdx = i; delete d.comp; return d; }
 function seasonGet(id) {
