@@ -560,7 +560,8 @@ function namesRow(players, meIdx, gridCols, last, first) {
 
 function stateChip(m) {
   if (m.phase === 'live') return '<span class="min"><i></i>' + esc((m.status || '').replace(/^идёт\s*/, '') || 'идёт') + '</span>';
-  if (m.phase === 'ft') return 'завершён';
+  // В Кубке ничья в основное время — серия пенальти; в наш зачёт идёт только счёт основного времени
+  if (m.phase === 'ft') return 'завершён' + (m.pen ? ', пен. ' + esc(m.pen) : '');
   if (m.phase === 'off') return 'перенесён';
   return '';
 }
