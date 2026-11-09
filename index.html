@@ -12,17 +12,17 @@
 <style>
   :root {
     --bg: #ecebf4; --surface: #ffffff; --soft: #f5f4fa; --ink: #1c1940; --muted: #6d6992; --line: #e3e0ef;
-    --accent: #4a3dcc; --accent-soft: #e8e5fb; --faint: #8581a8; --red: #e0393e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
+    --accent: #4a3dcc; --accent-soft: #e8e5fb; --faint: #a7a3c2; --red: #e0393e; --gold-mark: #a87a0e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
     --display: 'Unbounded', 'Onest', system-ui, sans-serif;
     --text: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --hdr: 96px; --nav: 58px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; --red: #f0525a; }
+      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #524e7d; --red: #f0525a; --gold-mark: #f2c14e; }
   }
   :root[data-theme="dark"] { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; --red: #f0525a; }
+    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #524e7d; --red: #f0525a; --gold-mark: #f2c14e; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.35 var(--text); font-variant-numeric: tabular-nums; }
@@ -39,7 +39,7 @@
      как буквы; высота значков равна высоте прописной «П». Линия значков (1,6 px) чуть плотнее основных штрихов имени (1,3 px)
      и легче логотипа (2,7 px). Между именем, свистком и стрелкой — одинаковые просветы 18 px, справа поле как слева у логотипа */
   .who { display: flex; align-items: center; margin-top: 4px; color: var(--muted); }
-  .who #who { position: relative; top: 2px; margin-right: 6px; font: 500 14px/1 var(--text); letter-spacing: -.005em; white-space: nowrap; }
+  .who #who { position: relative; top: 1px; margin-right: 6px; font: 500 14px/1 var(--text); letter-spacing: -.005em; white-space: nowrap; }
   #rulesbtn { margin-right: -4.25px; }
   /* Свисток шире и ниже стрелки; по площади силуэта он был на 6% меньше — увеличен на 3% от нижнего края, линия сохранена 1,6 px */
   #rulesbtn svg { transform: translateY(-3.35px) scale(1.032); transform-origin: 50% 20.6px; stroke-width: 1.7; }
@@ -50,10 +50,11 @@
   .icon-btn:active { background: var(--soft); color: var(--ink); }
   /* Соревнования: без подчёркивания и кружков — активное набрано тёмным, второе — светлым;
      число несделанных прогнозов — золотой индекс, как сноска */
-  .comps { display: flex; align-items: baseline; gap: 20px; padding: 8px 16px 10px; }
-  .comps button { border: 0; background: none; padding: 2px 0; cursor: pointer; font: 600 17px/1.15 var(--display); color: var(--faint); letter-spacing: -.015em; transition: color .15s; }
+  .comps { display: flex; align-items: baseline; gap: 20px; padding: 3px 16px 8px; }
+  /* Поле нажатия выше строки: отступы съедаются отрицательными полями, строка остаётся плотной */
+  .comps button { border: 0; background: none; padding: 8px 0; margin: -8px 0; cursor: pointer; font: 600 17px/1 var(--display); color: var(--faint); letter-spacing: -.01em; transition: color .15s; }
   .comps button.on { color: var(--ink); }
-  .badge { margin-left: 2px; font: 700 10.5px/1 var(--text); color: var(--gold); vertical-align: 8px; letter-spacing: 0; }
+  .badge { margin-left: 2px; font: 700 10.5px/1 var(--text); color: var(--gold-mark); vertical-align: 8px; letter-spacing: 0; }
   /* Когда страница прокручена, шапку отделяет тонкая линия */
   #hdr.scrolled { box-shadow: 0 1px 0 var(--line); }
 
