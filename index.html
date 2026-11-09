@@ -32,14 +32,19 @@
 
   /* Шапка: марка и вкладки турниров */
   #hdr { position: sticky; top: 0; z-index: 10; background: var(--bg); }
-  .bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 6px 2px 16px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px 2px 16px; }
   .brand { display: flex; align-items: center; color: var(--ink); }
   .brand svg { display: block; height: 34px; width: auto; }
-  /* Справа: имя и две иконки. Центр группы — на середине строчных логотипа (на 2 px ниже середины его рамки) */
+  /* Справа: имя и два значка. Всё стоит на базовой линии логотипа: имя — своей базовой линией, значки — нижним краем,
+     как буквы; высота значков равна высоте прописной «П». Линия значков (1,6 px) чуть плотнее основных штрихов имени (1,3 px)
+     и легче логотипа (2,7 px). Между именем, свистком и стрелкой — одинаковые просветы 18 px, справа поле как слева у логотипа */
   .who { display: flex; align-items: center; margin-top: 4px; color: var(--muted); }
-  .who #who { margin-right: 4px; font: 500 14px/1 var(--text); letter-spacing: -.005em; white-space: nowrap; }
+  .who #who { position: relative; top: 2px; margin-right: 6px; font: 500 14px/1 var(--text); letter-spacing: -.005em; white-space: nowrap; }
+  #rulesbtn { margin-right: -4.25px; }
+  #rulesbtn svg { transform: translateY(-3.35px); }
+  #refresh svg { transform: translateY(-1.85px); }
   .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: none; border-radius: 12px; cursor: pointer; color: var(--muted); }
-  .icon-btn svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
   .icon-btn svg .fill { fill: currentColor; stroke: none; }
   .icon-btn:active { background: var(--soft); color: var(--ink); }
   .comps { display: flex; gap: 22px; padding: 6px 16px 0; border-bottom: 1px solid var(--line); }
@@ -284,7 +289,7 @@
 <nav class="tabs"><div class="in" id="tabs">
   <button data-view="pred"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="navball"><circle cx="10.5" cy="13.5" r="7.25"/></clipPath></defs><circle cx="10.5" cy="13.5" r="7.25"/><path class="fill" d="M10.50 10.60 L13.26 12.60 L12.20 15.85 L8.80 15.85 L7.74 12.60Z"/><path class="fill" clip-path="url(#navball)" d="M10.50 8.71 L8.02 6.91 L8.97 3.99 L12.03 3.99 L12.98 6.91ZM15.05 12.02 L16.00 9.10 L19.07 9.10 L20.02 12.02 L17.53 13.82ZM13.31 17.37 L16.38 17.37 L17.33 20.29 L14.85 22.09 L12.36 20.29ZM7.69 17.37 L8.64 20.29 L6.15 22.09 L3.67 20.29 L4.62 17.37ZM5.95 12.02 L3.47 13.82 L0.98 12.02 L1.93 9.10 L5.00 9.10Z"/><path class="fill" d="M19.2 1.2Q19.85 4.15 22.8 4.8Q19.85 5.45 19.2 8.4Q18.55 5.45 15.6 4.8Q18.55 4.15 19.2 1.2Z"/></svg>Прогнозы</button>
   <button data-view="table"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill s1" d="M12.3 2.5Q13.42 8.38 19.3 9.5Q13.42 10.62 12.3 16.5Q11.18 10.62 5.3 9.5Q11.18 8.38 12.3 2.5Z"/><path class="fill s2" d="M4.7 12.1Q5.37 15.63 8.9 16.3Q5.37 16.97 4.7 20.5Q4.03 16.97 0.5 16.3Q4.03 15.63 4.7 12.1Z"/><path class="fill s3" d="M20.1 14.7Q20.64 17.56 23.5 18.1Q20.64 18.64 20.1 21.5Q19.56 18.64 16.7 18.1Q19.56 17.56 20.1 14.7Z"/></svg>Таблица</button>
-  <button data-view="tours"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/><circle cx="12" cy="15.2" r="2.3"/></svg>Туры</button>
+  <button data-view="tours"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/><circle cx="12" cy="15.2" r="2.3"/></svg>Результаты</button>
 </div></nav>
 <div class="toast" id="toast"></div>
 <div class="sheet" id="prof" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="prof-h">
@@ -312,7 +317,7 @@
     </ul>
     <h3>Таблица</h3>
     <p>Место в таблице считается по сумме очков, при равенстве очков — по сумме баллов, при равенстве и по этому показателю — по количеству точно угаданных результатов. У Чемпионата и Кубка таблицы отдельные.</p>
-    <p>В «Турах» стрелки рядом с очками показывают, кто после этого тура поднялся в таблице (▲), а кто опустился (▼).</p>
+    <p>В «Результатах» стрелки рядом с очками показывают, кто после этого тура поднялся в таблице (▲), а кто опустился (▼).</p>
     <h3>Угаданные исходы</h3>
     <p>Процент сыгранных матчей, в которых прогнозист угадал исход: победу хозяев, ничью или победу гостей. Счёт и разница мячей не важны. Матчи без прогноза не считаются.</p>
     <h3>Рекорды и серии</h3>
@@ -727,14 +732,14 @@ function renderTours(kind) {
     var d = SEASONS[kind + '|' + sel];
     if (!d) { loadSeason(kind, sel); d = { loading: true }; }
     if (d.loading || d.error) {
-      return '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
+      return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
         '<div class="pnote" style="padding:14px">' + (d.error ? esc(d.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
     }
     c = { kind: kind, season: sel, seasons: c0.seasons, players: d.players, me: d.me, meIdx: d.meIdx, tours: d.tours, live: [] };
   }
-  if (!c.tours.length) return '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div><div class="g names tl-head" style="--cols:' + cols(c.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div><div class="pnote" style="padding:14px">Сыгранных туров пока нет.</div></section>';
+  if (!c.tours.length) return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div><div class="pnote" style="padding:14px">Сыгранных туров пока нет.</div></section>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
-  var h = '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div>';
+  var h = '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div>';
   h += '<div style="height:6px"></div>' + namesRow(c.players, meOf(c), gc, '', seasonPick(c0));
   var P = placesByTour(c);
   c.tours.forEach(function (t) {
