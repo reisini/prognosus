@@ -661,11 +661,17 @@ function renderTable(kind) {
   var lg = S.tbl === 'league';
   var head = '<section class="panel"><div class="ptitle"><h2 class="tsw">' +
     '<button data-tbl="ours" class="' + (lg ? '' : 'on') + '" aria-pressed="' + !lg + '">Наша</button>' +
-    '<button data-tbl="league" class="' + (lg ? 'on' : '') + '" aria-pressed="' + lg + '">' + (kind === 'cup' ? 'Группы' : 'РПЛ') + '</button></h2>' + seasonPick(c0) + '</div>';
+    '<button data-tbl="league" class="' + (lg ? 'on' : '') + '" aria-pressed="' + lg + '">' + (kind === 'cup' ? 'Группы' : 'РПЛ') + '</button></h2>' +
+    (lg ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0)) + '</div>';
+  // Турнирная таблица — только текущего сезона
+  if (lg) {
+    var lsub = c0.after ? 'После тура ' + esc(c0.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
+    if (c0.live.length) lsub += ', идёт ' + esc(c0.live.join(', ').toLowerCase());
+    return renderLeague(c0, c0, head, lsub);
+  }
   if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   var sub = c.past ? 'Итоговая таблица сезона' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
-  if (lg) return renderLeague(c, c0, head, sub);
   var h = head;
   h += '<div class="pnote">' + sub + '</div>';
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
@@ -1074,7 +1080,6 @@ var LEAGUE = null;
 function renderLeague(c, c0, head, sub) {
   var cup = c.kind === 'cup', ms = leagueMatches(c), T = leagueRows(c, ms), h = head;
   LEAGUE = { c: c, c0: c0, T: T };
-  if (cup && c !== c0) return h + '<div class="pnote" style="padding-bottom:14px">Таблицы групп есть только для текущего сезона: в архиве прошлых нет серий пенальти.</div></section>';
   if (!ms.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых сыгранных матчей.</div></section>';
   var cols = cup ? ['И', 'В', 'ВП', 'ПП', 'П', 'М', 'О'] : ['И', 'В', 'Н', 'П', 'М', '±', 'О'];
   var full = { 'И': 'игры', 'В': 'победы', 'Н': 'ничьи', 'П': 'поражения', 'ВП': 'победы по пенальти', 'ПП': 'поражения по пенальти', 'М': 'мячи', '±': 'разница мячей', 'О': 'очки' };
