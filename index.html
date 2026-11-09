@@ -189,6 +189,14 @@
   .tc.win .b { color: var(--gold); font-weight: 700; }
   /* Сдвиг в таблице после тура: стрелка рядом с очками */
   .tc .bn { position: relative; }
+  /* Выбор сезона — в клетке над списком туров */
+  .season { position: relative; display: inline-flex; align-items: center; }
+  .season select { appearance: none; -webkit-appearance: none; margin: 0; padding: 6px 26px 6px 10px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink); font: 600 13px/1.2 var(--text); cursor: pointer; }
+  .season::after { content: ''; position: absolute; right: 10px; top: 50%; width: 6px; height: 6px; margin-top: -5px; border: solid var(--muted); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); pointer-events: none; }
+  .season.one { font: 600 13px/1.2 var(--text); color: var(--muted); }
+  .season.one::after { display: none; }
+  .season .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .tmv { position: absolute; left: 100%; bottom: 1px; margin-left: 3px; font-style: normal; font-size: 10px; line-height: 1; font-weight: 700; color: var(--accent); white-space: nowrap; }
   .tmv.down { color: var(--muted); }
   /* Перестановка мест при открытии таблицы */
@@ -311,7 +319,8 @@ function call(api, extra, ok, fail) {
 var API = {
   load: function (ok, fail) { call('data', null, ok, fail); },
   save: function (items, ok, fail) { call('save', { items: items }, ok, fail); },
-  claim: function (name, ok, fail) { call('claim', { name: name }, ok, fail); }
+  claim: function (name, ok, fail) { call('claim', { name: name }, ok, fail); },
+  season: function (kind, season, ok, fail) { call('season', { kind: kind, season: season }, ok, fail); }
 };
 var edits = {};      // key -> {h, a}
 var lateOpen = {};   // key -> true
@@ -325,6 +334,7 @@ function remember(k, v) { try { if (v === undefined) return localStorage.getItem
 function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 3200); }
 
 function comps() { return DATA.comps || []; }
+S.season = S.season || {};
 function comp(kind) { return comps().filter(function (c) { return c.kind === kind; })[0] || null; }
 function groupsOf(kind) { return (DATA.groups || []).filter(function (g) { return g.kind === kind; }); }
 function find(key) {
@@ -670,16 +680,48 @@ function profile(kind, name) {
 }
 
 // ---------- Туры ----------
+// Прошлые сезоны: загружаются по запросу и хранятся до перезагрузки приложения
+var SEASONS = {}, seasonBusy = {};
+function seasonPick(c) {
+  var list = c.seasons && c.seasons.length ? c.seasons : [c.season];
+  var cur = S.season[c.kind] || c.season;
+  if (list.length < 2) return '<span class="season one">сезон ' + esc(cur) + '</span>';
+  return '<label class="season"><span class="sr">Сезон</span><select data-season="' + c.kind + '">' + list.map(function (x) {
+    return '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>сезон ' + esc(x) + '</option>';
+  }).join('') + '</select></label>';
+}
+function loadSeason(kind, season) {
+  var id = kind + '|' + season;
+  if (SEASONS[id] || seasonBusy[id]) return;
+  seasonBusy[id] = true;
+  API.season(kind, season, function (d) {
+    seasonBusy[id] = false;
+    SEASONS[id] = d && d.tours ? d : { error: (d && d.error) || 'Не удалось загрузить сезон.' };
+    render();
+  }, function (e) { seasonBusy[id] = false; SEASONS[id] = { error: (e && e.message) || 'Нет связи с сервером.' }; render(); });
+}
+
 function renderTours(kind) {
-  var c = comp(kind);
-  if (!c || !c.tours.length) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
+  var c0 = comp(kind);
+  if (!c0) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
+  var sel = S.season[kind] || c0.season, c = c0;
+  if (sel !== c0.season) {
+    var d = SEASONS[kind + '|' + sel];
+    if (!d) { loadSeason(kind, sel); d = { loading: true }; }
+    if (d.loading || d.error) {
+      return '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
+        '<div class="pnote" style="padding:14px">' + (d.error ? esc(d.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
+    }
+    c = { kind: kind, season: sel, seasons: c0.seasons, players: d.players, me: d.me, meIdx: d.meIdx, tours: d.tours, live: [] };
+  }
+  if (!c.tours.length) return '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div><div class="g names tl-head" style="--cols:' + cols(c.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div><div class="pnote" style="padding:14px">Сыгранных туров пока нет.</div></section>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
-  var h = '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
-  h += '<div style="height:10px"></div>' + namesRow(c.players, meOf(c), gc, '', '');
+  var h = '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2></div>';
+  h += '<div style="height:6px"></div>' + namesRow(c.players, meOf(c), gc, '', seasonPick(c0));
   var P = placesByTour(c);
   c.tours.forEach(function (t) {
     var mv = moves(c, t.label, P);
-    var key = kind + ':' + t.label, open = !!S.open[key];
+    var key = kind + ':' + c.season + ':' + t.label, open = !!S.open[key];
     var w = winners(t.tp);
     h += '<div class="tour' + (open ? ' open' : '') + '"><button class="trow g" style="--cols:' + gc + '" data-tour="' + esc(key) + '" aria-expanded="' + open + '">' +
       '<span class="tl"><b>' + esc(t.label) + '</b><span>' + (t.state === 'live' ? '<i class="live">идёт</i>' + (t.dates ? ', ' : '') : '') + esc(t.dates || '') + '</span></span>';
@@ -818,6 +860,10 @@ function reload() {
   API.load(function (d) { DATA = d; render(); }, function () { render(); });
 }
 $('refresh').addEventListener('click', function () { if (!DATA.error) { toast('Обновляю…'); reload(); } });
+document.addEventListener('change', function (e) {
+  var t = e.target;
+  if (t && t.dataset && t.dataset.season) { S.season[t.dataset.season] = t.value; render(); }
+});
 function sheet(id, open) { $(id).hidden = !open; document.body.style.overflow = open ? 'hidden' : ''; if (open) $(id + 'close').focus(); }
 function rules(open) { sheet('rules', open); }
 $('rulesbtn').addEventListener('click', function () { rules(true); });
