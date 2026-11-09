@@ -167,7 +167,7 @@
   .lrow > span { text-align: right; white-space: nowrap; }
   .lrow .lm { text-align: center; }
   .lrow .lp { text-align: left; font: 600 14px/1 var(--display); color: var(--muted); }
-  .lrow .ln { min-width: 0; text-align: left; }
+  .lrow .ln { min-width: 0; text-align: left; white-space: normal; }
   .lrow .ln b { display: block; overflow-wrap: break-word; font-weight: 600; font-size: 14.5px; line-height: 1.2; }
   .lrow .lpts { font: 600 15px/1 var(--display); }
   .lrow .lgd { color: var(--muted); }
@@ -215,10 +215,11 @@
   .ldot { display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--live); vertical-align: 2px; animation: pulse 1.6s ease-in-out infinite; }
   .lrow.hl { background: var(--accent-soft); }
   .lrow { transition: background .8s; }
-  .lg.my { --lcols: 18px minmax(0, 1fr) 20px 17px 17px 17px 21px 30px 30px 32px; }
+  .lg.my { --lcols: 18px minmax(0, 1fr) 20px 16px 16px 16px 20px 36px 38px 40px; }
+  .ph { visibility: hidden; font-style: normal; }
   /* счётчики М, 4, 3, 2, 0 — по центру столбца: двузначные не слипаются с соседями */
   .lg.my .lrow > span:nth-child(n+3):nth-child(-n+7) { text-align: center; }
-  .lg.my .lrow { column-gap: 3px; font-size: 13px; }
+  .lg.my .lrow { column-gap: 2px; padding-right: 10px; font-size: 13px; }
   .lg.my .lwl { color: var(--muted); }
   button.team { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; font-size: 15px; line-height: 28px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   button.team span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
@@ -505,7 +506,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw90wt7b";
+var BUILD = "mw91akhd";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -625,7 +626,7 @@ function matchRow(g, m, gridCols, editable) {
   var cls = 'm' + (m.phase === 'live' ? ' is-live' : '') + (dirty ? (m.started ? ' late' : ' dirty') : '');
   var h = '<div class="' + cls + '" data-mkey="' + esc(m.key || '') + '"><div class="mt"><span>' + esc(m.when) + '</span><span>' + right + '</span></div>';
   ['h', 'a'].forEach(function (side) {
-    h += '<div class="g" style="--cols:' + gridCols + '"><button class="team" data-team="' + esc(side === 'h' ? m.hn || m.home : m.an || m.away) + '"><span>' + esc(side === 'h' ? m.home : m.away) + '</span></button>';
+    h += '<div class="g" style="--cols:' + gridCols + '"><button class="team" data-team="' + esc(side === 'h' ? m.hn || m.home : m.an || m.away) + '"><span>' + esc(short(side === 'h' ? m.home : m.away)) + '</span></button>';
     for (var j = 0; j < m.cells.length; j++) h += cell(g, m, j, side, editable);
     h += '<div class="sc">' + (m.started ? v(side === 'h' ? m.hs : m.as) : '') + '</div></div>';
   });
@@ -725,8 +726,8 @@ function renderTable(kind) {
   if (mode === 'league') return renderLeague(kind, head);
   if (mode === 'mine') return renderMine(kind, head);
   if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
-  var sub = c.past ? 'Итоговая таблица сезона' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
-  if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
+  // Во время тура — результаты live, между турами — после какого тура
+  var sub = c.past ? 'Итоговая таблица сезона' : c.live.length ? 'Результаты live' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   var h = head;
   h += '<div class="pnote">' + sub + '</div>';
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
@@ -1039,11 +1040,11 @@ function teamBlock(list, name, kind) {
   var tr = ends(ts, function (t) { return t.trust / t.n; }, 3);
   h += '<div class="tcap">Доверие: как часто ставит на победу команды</div>';
   h += teamLists(tr[0], tr[1], 'Верит', 'Не верит', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
+    return '<li><span>' + tname(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
   if (fe[0].length) h += '<div class="tcap">Средний балл за прогноз на матч команды и сумма; баллы матча делятся поровну между игравшими командами.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+    return '<li><span>' + tname(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   });
   return h;
 }
@@ -1055,7 +1056,7 @@ function renderTeams(c) {
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
   h += '<div class="pnote">Средний балл за прогноз на матч команды и сумма на всех; баллы матча делятся поровну между игравшими командами.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+    return '<li><span>' + tname(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
 }
 
@@ -1153,6 +1154,10 @@ function formMarks(res) {
   return '<span class="fm" aria-label="последние матчи: ' + res.map(function (x) { return w[x.res]; }).join(' ') + '">' +
     res.map(function (x) { return '<i class="' + x.res + '"></i>'; }).join('') + '</span>';
 }
+// Короткие названия для узких столбцов (таблицы, прогнозы, списки); полное — в карточке команды и строках матчей
+var SHORT = { 'Крылья Советов': 'Крылья Сов.' };
+function short(n) { return SHORT[n] || n; }
+function tname(n) { return SHORT[n] ? '<span title="' + esc(n) + '">' + esc(SHORT[n]) + '</span>' : esc(n); }
 function liveDot(on) { return on ? '<i class="ldot" title="идёт матч"></i>' : ''; }
 var TAP_TEAM = '<span>Нажми на команду, чтобы увидеть её последние матчи.</span>';
 function renderLeague(kind, head) {
@@ -1167,7 +1172,7 @@ function renderLeague(kind, head) {
     var nums = cup ? [r.p, r.w, r.wp, r.lp, r.l] : [r.p, r.w, r.d, r.l];
     if (r.wait) wait = true;
     return '<button class="lrow' + zone + '" data-team="' + esc(r.name) + '" data-from="table"><span class="lp">' + (k + 1) + '</span>' +
-      '<span class="ln"><b>' + esc(r.name) + liveDot(r.live) + '</b>' + formMarks(r.res.slice(-5)) + '</span>' +
+      '<span class="ln"><b>' + tname(r.name) + liveDot(r.live) + '</b>' + formMarks(r.res.slice(-5)) + '</span>' +
       nums.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '<span class="lm">' + r.gf + '–' + r.ga + '</span>' +
       (cup ? '' : '<span class="lgd">' + (gd > 0 ? '+' : gd < 0 ? '−' : '') + Math.abs(gd) + '</span>') +
       '<span class="lpts">' + r.pts + (r.wait ? '*' : '') + '</span></button>';
@@ -1200,17 +1205,19 @@ function myRows(kind) {
   return Object.keys(T).map(function (n) { return T[n]; })
     .sort(function (a, b) { return b.pts - a.pts || b.pts / b.p - a.pts / a.p || a.name.localeCompare(b.name, 'ru'); });
 }
+// Баллы кратны половине: у целых — невидимое «,5», чтобы числа в столбце стояли по запятой
+function half(x) { return num(x) + (x % 1 ? '' : '<i class="ph" aria-hidden="true">,5</i>'); }
 function renderMine(kind, head) {
   var rows = myRows(kind), h = head;
   if (!rows || !rows.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых матчей с твоими прогнозами.</div></section>';
   var full = { 'М': 'матчи с прогнозом', '4': 'точный счёт', '3': 'разница мячей', '2': 'исход', '0': 'мимо', 'В': 'баллы в её победах', 'П': 'баллы в её поражениях', 'Б': 'баллы' };
   h += '<div class="pnote">Баллы по моим прогнозам, результаты live</div><div class="lg my">' +
     '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' +
-    ['М', '4', '3', '2', '0', 'В', 'П', 'Б'].map(function (x) { return '<span title="' + full[x] + '">' + x + '</span>'; }).join('') + '</div>';
+    ['М', '4', '3', '2', '0', 'В', 'П', 'Б'].map(function (x, i) { return '<span title="' + full[x] + '">' + (i > 4 ? half(0).replace('0', x) : x) + '</span>'; }).join('') + '</div>';
   h += rows.map(function (r, k) {
-    return '<button class="lrow" data-team="' + esc(r.name) + '"><span class="lp">' + (k + 1) + '</span><span class="ln"><b>' + esc(r.name) + liveDot(r.live) + '</b></span>' +
+    return '<button class="lrow" data-team="' + esc(r.name) + '"><span class="lp">' + (k + 1) + '</span><span class="ln"><b>' + tname(r.name) + liveDot(r.live) + '</b></span>' +
       [r.p, r.k[4], r.k[3], r.k[2], r.k[0]].map(function (x) { return '<span>' + x + '</span>'; }).join('') +
-      '<span class="lwl">' + num(r.win) + '</span><span class="lwl">' + num(r.lose) + '</span><span class="lpts">' + num(r.pts) + '</span></button>';
+      '<span class="lwl">' + half(r.win) + '</span><span class="lwl">' + half(r.lose) + '</span><span class="lpts">' + half(r.pts) + '</span></button>';
   }).join('');
   return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между игравшими командами.</span>' + TAP_TEAM + '</div></section>';
 }
