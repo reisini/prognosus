@@ -811,7 +811,7 @@ function records(c) {
   if (pp.length) out.push({ t: 'Баллы за тур', rows: pp });
   if (ex.length) out.push({ t: 'Точные прогнозы за тур', rows: ex });
   if (ws.length) out.push({ t: 'Победы подряд', rows: ws });
-  if (ps.length) out.push({ t: 'Беспроигрышная серия (туров подряд)', rows: ps });
+  if (ps.length) out.push({ t: 'Беспроигрышная серия', rows: ps });
   return out;
 }
 
@@ -931,7 +931,7 @@ function scopeSeasons(c, scope) {
 // who — имя игрока или null (все игроки вместе). Берём только завершённые матчи с прогнозом.
 function teamStats(list, who) {
   var T = {};
-  function ent(name) { return T[name] || (T[name] = { name: name, n: 0, trust: 0, pm: 0, pts: 0, g: 0 }); }
+  function ent(name) { return T[name] || (T[name] = { name: name, n: 0, trust: 0, pm: 0, pts: 0 }); }
   function add(name, share, pts) {
     var t = ent(name);
     if (share !== null) { t.n++; t.trust += share; }
@@ -942,14 +942,12 @@ function teamStats(list, who) {
     if (js[0] < 0) return;
     (d.tours || []).forEach(function (t) { (t.matches || []).forEach(function (m) {
       if (m.phase !== 'ft' || m.hs === null || m.hs === undefined) return;
-      var any = false;
       js.forEach(function (j) {
         var x = m.cells && m.cells[j];
         if (!x || x.h === null || x.h === undefined || x.a === null || x.a === undefined) return;
         var sh = x.h > x.a ? 1 : x.h === x.a ? .5 : 0;
-        add(m.hn || m.home, sh, x.pts); add(m.an || m.away, 1 - sh, x.pts); any = true;
+        add(m.hn || m.home, sh, x.pts); add(m.an || m.away, 1 - sh, x.pts);
       });
-      if (any) { ent(m.hn || m.home).g++; ent(m.an || m.away).g++; } // сыгранные матчи команды (с прогнозом хотя бы одного)
     }); });
   });
   return Object.keys(T).map(function (k) { return T[k]; });
@@ -976,7 +974,7 @@ function teamBlock(list, name, kind) {
     return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
-  if (fe[0].length) h += '<div class="tcap">Сколько баллов в среднем приносит прогноз на матч команды</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+  if (fe[0].length) h += '<div class="tcap">Справа — сколько в среднем баллов приносит прогноз на матч команды. Под названием — сколько всего баллов принесли её матчи; баллы за матч делятся поровну между соперниками.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   });
   return h;
@@ -987,9 +985,9 @@ function renderTeams(c) {
   var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
   if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
-  h += '<div class="pnote">Сколько баллов в среднем приносит прогноз на матч команды.</div>';
+  h += '<div class="pnote">Справа — сколько в среднем баллов приносит прогноз на матч команды. Под названием — сколько всего баллов принесли её матчи всем вместе; баллы за матч делятся поровну между соперниками.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
-    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.g) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+    return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
 }
 
