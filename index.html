@@ -318,6 +318,9 @@
   .pc { font-family: var(--text); font-weight: 600; margin-left: 1px; }
   .retry { margin-top: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--accent); font: 600 14px/1 var(--text); cursor: pointer; }
   .pscope { padding: 0 16px 6px; }
+  .psec.has-pick { display: flex; align-items: center; gap: 6px; }
+  .psec.has-pick .season { margin-left: auto; }
+  .psec.has-pick small { display: none; } /* сезон уже написан на кнопке */
   .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
   .tcap + .tl2 { padding-top: 6px; }
   .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(6, 16, 10, .45); display: flex; align-items: flex-end; }
@@ -545,7 +548,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw93b74q";
+var BUILD = "mw93e5l2";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1119,7 +1122,7 @@ function allSeasons() {
 }
 function profile(kind, name, keep) {
   var list = allSeasons(), scope = S.pscope && (S.pscope === 'all' || list.indexOf(S.pscope) >= 0) ? S.pscope : (comps()[0] || {}).season;
-  var pick = list.length > 1 ? '<div class="pscope">' + pickBtn('pscope', list.concat(['all']), scope) + '</div>' : '';
+  var pick = list.length > 1 ? pickBtn('pscope', list.concat(['all']), scope) : '';
   var h = comps().map(function (c0) {
     if (scope === 'all') return allSection(c0, name);
     if (scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) return '';
@@ -1129,7 +1132,11 @@ function profile(kind, name, keep) {
   }).join('');
   PROF = { kind: kind, name: name };
   $('prof-h').textContent = name;
-  $('profbody').innerHTML = awardsBlock(name) + pick + (h || '<div class="tnote">Нет данных.</div>');
+  // Выбор сезона — справа в заголовке первого раздела статистики: он относится к статистике, а не к наградам
+  var i = h.indexOf('<div class="psec">');
+  if (pick && i >= 0) { var j = h.indexOf('</div>', i); h = h.slice(0, i) + '<div class="psec has-pick">' + h.slice(i + 18, j) + pick + h.slice(j); }
+  else if (pick) h = '<div class="pscope">' + pick + '</div>' + h;
+  $('profbody').innerHTML = awardsBlock(name) + (h || '<div class="tnote">Нет данных.</div>');
   if (!keep) sheet('prof', true);
 }
 // Награды игрока за все сезоны: печать чемпиона (сова) и обладателя Кубка (осьминог) за каждый оконченный сезон, где он первый
