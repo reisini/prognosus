@@ -171,6 +171,24 @@
   .prow .pv { text-align: right; white-space: nowrap; }
   .prow .pv b { font: 600 19px/1 var(--display); }
   .prow .pv small { display: block; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+  /* Команды: доверие, кормильцы и обманщики — два столбца списков */
+  .tsub { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 16px 0; border-top: 1px solid var(--line); margin-top: 2px; }
+  .tsub h4 { margin: 0; font: 600 15px/1.25 var(--text); }
+  .tsub small { font-size: 12px; color: var(--muted); }
+  .seg { display: flex; gap: 4px; margin: 10px 16px 0; padding: 3px; border-radius: 11px; background: var(--soft); }
+  .seg button { flex: 1; border: 0; background: none; padding: 6px 4px; border-radius: 8px; font: 600 12.5px/1.2 var(--text); color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(20, 16, 60, .12); }
+  .tl2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; padding: 10px 16px 14px; }
+  .tl2 h5 { margin: 0 0 2px; font: 600 12.5px/1.3 var(--text); color: var(--muted); }
+  .tl2 ol { list-style: none; margin: 0; padding: 0; }
+  .tl2 li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 8px; padding: 6px 0 0; }
+  .tl2 li span { min-width: 0; font-size: 14.5px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+  .tl2 li span small { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .tl2 li b { font: 600 16px/1.1 var(--display); white-space: nowrap; }
+  .tl2 .top li:first-child b { color: var(--gold); }
+  .tnote { padding: 8px 16px 14px; font-size: 13px; color: var(--muted); }
+  .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+  .tcap + .tl2 { padding-top: 6px; }
   .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(12, 10, 34, .45); display: flex; align-items: flex-end; }
   .sheet[hidden] { display: none; }
   .sheet-in { width: 100%; max-width: 520px; margin: 0 auto; max-height: 88vh; overflow: auto; background: var(--surface);
@@ -246,7 +264,8 @@
   nav.tabs .in { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 520px; margin: 0 auto; height: var(--nav); }
   nav.tabs button { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     color: var(--muted); font-size: 11.5px; font-weight: 600; }
-  nav.tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  /* Значки 28 px при подписи 11,5 px — пропорция панелей вкладок; толщина линии сохранена 1,9 px (1,63 из 24 единиц) */
+  nav.tabs button svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.63; stroke-linecap: round; stroke-linejoin: round; }
   nav.tabs button svg .fill { fill: currentColor; stroke: none; }
   nav.tabs button.on { color: var(--accent); }
   .toast { position: fixed; left: 50%; bottom: calc(var(--nav) + 76px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
@@ -342,6 +361,10 @@
     <h3>Рекорды и серии</h3>
     <p>Победа в туре — первое место по баллам, в том числе разделённое. Если у всех поровну, победителя нет.</p>
     <p>Победы подряд — туры подряд с победой. Беспроигрышная серия — туры подряд, в которых игрок получил хотя бы 0,5 очка. Считаются только завершённые туры сезона.</p>
+    <h3>Команды</h3>
+    <p>Доверие — как часто игрок ставит на победу команды: прогноз её победы — 1, ничьей — ½, поражения — 0. Процент — среднее по её матчам.</p>
+    <p>Кормильцы и обманщики — команды, в матчах которых прогнозы приносят больше и меньше всего баллов за матч. Сколько всего принесла команда: баллы за матч делятся пополам между двумя командами, поэтому сумма по всем командам равна баллам игрока.</p>
+    <p>В профиле статистику можно смотреть за этот сезон, за прошлые и за все вместе. Учитываются завершённые матчи, команды — с трёх матчей, в Кубке — с двух.</p>
   </div>
 </div></div>
 
@@ -376,7 +399,7 @@ function remember(k, v) { try { if (v === undefined) return localStorage.getItem
 function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 3200); }
 
 function comps() { return DATA.comps || []; }
-S.season = S.season || {};
+S.season = S.season || {}; S.tscope = S.tscope || {};
 function comp(kind) { return comps().filter(function (c) { return c.kind === kind; })[0] || null; }
 function groupsOf(kind) { return (DATA.groups || []).filter(function (g) { return g.kind === kind; }); }
 function find(key) {
@@ -542,7 +565,7 @@ function renderTable(kind) {
       '<span class="num ex">' + num(s.ex) + (c.live.length ? '<small>&nbsp;</small>' : '') + '</span></button>';
   });
   h += '<div class="hint">Нажми на игрока, чтобы увидеть его профиль.</div></section>';
-  return h + renderRecords(c);
+  return h + renderRecords(c) + renderTeams(c);
 }
 
 // ---------- Рекорды и серии ----------
@@ -702,23 +725,106 @@ function profileSection(c, name) {
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
   var oc = outcomes(c, c.players.indexOf(name));
   if (oc.n) h += row('Угаданные исходы', 'исход матча, счёт не важен', oc.pct + '%', oc.ok + ' из ' + oc.n + ' ' + plural(oc.n, 'матча', 'матчей', 'матчей'));
-  if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>';
+  if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>' + teamBlock(c, name);
   h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
   // Справа — текущая серия, слева под названием — рекорд игрока
   function best(x) { return x.best ? 'рекорд ' + x.best + ', ' + spansText(x.spans) : 'пока не было'; }
   h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
   h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
   if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(p.best.label)));
-  return h;
+  return h + teamBlock(c, name);
 }
 
-// Профиль: Чемпионат и Кубок, в порядке вкладок
-function profile(kind, name) {
+// Профиль: Чемпионат и Кубок, в порядке вкладок. keep — перерисовать открытый профиль, не трогая прокрутку
+var PROF = null;
+function profile(kind, name, keep) {
   var h = (DATA.comps || []).map(function (c) { return profileSection(c, name); }).join('');
   if (!h) return;
+  PROF = { kind: kind, name: name };
   $('prof-h').textContent = name;
   $('profbody').innerHTML = h;
-  sheet('prof', true);
+  if (!keep) sheet('prof', true);
+}
+function refreshProfile() { if (PROF && !$('prof').hidden) profile(PROF.kind, PROF.name, true); }
+
+// ---------- Команды: доверие, кормильцы и обманщики ----------
+// Сезоны для статистики: этот, прошлые (загружаются по запросу) или все
+function scopeSeasons(c, scope) {
+  var past = (c.seasons || []).filter(function (x) { return x !== c.season; }), list = scope === 'past' ? [] : [c], missing = [], errors = 0;
+  if (scope !== 'cur') past.forEach(function (x) {
+    var d = SEASONS[c.kind + '|' + x];
+    if (!d) missing.push(x); else if (d.error) errors++; else list.push(d);
+  });
+  return { list: list, missing: missing, errors: errors };
+}
+// По каждой команде: доверие (прогноз её победы — 1, ничьей — ½, поражения — 0), баллы в её матчах.
+// who — имя игрока или null (все игроки вместе). Берём только завершённые матчи с прогнозом.
+function teamStats(list, who) {
+  var T = {};
+  function add(name, share, pts) {
+    var t = T[name] || (T[name] = { name: name, n: 0, trust: 0, pm: 0, pts: 0 });
+    if (share !== null) { t.n++; t.trust += share; }
+    if (pts !== null && pts !== undefined) { t.pm++; t.pts += pts; }
+  }
+  list.forEach(function (d) {
+    var js = who === null ? d.players.map(function (x, j) { return j; }) : [d.players.indexOf(who)];
+    if (js[0] < 0) return;
+    (d.tours || []).forEach(function (t) { (t.matches || []).forEach(function (m) {
+      if (m.phase !== 'ft' || m.hs === null || m.hs === undefined) return;
+      js.forEach(function (j) {
+        var x = m.cells && m.cells[j];
+        if (!x || x.h === null || x.h === undefined || x.a === null || x.a === undefined) return;
+        var sh = x.h > x.a ? 1 : x.h === x.a ? .5 : 0;
+        add(m.hn || m.home, sh, x.pts); add(m.an || m.away, 1 - sh, x.pts);
+      });
+    }); });
+  });
+  return Object.keys(T).map(function (k) { return T[k]; });
+}
+function matchesWord(n) { return n + ' ' + plural(n, 'матч', 'матча', 'матчей'); }
+function pointsWord(x) { return num(x) + ' ' + (x % 1 ? 'балла' : plural(x, 'балл', 'балла', 'баллов')); }
+function teamLists(a, b, ha, hb, item) {
+  function ol(arr, cls) { return '<ol class="' + cls + '">' + arr.map(item).join('') + '</ol>'; }
+  return '<div class="tl2"><div><h5>' + ha + '</h5>' + ol(a, 'top') + '</div><div><h5>' + hb + '</h5>' + ol(b, 'low') + '</div></div>';
+}
+// Лучшие и худшие по метрике; при малом числе команд списки не пересекаются
+function ends(arr, val, k) {
+  var s = arr.slice().sort(function (x, y) { return val(y) - val(x) || y.n - x.n; }), m = Math.min(k, Math.floor(s.length / 2));
+  return [s.slice(0, m), s.slice(s.length - m).reverse()];
+}
+function teamBlock(c, name) {
+  var past = (c.seasons || []).filter(function (x) { return x !== c.season; });
+  var scope = past.length ? (S.tscope[c.kind] || 'cur') : 'cur';
+  var h = '<div class="tsub"><h4>Команды</h4>' + (past.length ? '' : '<small>этот сезон</small>') + '</div>';
+  if (past.length) h += '<div class="seg">' + [['cur', 'этот сезон'], ['past', 'прошлые'], ['all', 'все']].map(function (x) {
+    return '<button data-tscope="' + c.kind + '|' + x[0] + '"' + (x[0] === scope ? ' class="on"' : '') + '>' + x[1] + '</button>';
+  }).join('') + '</div>';
+  var sc = scopeSeasons(c, scope);
+  if (sc.missing.length) { sc.missing.forEach(function (x) { loadSeason(c.kind, x); }); return h + '<div class="tnote">Загружаю прошлые сезоны…</div>'; }
+  var min = c.kind === 'cup' ? 2 : 3;
+  var ts = teamStats(sc.list, name).filter(function (t) { return t.n >= min; });
+  if (ts.length < 2) return h + '<div class="tnote">' + (sc.errors ? 'Не удалось загрузить прошлые сезоны.' : scope === 'past' && !sc.list.some(function (d) { return d.players.indexOf(name) >= 0; }) ? 'В прошлых сезонах не играл.' : 'Пока мало сыгранных матчей.') + '</div>';
+  var tr = ends(ts, function (t) { return t.trust / t.n; }, 3);
+  h += '<div class="tcap">Доверие: как часто ставит на победу команды</div>';
+  h += teamLists(tr[0], tr[1], 'Верит', 'Не верит', function (t) {
+    return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '%</b></li>';
+  });
+  var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
+  if (fe[0].length) h += '<div class="tcap">Сколько баллов в среднем приносит прогноз на матч команды</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+    return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+  });
+  return h;
+}
+// Таблица: кормильцы и обманщики сезона для всех игроков вместе
+function renderTeams(c) {
+  var ts = teamStats([c], null).filter(function (t) { return t.pm >= (c.kind === 'cup' ? 2 : 3); });
+  var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
+  if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
+  var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
+  h += '<div class="pnote">Сколько баллов в среднем приносит прогноз на матч команды, у всех игроков вместе.</div>';
+  return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+    return '<li><span>' + esc(t.name) + '<small>всем ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
+  }) + '</section>';
 }
 
 // ---------- Туры ----------
@@ -739,8 +845,8 @@ function loadSeason(kind, season) {
   API.season(kind, season, function (d) {
     seasonBusy[id] = false;
     SEASONS[id] = d && d.tours ? d : { error: (d && d.error) || 'Не удалось загрузить сезон.' };
-    render();
-  }, function (e) { seasonBusy[id] = false; SEASONS[id] = { error: (e && e.message) || 'Нет связи с сервером.' }; render(); });
+    render(); refreshProfile();
+  }, function (e) { seasonBusy[id] = false; SEASONS[id] = { error: (e && e.message) || 'Нет связи с сервером.' }; render(); refreshProfile(); });
 }
 
 function renderTours(kind) {
@@ -879,6 +985,7 @@ document.addEventListener('click', function (e) {
     b.disabled = true;
     return API.claim(b.dataset.claim, function (d) { DATA = d; startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
   }
+  if (b.dataset.tscope) { var ts = b.dataset.tscope.split('|'); S.tscope[ts[0]] = ts[1]; return refreshProfile(); }
   if (b.dataset.player) return profile(S.comp, b.dataset.player);
   if (b.dataset.comp) return setComp(b.dataset.comp);
   if (b.dataset.view) return setView(b.dataset.view);
