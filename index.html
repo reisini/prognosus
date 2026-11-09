@@ -500,26 +500,45 @@ function outcomes(c, j) {
   return { ok: ok, n: n, pct: n ? Math.round(100 * ok / n) : null };
 }
 
+// Серии: все отрезки подряд идущих туров с выполненным условием.
+// best — самая длинная серия, spans — все серии такой длины, cur — текущая (если доходит до последнего тура).
+function series(flags, labels) {
+  var runs = [], start = -1;
+  flags.forEach(function (ok, k) {
+    if (ok && start < 0) start = k;
+    if (start >= 0 && (!ok || k === flags.length - 1)) {
+      var end = ok ? k : k - 1;
+      runs.push({ len: end - start + 1, from: labels[start], to: labels[end], end: end });
+      start = -1;
+    }
+  });
+  var best = runs.reduce(function (m, r) { return Math.max(m, r.len); }, 0);
+  var last = runs[runs.length - 1];
+  return {
+    best: best, cur: last && last.end === flags.length - 1 ? last.len : 0,
+    spans: runs.filter(function (r) { return best && r.len === best; }).map(function (r) { return [r.from, r.to]; })
+  };
+}
+// «тур 13», «туры 13–14», «туры 1–3, 6–8 и 12–14»
+function spansText(spans) {
+  var parts = spans.map(function (x) { return x[0] === x[1] ? tourNo(x[0]) : tourNo(x[0]) + '–' + tourNo(x[1]); });
+  var many = parts.length > 1 || spans[0][0] !== spans[0][1];
+  return (many ? 'туры ' : 'тур ') + (parts.length > 1 ? parts.slice(0, -1).join(', ') + ' и ' + parts[parts.length - 1] : parts[0]);
+}
+
 // Сезон по завершённым турам: победы, серии, лучший тур каждого игрока
 function season(c) {
   var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp; }).slice().reverse();
-  var P = c.players.map(function (name) {
-    return { name: name, wins: 0, best: null, win: { cur: 0, best: 0 }, pts: { cur: 0, best: 0 } };
-  });
-  function step(s, ok, label) {
-    if (!ok) { s.cur = 0; return; }
-    s.cur++; if (s.cur === 1) s.curFrom = label; s.curTo = label;
-    if (s.cur > s.best) { s.best = s.cur; s.from = s.curFrom; s.to = label; }
-  }
-  done.forEach(function (t) {
-    var mx = Math.max.apply(null, t.pp), tie = t.pp.every(function (x) { return x === mx; });
-    t.pp.forEach(function (x, j) {
-      var p = P[j], win = x === mx && !tie;
-      if (win) p.wins++;
-      step(p.win, win, t.label);
-      step(p.pts, (t.tp ? t.tp[j] : 0) > 0, t.label);
-      if (!p.best || x > p.best.v) p.best = { v: x, label: t.label };
+  var labels = done.map(function (t) { return t.label; });
+  var P = c.players.map(function (name, j) {
+    var wins = done.map(function (t) {
+      var mx = Math.max.apply(null, t.pp), tie = t.pp.every(function (x) { return x === mx; });
+      return t.pp[j] === mx && !tie;
     });
+    var pts = done.map(function (t) { return (t.tp ? t.tp[j] : 0) > 0; });
+    var best = null;
+    done.forEach(function (t) { if (!best || t.pp[j] > best.v) best = { v: t.pp[j], label: t.label }; });
+    return { name: name, wins: wins.filter(Boolean).length, best: best, win: series(wins, labels), pts: series(pts, labels) };
   });
   return { done: done, players: P };
 }
@@ -555,7 +574,7 @@ function records(c) {
     var best = 0, who = [];
     S.players.forEach(function (p) { var s = p[key];
       if (s.best > best) { best = s.best; who = []; }
-      if (s.best === best && best > 0) who.push(p.name + ', ' + span(s.from, s.to));
+      if (s.best === best && best > 0) who.push(p.name + ', ' + spansText(s.spans));
     });
     return best ? [{ v: best, who: who }] : [];
   }
@@ -594,7 +613,7 @@ function profileSection(c, name) {
   if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>';
   h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
   // Справа — текущая серия, слева под названием — рекорд игрока
-  function best(x) { return x.best ? 'рекорд ' + x.best + ', ' + span(x.from, x.to) : 'пока не было'; }
+  function best(x) { return x.best ? 'рекорд ' + x.best + ', ' + spansText(x.spans) : 'пока не было'; }
   h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
   h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
   if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(p.best.label)));
