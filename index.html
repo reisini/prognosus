@@ -225,9 +225,9 @@
   .lg.my .lrow { column-gap: 2px; padding-right: 10px; font-size: 13px; }
   .lg.my .lwl { color: var(--muted); }
   /* Подпись под вкладками таблицы и сезон справа: одна высота во всех таблицах */
-  .tsub { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; padding: 0 14px 8px; color: var(--muted); font-size: 13px; line-height: 1.3; }
-  .tsub:last-child { padding-bottom: 14px; }
-  .tsub > .season { flex: none; }
+  .tbsub { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; padding: 0 14px 8px; color: var(--muted); font-size: 13px; line-height: 1.3; }
+  .tbsub:last-child { padding-bottom: 14px; }
+  .tbsub > .season { flex: none; }
   .tretry { padding-top: 0; padding-bottom: 14px; }
   .tretry .retry { margin-top: 0; }
   /* Фанатская: чьи прогнозы — переключатель игроков */
@@ -239,7 +239,7 @@
   .fanp button[data-fanp].on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--ink); cursor: default; }
   .fanp button[data-fanp]:focus { outline: none; }
   .fanp button[data-fanp]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .tsub + .fanp { padding-top: 4px; }
+  .tbsub + .fanp { padding-top: 4px; }
   .fanempty { padding-bottom: 14px; }
   .fpo { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: baseline; padding: 9px 14px; border-top: 1px solid var(--line); font: 500 14px/1.25 var(--text); }
   .lgrp + .fpo { border-top: 0; }
@@ -669,7 +669,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw98d06q";
+var BUILD = "mw98qy7t";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -988,8 +988,8 @@ function stampSeen(key, set) {
 var stampObs = null;
 // Звук и толчки к анимации Золотого мяча: три отскока, затем мяч золотится
 function ballSounds() {
-  [.53, .85, 1.04].forEach(function (d, k) { play('bounce', d, k); });
-  play('gild', 1.42);
+  [.53, .85, 1.04].forEach(function (d, k) { sound('bounce', d, k); });
+  sound('gild', 1.42);
   setTimeout(function () { haptic('light'); }, 530); setTimeout(function () { haptic('success'); }, 1500);
 }
 // Нажатие на мяч или на штемпель — повторить анимацию со звуком
@@ -1005,7 +1005,7 @@ function animateStamps() {
   function go(el) {
     if (el.classList.contains('go')) return;
     el.classList.add('go'); stampSeen(el.dataset.stamp, true);
-    play('stamp', calm ? 0 : .26);
+    sound('stamp', calm ? 0 : .26);
     if (calm) return;
     setTimeout(function () { try { if (TG && TG.HapticFeedback) TG.HapticFeedback.impactOccurred('medium'); } catch (e) {} }, 260);
   }
@@ -1049,7 +1049,7 @@ function renderTable(kind) {
     return '<button data-tbl="' + t[0] + '" class="' + (mode === t[0] ? 'on' : '') + '" aria-pressed="' + (mode === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</h2></div>';
   // Под вкладками — подпись и сезон: строка одной высоты во всех таблицах, таблица под ней начинается на том же месте
   var pick = mode === 'league' || mode === 'mine' ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0);
-  function sub(text, bare) { return '<div class="tsub"><span>' + text + '</span>' + (bare ? '' : pick) + '</div>'; }
+  function sub(text, bare) { return '<div class="tbsub"><span>' + text + '</span>' + (bare ? '' : pick) + '</div>'; }
   function waiting() { return head + sub(r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + (r.error ? '<div class="pnote tretry">' + retryBtn(r) + '</div>' : '') + '</section>'; }
   if (mode === 'league') return renderLeague(kind, head, sub);
   if (mode === 'mine') return renderMine(kind, head, sub);
@@ -2034,7 +2034,7 @@ document.addEventListener('click', function (e) {
   var ico = e.target.closest('.gbnote .vb-ico');
   if (ico) { unlockAudio(); return replayAward(ico.closest('.gbnote'), 'fresh', function () { setTimeout(ballSounds, 30); }); }
   var pm = e.target.closest('.pmark');
-  if (pm) { unlockAudio(); pm.classList.add('fresh'); return replayAward(pm, 'go', function () { setTimeout(function () { play('stamp', .23); }, 30); setTimeout(function () { haptic('medium'); }, 260); }); }
+  if (pm) { unlockAudio(); pm.classList.add('fresh'); return replayAward(pm, 'go', function () { setTimeout(function () { sound('stamp', .23); }, 30); setTimeout(function () { haptic('medium'); }, 260); }); }
 });
 document.addEventListener('click', function (e) {
   var b = e.target.closest('button');
@@ -2242,7 +2242,7 @@ var SND = {
     [329.6, 415.3, 493.9, 659.3].forEach(function (f) { tone(t + 1.3, f, 2.2, 'triangle', .1); tone(t + 1.3, f / 2, 2.2, 'sine', .08); });
   }
 };
-function play(name, delay, arg) { if (!soundOn()) return; try { SND[name](AU.currentTime + (delay || 0), arg); } catch (e) {} }
+function sound(name, delay, arg) { if (!soundOn()) return; try { SND[name](AU.currentTime + (delay || 0), arg); } catch (e) {} }
 
 // ---------- Поздравления: победа в туре — скромно, сезон чемпионата и Кубка — роскошно ----------
 // Показываем самому победителю при первом заходе после победы — один раз (помним в памяти телефона).
@@ -2356,7 +2356,7 @@ function seasonWin(x, done) {
     el.classList.remove('gate'); el.classList.add('in');
     if (!CALM()) stop = (cup ? confetti : fireworks)(el.querySelector('canvas'));
     // Звук стартует чуть позже, чтобы телефон успел включить звук после нажатия
-    setTimeout(function () { play(cup ? 'cup' : 'champion', 0, [.5, .95, 1.4, 1.9, 2.5, 3.1, 3.6]); }, 40);
+    setTimeout(function () { sound(cup ? 'cup' : 'champion', 0, [.5, .95, 1.4, 1.9, 2.5, 3.1, 3.6]); }, 40);
     setTimeout(function () { haptic('heavy'); }, cup ? 620 : 900);
     setTimeout(function () { haptic('success'); }, cup ? 900 : 1150);
   });
