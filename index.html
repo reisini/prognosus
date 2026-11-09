@@ -151,8 +151,9 @@
   .mv.down { color: var(--muted); }
   .hint { padding: 10px 14px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
   /* Заголовок «Таблицы»: наша таблица или турнирная — как вкладки турниров, шрифтом */
-  .ptitle .tsw { display: flex; align-items: baseline; gap: 16px; min-width: 0; }
-  .tsw button { border: 0; background: none; padding: 8px 0; margin: -8px 0; cursor: pointer; font: 600 21px/1.15 var(--display); letter-spacing: -.01em; color: var(--faint); white-space: nowrap; transition: color .15s; -webkit-tap-highlight-color: transparent; }
+  .ptitle .tsw { display: flex; align-items: baseline; gap: clamp(10px, 4.27vw, 16px); min-width: 0; padding: 8px 0; margin: -8px 0; overflow-x: auto; scrollbar-width: none; }
+  .ptitle .tsw::-webkit-scrollbar { display: none; }
+  .tsw button { border: 0; background: none; padding: 8px 0; margin: -8px 0; cursor: pointer; font: 600 clamp(17px, 5.55vw, 21px)/1.15 var(--display); letter-spacing: -.01em; color: var(--faint); white-space: nowrap; transition: color .15s; -webkit-tap-highlight-color: transparent; }
   .tsw button.on { color: var(--ink); cursor: default; }
   .tsw button:focus { outline: none; }
   .tsw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
@@ -222,6 +223,29 @@
   .lg.my .lrow > span:nth-child(n+3):nth-child(-n+7) { text-align: center; }
   .lg.my .lrow { column-gap: 2px; padding-right: 10px; font-size: 13px; }
   .lg.my .lwl { color: var(--muted); }
+  /* Подпись под вкладками таблицы и сезон справа: одна высота во всех таблицах */
+  .tsub { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; padding: 0 14px 8px; color: var(--muted); font-size: 13px; line-height: 1.3; }
+  .tsub:last-child { padding-bottom: 14px; }
+  .tsub > .season { flex: none; }
+  .tretry { padding-top: 0; padding-bottom: 14px; }
+  .tretry .retry { margin-top: 0; }
+  /* Фанатская: чьи прогнозы — переключатель игроков */
+  .fanp { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 0 14px 12px; }
+  .fanp > div { display: flex; flex: 1 1 165px; gap: 6px; min-width: 0; }
+  .fanp > .season { flex: none; margin-left: auto; } /* очень узкий экран — сезон уходит строкой ниже */
+  .fanp button[data-fanp] { flex: 1 1 0; min-width: 0; padding: 8px 6px; border: 1px solid var(--line); border-radius: 10px; background: none; color: var(--muted);
+    padding-left: 4px; padding-right: 4px; font: 600 14px/1.15 var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color .15s, border-color .15s, background .15s; }
+  .fanp button[data-fanp].on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--ink); cursor: default; }
+  .fanp button[data-fanp]:focus { outline: none; }
+  .fanp button[data-fanp]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tsub + .fanp { padding-top: 4px; }
+  .fanempty { padding-bottom: 14px; }
+  .fpo { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: baseline; padding: 9px 14px; border-top: 1px solid var(--line); font: 500 14px/1.25 var(--text); }
+  .lgrp + .fpo { border-top: 0; }
+  .fpo .fh { text-align: right; }
+  .fpo b { text-align: center; font: 600 15px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .fpo .w { font-weight: 600; }
+  .fpo .l { color: var(--muted); }
   button.team { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; font-size: 15px; line-height: 28px; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .fit i { font-style: normal; }
   .fit .sh, .fit.short .fl { display: none; }
@@ -644,7 +668,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw95gtze";
+var BUILD = "mw97nsir";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -685,7 +709,7 @@ var API = {
 })();
 var edits = {};      // key -> {h, a}
 var lateOpen = {};   // key -> true
-var S = { comp: null, view: null, open: {}, tbl: /^(league|mine)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours' };
+var S = { comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -1009,25 +1033,29 @@ function seasonOver(c) {
 }
 
 // ---------- Таблица ----------
-function tblMode(c0) { return S.tbl === 'league' || (S.tbl === 'mine' && c0 && c0.me) ? S.tbl : 'ours'; }
+function tblMode(c0) { return S.tbl === 'league' || S.tbl === 'fan' || (S.tbl === 'mine' && c0 && c0.me) ? S.tbl : 'ours'; }
 function renderTable(kind) {
   var c0 = comp(kind);
   if (!c0) return '<div class="panel blank">Нет данных.</div>';
   var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
-  // Наша таблица, таблица турнира и моя (команды по баллам, которые мне приносят мои прогнозы); две последние — только текущий сезон
+  // Наша таблица, таблица турнира, моя (команды по баллам, которые мне приносят мои прогнозы) и фанатская (турнир по прогнозам);
+  // таблица турнира и моя — только текущий сезон
   var mode = tblMode(c0);
-  var tabs = [['ours', 'Наша'], ['league', kind === 'cup' ? 'Кубок' : 'РПЛ']].concat(c0.me ? [['mine', 'Моя']] : []);
+  var tabs = [['ours', 'Наша'], ['league', kind === 'cup' ? 'Кубок' : 'РПЛ']].concat(c0.me ? [['mine', 'Моя']] : []).concat([['fan', 'Фанатская']]);
   var head = '<section class="panel"><div class="ptitle"><h2 class="tsw">' + tabs.map(function (t) {
-    return '<button data-tbl="' + t[0] + '" class="' + (mode === t[0] ? 'on' : '') + '" aria-pressed="' + (mode === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</h2>' +
-    (mode !== 'ours' ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0)) + '</div>';
-  if (mode === 'league') return renderLeague(kind, head);
-  if (mode === 'mine') return renderMine(kind, head);
-  if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
+    return '<button data-tbl="' + t[0] + '" class="' + (mode === t[0] ? 'on' : '') + '" aria-pressed="' + (mode === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</h2></div>';
+  // Под вкладками — подпись и сезон: строка одной высоты во всех таблицах, таблица под ней начинается на том же месте
+  var pick = mode === 'league' || mode === 'mine' ? '<span class="season one">сезон ' + esc(c0.season) + '</span>' : seasonPick(c0);
+  function sub(text, bare) { return '<div class="tsub"><span>' + text + '</span>' + (bare ? '' : pick) + '</div>'; }
+  function waiting() { return head + sub(r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + (r.error ? '<div class="pnote tretry">' + retryBtn(r) + '</div>' : '') + '</section>'; }
+  if (mode === 'league') return renderLeague(kind, head, sub);
+  if (mode === 'mine') return renderMine(kind, head, sub);
+  if (mode === 'fan') return c ? renderFan(c, head, sub, pick) : waiting();
+  if (!c) return waiting();
   // Во время тура — результаты live, между турами — после какого тура
   var over = seasonOver(c);
-  var sub = over ? 'Итоговая таблица сезона' : c.live.length ? 'Результаты live' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
-  var h = head;
-  h += '<div class="pnote">' + sub + '</div>';
+  var note = over ? 'Итоговая таблица сезона' : c.live.length ? 'Результаты live' : c.after ? 'После ' + esc(isNo(tourNo(c.after)) ? 'тура ' + tourNo(c.after) : tourNo(c.after).replace(/финал$/, 'финала')) : 'Сезон только начался';
+  var h = head + sub(note);
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
   c.standings.forEach(function (s) {
     var oc = outcomes(c, c.players.indexOf(s.name));
@@ -1050,7 +1078,10 @@ function renderTable(kind) {
 }
 
 // ---------- Рекорды и серии ----------
-function tourNo(label) { return String(label || '').replace(/^тур\s*/i, ''); }
+// «Тур 12» → «12»; раунд плей-офф с названием («Суперфинал») — само название строчными
+function tourNo(label) { var s = String(label || ''); return /^тур\s*\d/i.test(s) ? s.replace(/^тур\s*/i, '') : s.toLowerCase(); }
+function isNo(x) { return /^\d/.test(x); }
+function tourWord(label) { var n = tourNo(label); return isNo(n) ? 'тур ' + n : n; }
 function plural(n, one, few, many) { var a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many; }
 function span(from, to) { return from === to ? 'тур ' + tourNo(to) : 'туры ' + tourNo(from) + '–' + tourNo(to); }
 
@@ -1087,6 +1118,10 @@ function series(flags, labels) {
 }
 // «тур 13», «туры 13–14», «туры 1–3, 6–8 и 12–14»
 function spansText(spans) {
+  if (spans.some(function (x) { return !isNo(tourNo(x[0])) || !isNo(tourNo(x[1])); })) {
+    var w = spans.map(function (x) { return x[0] === x[1] ? tourWord(x[0]) : tourWord(x[0]) + ' – ' + tourWord(x[1]); });
+    return w.length > 1 ? w.slice(0, -1).join(', ') + ' и ' + w[w.length - 1] : w[0];
+  }
   var parts = spans.map(function (x) { return x[0] === x[1] ? tourNo(x[0]) : tourNo(x[0]) + '–' + tourNo(x[1]); });
   var many = parts.length > 1 || spans[0][0] !== spans[0][1];
   return (many ? 'туры ' : 'тур ') + (parts.length > 1 ? parts.slice(0, -1).join(', ') + ' и ' + parts[parts.length - 1] : parts[0]);
@@ -1140,9 +1175,10 @@ function season(c) {
 }
 
 // «тур 9», «туры 9 и 12», «туры 3, 7 и 9»
+// «тур 3», «туры 3, 5 и 7», «тур 12 и суперфинал»
 function toursText(list) {
-  if (list.length === 1) return 'тур ' + list[0];
-  return 'туры ' + list.slice(0, -1).join(', ') + ' и ' + list[list.length - 1];
+  var n = list.filter(isNo), all = n.concat(list.filter(function (x) { return !isNo(x); }));
+  return (n.length ? (n.length > 1 ? 'туры ' : 'тур ') : '') + (all.length > 1 ? all.slice(0, -1).join(', ') + ' и ' + all[all.length - 1] : all[0]);
 }
 // Кто: по игроку на строку, в порядке листа
 function whoLines(c, hits) {
@@ -1218,7 +1254,7 @@ function profileSection(c, name) {
     h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
     h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
   }
-  if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(p.best.label)));
+  if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', ' + esc(tourWord(p.best.label)));
   return h + teamBlock([c], name, c.kind);
 }
 
@@ -1323,7 +1359,7 @@ function allSection(c0, name) {
   if (done) h += row('Победы в турах', 'первое место по баллам', wins, 'из ' + done);
   if (bw.v) h += row('Победы подряд', esc(bw.w.join('; ')), bw.v, 'рекорд');
   if (bp.v) h += row('Беспроигрышная серия', esc(bp.w.join('; ')), bp.v, 'рекорд');
-  if (bt) h += row('Лучший тур', null, num(bt.v), plural(bt.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(bt.label)) + ', ' + esc(bt.season));
+  if (bt) h += row('Лучший тур', null, num(bt.v), plural(bt.v, 'балл', 'балла', 'баллов') + ', ' + esc(tourWord(bt.label)) + ', ' + esc(bt.season));
   return h + teamBlock(list, name, c0.kind);
 }
 function refreshProfile() { if (PROF && !$('prof').hidden) profile(PROF.kind, PROF.name, true); }
@@ -1424,7 +1460,8 @@ function allMatches(c) {
   });
   return out.sort(function (x, y) { return x.k - y.k || x.o - y.o; });
 }
-function groupStage(c, m) { return c.kind !== 'cup' || /^тур\s*\d/i.test(m.label); }
+// Групповой этап Кубка — туры 1–6; дальше плей-офф (в листе прошлых сезонов он тоже «Тур 7», «Тур 8»…)
+function groupStage(c, m) { return c.kind !== 'cup' || /^тур\s*[1-6]$/i.test(String(m.label).trim()); }
 function leagueMatches(c) { return allMatches(c).filter(function (m) { return groupStage(c, m); }); }
 // Исход для команды: f — свои мячи, g — чужие, pen — серия [свои, чужие] или null
 function outcome(f, g, pen, cup) {
@@ -1517,9 +1554,9 @@ window.addEventListener('resize', queueFit);
 function tname(n) { return SHORT[n] ? '<span title="' + esc(n) + '">' + esc(SHORT[n]) + '</span>' : esc(n); }
 function liveDot(on) { return on ? '<i class="ldot" title="идёт матч"></i>' : ''; }
 var TAP_TEAM = '<span>Нажми на команду, чтобы увидеть её последние матчи.</span>';
-function renderLeague(kind, head) {
+function renderLeague(kind, head, sub) {
   var L = leagueData(kind), cup = kind === 'cup', h = head;
-  if (!L || !L.ms.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых сыгранных матчей.</div></section>';
+  if (!L || !L.ms.length) return h + sub('Таблица появится после первых сыгранных матчей.') + '</section>';
   var cols = cup ? ['И', 'В', 'ВП', 'ПП', 'П', 'М', 'О'] : ['И', 'В', 'Н', 'П', 'М', '±', 'О'];
   var full = { 'И': 'игры', 'В': 'победы', 'Н': 'ничьи', 'П': 'поражения', 'ВП': 'победы по пенальти', 'ПП': 'поражения по пенальти', 'М': 'мячи', '±': 'разница мячей', 'О': 'очки' };
   var headRow = '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' + cols.map(function (x) { return '<span title="' + full[x] + '"' + (x === 'М' ? ' class="lm"' : '') + '>' + x + '</span>'; }).join('') + '</div>';
@@ -1534,7 +1571,7 @@ function renderLeague(kind, head) {
       (cup ? '' : '<span class="lgd">' + (gd > 0 ? '+' : gd < 0 ? '−' : '') + Math.abs(gd) + '</span>') +
       '<span class="lpts">' + r.pts + (r.wait ? '*' : '') + '</span></button>';
   }
-  h += '<div class="pnote">' + (cup ? 'Групповой этап, результаты live' : 'Результаты live') + '</div><div class="lg' + (cup ? ' cup' : '') + '">';
+  h += sub(cup ? 'Групповой этап, результаты live' : 'Результаты live') + '<div class="lg' + (cup ? ' cup' : '') + '">';
   L.groups.forEach(function (g) { h += (g.name ? '<div class="lgrp">' + esc(g.name) + '</div>' : '') + headRow + g.rows.map(rowHtml).join(''); });
   h += '</div><div class="lleg"><span>' + formMarks([{ res: 'W' }]) + 'победа</span><span>' + formMarks([{ res: 'D' }]) + 'ничья</span><span>' + formMarks([{ res: 'L' }]) + 'поражение</span>' +
     (cup ? '<span>ВП и ПП: победа (2 очка) и поражение (1 очко) в серии пенальти</span>' + (wait ? '<span>* ждём счёт серии пенальти</span>' : '')
@@ -1564,11 +1601,11 @@ function myRows(kind) {
 }
 // Баллы кратны половине: у целых — невидимое «,5», чтобы числа в столбце стояли по запятой
 function half(x) { return num(x) + (x % 1 ? '' : '<i class="ph" aria-hidden="true">,5</i>'); }
-function renderMine(kind, head) {
+function renderMine(kind, head, sub) {
   var rows = myRows(kind), h = head;
-  if (!rows || !rows.length) return h + '<div class="pnote" style="padding-bottom:14px">Таблица появится после первых матчей с твоими прогнозами.</div></section>';
+  if (!rows || !rows.length) return h + sub('Таблица появится после первых матчей с твоими прогнозами.') + '</section>';
   var full = { 'М': 'матчи с прогнозом', '4': 'точный счёт', '3': 'разница мячей', '2': 'исход', '0': 'мимо', 'В': 'баллы в её победах', 'П': 'баллы в её поражениях', 'Б': 'баллы' };
-  h += '<div class="pnote">Баллы по моим прогнозам, результаты live</div><div class="lg my">' +
+  h += sub('Баллы по моим прогнозам, результаты live') + '<div class="lg my">' +
     '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' +
     ['М', '4', '3', '2', '0', 'В', 'П', 'Б'].map(function (x, i) { return '<span title="' + full[x] + '">' + (i > 4 ? half(0).replace('0', x) : x) + '</span>'; }).join('') + '</div>';
   h += rows.map(function (r, k) {
@@ -1577,6 +1614,60 @@ function renderMine(kind, head) {
       '<span class="lwl">' + half(r.win) + '</span><span class="lwl">' + half(r.lose) + '</span><span class="lpts">' + half(r.pts) + '</span></button>';
   }).join('');
   return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между игравшими командами.</span>' + TAP_TEAM + '</div></section>';
+}
+
+// ---------- Фанатская: турнир, как если бы сбылись прогнозы игрока ----------
+// Счёт каждого начавшегося матча — из прогноза игрока (до стартового свистка прогнозы скрыты, поэтому только начавшиеся).
+// Матчи без прогноза не считаем. Кубок: группы (туры 1–6) и первый раунд плей-офф; ничья в группе — по очку, серии в прогнозах нет
+function fanData(c, j) {
+  var all = allMatches(c), real = all.filter(function (m) { return groupStage(c, m); }), fan = [], po = null, n = 0;
+  var chron = (c.tours || []).slice().reverse(), first = chron.filter(function (t) { return !groupStage(c, t); })[0];
+  all.forEach(function (m) {
+    var x = m.cells[j];
+    if (!x || x.h === null || x.h === undefined || x.h === '' || x.a === null || x.a === undefined || x.a === '') return;
+    var f = { h: m.h, a: m.a, hs: +x.h, as: +x.a, pen: null, live: false, label: m.label };
+    if (groupStage(c, m)) { fan.push(f); n++; }
+    else if (first && m.label === first.label) { (po = po || { label: first.label, ms: [] }).ms.push(f); n++; }
+  });
+  var T = leagueRows({ kind: 'champ' }, fan);
+  function rows(names) { return leagueRank(names.map(function (nm) { return T[nm] || (T[nm] = { name: nm, p: 0, w: 0, d: 0, l: 0, wp: 0, lp: 0, gf: 0, ga: 0, pts: 0, res: [], wait: 0, live: false }); }), fan, false); }
+  // Состав турнира — по настоящим матчам: команда без прогнозов на её матчи всё равно в таблице, с нулями
+  var RT = leagueRows(c, real), groups = c.kind === 'cup'
+    ? cupGroups(c, real, RT).map(function (g) { return { name: g.name, rows: rows(g.teams) }; })
+    : [{ name: '', rows: rows(Object.keys(RT)) }];
+  return { n: n, groups: groups, po: po, teams: Object.keys(RT).length };
+}
+function renderFan(c, head, sub, pick) {
+  var P = c.players, j = P.indexOf(S.fanP), cup = c.kind === 'cup';
+  if (j < 0) j = meOf(c) >= 0 ? meOf(c) : 0;
+  // Подзаголовок — во всю строку, сезон — справа от переключателя игроков
+  var h = head + sub('Ваши ожидания — это ваши проблемы', true) +
+    '<div class="fanp"><div role="group" aria-label="Чьи прогнозы">' + P.map(function (n, k) {
+      return '<button data-fanp="' + esc(n) + '" class="' + (k === j ? 'on' : '') + '" aria-pressed="' + (k === j) + '">' + esc(n) + '</button>'; }).join('') + '</div>' + pick + '</div>';
+  var F = fanData(c, j);
+  if (!F.n) return h + '<div class="pnote fanempty">Таблица появится после первых матчей с прогнозами.</div></section>';
+  var cols = ['И', 'В', 'Н', 'П', 'М', '±', 'О'];
+  var full = { 'И': 'игры', 'В': 'победы', 'Н': 'ничьи', 'П': 'поражения', 'М': 'мячи', '±': 'разница мячей', 'О': 'очки' };
+  var headRow = '<div class="lrow head" aria-hidden="true"><span class="lp"></span><span class="ln"></span>' + cols.map(function (x) { return '<span title="' + full[x] + '"' + (x === 'М' ? ' class="lm"' : '') + '>' + x + '</span>'; }).join('') + '</div>';
+  var n16 = !cup && F.teams === 16;
+  function rowHtml(r, k) {
+    var zone = n16 ? (k >= 14 ? ' rel' : k >= 12 ? ' po' : '') : '', gd = r.gf - r.ga;
+    return '<button class="lrow' + zone + '" data-team="' + esc(r.name) + '" data-from="table"><span class="lp">' + (k + 1) + '</span>' +
+      '<span class="ln"><b>' + tname(r.name) + '</b>' + formMarks(r.res.slice(-5)) + '</span>' +
+      [r.p, r.w, r.d, r.l].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '<span class="lm">' + r.gf + '–' + r.ga + '</span>' +
+      '<span class="lgd">' + (gd > 0 ? '+' : gd < 0 ? '−' : '') + Math.abs(gd) + '</span><span class="lpts">' + r.pts + '</span></button>';
+  }
+  h += '<div class="lg fan">';
+  F.groups.forEach(function (g) { h += (g.name ? '<div class="lgrp">' + esc(g.name) + '</div>' : '') + headRow + g.rows.map(rowHtml).join(''); });
+  // Первый раунд плей-офф: пары и счёт из прогнозов, у победителя — жирное название
+  if (F.po) h += '<div class="lgrp">Плей-офф: ' + esc(tourWord(F.po.label)) + '</div>' + F.po.ms.map(function (m) {
+    var w = m.hs > m.as ? 'h' : m.hs < m.as ? 'a' : '';
+    return '<div class="fpo"><span class="fh' + (w === 'h' ? ' w' : w ? ' l' : '') + '">' + tname(m.h) + '</span><b>' + m.hs + ':' + m.as + '</b>' +
+      '<span class="fa' + (w === 'a' ? ' w' : w ? ' l' : '') + '">' + tname(m.a) + '</span></div>';
+  }).join('');
+  return h + '</div><div class="lleg"><span>' + formMarks([{ res: 'W' }]) + 'победа</span><span>' + formMarks([{ res: 'D' }]) + 'ничья</span><span>' + formMarks([{ res: 'L' }]) + 'поражение</span>' +
+    (n16 ? '<span class="lz"><span><i class="zbar po"></i>стыки</span><span><i class="zbar"></i>вылет</span></span>' : '') +
+    '<span>Счёт — из прогноза, матчи без прогноза не в зачёте.' + (cup ? ' Ничья в группе — по очку: серии пенальти в прогнозах нет.' : '') + '</span>' + TAP_TEAM + '</div></section>';
 }
 
 // ---------- Карточка команды: место, последние матчи, мои прогнозы на её матчи ----------
@@ -1745,7 +1836,7 @@ function seasonPick(c) {
 }
 // Прошлые сезоны не меняются: загруженный хранится на устройстве, со второго раза открывается сразу.
 // Свой столбец считаем здесь — сохранённый сезон годится любому игроку на этом устройстве.
-var SEASON_V = 2; // 2: полное «Крылья Советов» в сохранённых сезонах
+var SEASON_V = 3; // 2: полное «Крылья Советов» в сохранённых сезонах; 3: суперфинал Кубка 25/26
 function seasonKey(id) { return 'prognozus.season.v' + SEASON_V + '.' + id; }
 function mine(d) { var i = d.players.indexOf(DATA.name); d.me = i >= 0; d.meIdx = i; delete d.comp; return d; }
 function seasonGet(id) {
@@ -1875,6 +1966,13 @@ function animateTable(c) {
 var shownKey = '';
 
 // ---------- каркас ----------
+// Узкий экран: вкладки таблицы прокручиваются вбок — открытую держим в поле зрения (и когда догрузился шрифт)
+function keepTab() {
+  var tsw = document.querySelector('#app .tsw'), ton = tsw && tsw.querySelector('.on');
+  if (ton && tsw.scrollWidth > tsw.clientWidth) tsw.scrollLeft = Math.max(0, ton.getBoundingClientRect().right - tsw.getBoundingClientRect().left + tsw.scrollLeft - tsw.clientWidth);
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(keepTab);
+window.addEventListener('resize', keepTab);
 function render() {
   $('who').textContent = DATA.name || '';
   var app = $('app');
@@ -1898,6 +1996,7 @@ function render() {
   [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
   setTimeout(animateStamps, 120);
+  keepTab();
   var key = S.view + '|' + S.comp;
   var cur = comp(S.comp), sel = S.season[S.comp];
   if (S.view === 'table' && tblMode(cur) === 'ours' && key !== shownKey && (!sel || !cur || sel === cur.season)) animateTable(cur);
@@ -1950,6 +2049,7 @@ document.addEventListener('click', function (e) {
   if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { gotData(d); startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
   if (b.dataset.pick) return openPick(b);
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
+  if (b.dataset.fanp) { if (S.fanP !== b.dataset.fanp || !b.classList.contains('on')) { S.fanP = b.dataset.fanp; remember('fanp', S.fanP); render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
   if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
   if (b.dataset.gbclose) {
