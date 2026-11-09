@@ -237,7 +237,7 @@
   .sealw svg { position: absolute; left: 4px; top: -56px; width: 78px; height: 78px; transform: rotate(-11deg); color: var(--gold-mark); }
   /* Штемпель тура: круг заходит на конец названия («14»), волны гашения уходят вправо; шапка тура выше, чтобы штемпель
      помещался целиком и не уходил под строку имён */
-  .ptitle.done { min-height: 86px; padding-bottom: 0; }
+  .ptitle.done { min-height: 92px; padding-bottom: 0; }
   /* Награды в профиле: печати в ряд, подпись под каждой */
   .awards { display: flex; flex-wrap: wrap; gap: 4px 2px; padding: 4px 8px 6px; }
   .awards figure { margin: 0; width: 116px; text-align: center; }
@@ -250,7 +250,8 @@
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .awards svg { mix-blend-mode: multiply; } }
   :root[data-theme="light"] .awards svg { mix-blend-mode: multiply; }
   .pmark { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; pointer-events: none; z-index: 1; }
-  .pmark svg { position: absolute; left: -6px; top: -5px; width: 104px; height: 71px; transform: rotate(-8deg); transform-origin: 34.6px 35.6px; color: var(--accent); }
+  /* Круг 86 px — во всю высоту шапки тура: от верхнего края панели до строки имён; левым краем накрывает цифры номера */
+  .pmark svg { position: absolute; left: -31.5px; top: -15.5px; width: 136px; height: 93px; transform: rotate(-8deg); transform-origin: 46.5px 46.5px; color: var(--accent); }
   .pmark.fresh svg { opacity: 0; }
   /* Падение: крупно и прозрачно → удар чуть с перебором → на место; удар совпадает с толчком телефона (260 мс) */
   .pmark.fresh.go svg { animation: stampdown .46s cubic-bezier(.55, 0, .7, .2) forwards; }
@@ -542,7 +543,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw933hsi";
+var BUILD = "mw937k0g";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -849,9 +850,10 @@ function tourPostSVG(label, date) {
 }
 // Штемпель «падает» на тур один раз — при первом показе после окончания тура (запоминаем в памяти телефона)
 function stampSeen(key, set) {
-  var list = []; try { list = JSON.parse(localStorage.getItem('prognozus.stamped') || '[]'); } catch (e) {}
+  // v2: штемпель стал крупнее — каждый увидит, как он падает, ещё раз
+  var list = []; try { list = JSON.parse(localStorage.getItem('prognozus.stamped.v2') || '[]'); } catch (e) {}
   if (!set) return list.indexOf(key) >= 0;
-  if (list.indexOf(key) < 0) { list.push(key); try { localStorage.setItem('prognozus.stamped', JSON.stringify(list.slice(-40))); } catch (e) {} }
+  if (list.indexOf(key) < 0) { list.push(key); try { localStorage.setItem('prognozus.stamped.v2', JSON.stringify(list.slice(-40))); localStorage.removeItem('prognozus.stamped'); } catch (e) {} }
 }
 // Новые штемпели оживают, когда видны на экране: падают, слегка пружинят, телефон отзывается лёгким толчком
 var stampObs = null;
