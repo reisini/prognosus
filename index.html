@@ -183,7 +183,7 @@
   .trow { display: grid; width: 100%; border: 0; background: none; text-align: left; cursor: pointer; padding: 10px 12px; border-top: 1px solid var(--line); }
   .tl b { display: block; font: 600 15px/1.2 var(--display); letter-spacing: -.01em; }
   .tl span { font-size: 12px; color: var(--muted); }
-  .tl span.live { color: var(--live); font-weight: 600; }
+  .tl .live { font-style: normal; color: var(--live); font-weight: 600; }
   .tc .a { display: block; font-weight: 600; font-size: 16px; }
   .tc .b { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
   .tc.win .b { color: var(--gold); font-weight: 700; }
@@ -191,7 +191,6 @@
   .tc .bn { position: relative; }
   .tmv { position: absolute; left: 100%; bottom: 1px; margin-left: 3px; font-style: normal; font-size: 10px; line-height: 1; font-weight: 700; color: var(--accent); white-space: nowrap; }
   .tmv.down { color: var(--muted); }
-  .leg .arr { font-size: 10.5px; }
   /* Перестановка мест при открытии таблицы */
   .srow.moving { position: relative; background: var(--surface); transition: transform .75s cubic-bezier(.22, .8, .24, 1); }
   .srow.moving.up { z-index: 2; box-shadow: 0 6px 18px rgba(28, 25, 64, .12); }
@@ -540,6 +539,11 @@ function spansText(spans) {
 // Места в таблице после каждого завершённого тура: по сумме очков, затем баллов, затем точных
 function placesByTour(c) {
   var done = (c.tours || []).filter(function (t) { return t.state === 'done' && t.pp && t.tp; }).slice().reverse();
+  // Места после тура присылает сервер (по итогам из таблицы); если их нет — считаем сами по сыгранным турам
+  if (done.length && done.every(function (t) { return t.place; })) {
+    var o = {}; done.forEach(function (t) { o[t.label] = t.place; });
+    return { order: done.map(function (t) { return t.label; }), places: o };
+  }
   var n = c.players.length, tp = [], pp = [], ex = [], out = {}, order = [];
   for (var j = 0; j < n; j++) { tp[j] = 0; pp[j] = 0; ex[j] = 0; }
   done.forEach(function (t) {
@@ -670,15 +674,15 @@ function renderTours(kind) {
   var c = comp(kind);
   if (!c || !c.tours.length) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
-  var h = '<section class="panel tlist"><div class="ptitle"><h2>Туры</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
-  h += '<div style="height:10px"></div>' + namesRow(c.players, meOf(c), gc, '', '<span class="leg">баллы<br><span>очки и место <span class="arr">▲▼</span></span></span>');
+  var h = '<section class="panel tlist"><div class="ptitle"><h2>Календарь</h2><span class="meta">' + (c.season ? 'сезон ' + esc(c.season) : '') + '</span></div>';
+  h += '<div style="height:10px"></div>' + namesRow(c.players, meOf(c), gc, '', '');
   var P = placesByTour(c);
   c.tours.forEach(function (t) {
     var mv = moves(c, t.label, P);
     var key = kind + ':' + t.label, open = !!S.open[key];
     var w = winners(t.tp);
     h += '<div class="tour' + (open ? ' open' : '') + '"><button class="trow g" style="--cols:' + gc + '" data-tour="' + esc(key) + '" aria-expanded="' + open + '">' +
-      '<span class="tl"><b>' + esc(t.label) + '</b><span' + (t.state === 'live' ? ' class="live">идёт' : '>' + esc(t.dates)) + '</span></span>';
+      '<span class="tl"><b>' + esc(t.label) + '</b><span>' + (t.state === 'live' ? '<i class="live">идёт</i>' + (t.dates ? ', ' : '') : '') + esc(t.dates || '') + '</span></span>';
     for (var j = 0; j < n; j++) {
       var d = mv ? mv[j] : 0;
       var arrow = d > 0 ? '<i class="tmv" title="поднялся на ' + d + '">▲' + (d > 1 ? d : '') + '</i>'
@@ -695,36 +699,28 @@ function renderTours(kind) {
 }
 
 // ---------- Перестановка мест при открытии таблицы ----------
-// Сравниваем с порядком, который этот зритель видел в прошлый раз (хранится в браузере).
-// Если раньше не видел — с порядком до последнего тура.
-var animated = {};
-function orderKey(kind) { return 'prognozus.order.' + kind; }
+// Каждый раз, когда открываешь таблицу: строки стоят как до последнего тура (или до идущего),
+// затем те, кто обогнал, переезжают на новые места.
 function animateTable(c) {
-  if (!c || animated[c.kind]) return;
-  animated[c.kind] = true;
-  var now = c.standings.map(function (s) { return { n: s.name, p: s.place }; });
-  var before = null;
-  try { before = JSON.parse(localStorage.getItem(orderKey(c.kind)) || 'null'); } catch (e) { before = null; }
-  if (!before) {
-    var P = placesByTour(c), L = P.order, base = L[L.length - (c.live.length ? 1 : 2)];
-    if (base) before = c.players.map(function (n, j) { return { n: n, p: P.places[base][j] }; })
-      .sort(function (a, b) { return a.p - b.p; });
-  }
-  try { localStorage.setItem(orderKey(c.kind), JSON.stringify(now)); } catch (e) {}
-  if (!before || before.length !== now.length) return;
-  var bi = {}, bp = {};
-  before.forEach(function (x, i) { bi[x.n] = i; bp[x.n] = x.p; });
-  if (now.every(function (x, i) { return bi[x.n] === i; })) return;
+  if (!c) return;
+  var P = placesByTour(c), L = P.order, base = L[L.length - (c.live.length ? 1 : 2)];
+  if (!base) return;
+  var bp = {};
+  c.players.forEach(function (n, j) { bp[n] = P.places[base][j]; });
+  var before = c.players.slice().sort(function (a, b) { return bp[a] - bp[b] || c.players.indexOf(a) - c.players.indexOf(b); });
+  var now = c.standings.map(function (s) { return s.name; });
+  var bi = {}; before.forEach(function (n, i) { bi[n] = i; });
+  if (now.every(function (n, i) { return bi[n] === i; })) return;
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var rows = [].slice.call(document.querySelectorAll('button.srow'));
   if (rows.length !== now.length) return;
   var tops = rows.map(function (r) { return r.offsetTop; });
   rows.forEach(function (r, i) {
-    var from = bi[now[i].n]; if (from === undefined) return;
+    var from = bi[now[i]]; if (from === undefined) return;
     var pl = r.querySelector('.pl');
     r.dataset.place = pl.textContent;
-    pl.textContent = bp[now[i].n];
-    pl.classList.toggle('p1', bp[now[i].n] === 1);
+    pl.textContent = bp[now[i]];
+    pl.classList.toggle('p1', bp[now[i]] === 1);
     r.classList.add('moving'); if (from > i) r.classList.add('up');
     r.style.transition = 'none';
     r.style.transform = 'translateY(' + (tops[from] - tops[i]) + 'px)';
@@ -742,6 +738,7 @@ function animateTable(c) {
     }, 780);
   }, 450);
 }
+var shownKey = '';
 
 // ---------- каркас ----------
 function render() {
@@ -766,7 +763,9 @@ function render() {
   }).join('');
   [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
-  if (S.view === 'table') animateTable(comp(S.comp));
+  var key = S.view + '|' + S.comp;
+  if (S.view === 'table' && key !== shownKey) animateTable(comp(S.comp));
+  shownKey = key;
   var n = Object.keys(edits).length;
   $('savebar').hidden = !(S.view === 'pred' && n);
   var late = Object.keys(edits).filter(function (k) { return find(k).started; }).length;
