@@ -318,9 +318,13 @@
   .pc { font-family: var(--text); font-weight: 600; margin-left: 1px; }
   .retry { margin-top: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--accent); font: 600 14px/1 var(--text); cursor: pointer; }
   .pscope { padding: 0 16px 6px; }
-  .psec.has-pick { display: flex; align-items: center; gap: 6px; }
-  .psec.has-pick .season { margin-left: auto; }
-  .psec.has-pick small { display: none; } /* сезон уже написан на кнопке */
+  /* Вкладки турниров в профиле: под наградами, отделены чертой; выбор сезона — справа */
+  .ptabs { display: flex; align-items: center; gap: 18px; margin: 14px 16px 0; padding-top: 12px; border-top: 1px solid var(--line); }
+  .ptabs button[role="tab"], .ptabs > span { border: 0; background: none; padding: 8px 0; margin: -8px 0; cursor: pointer; font: 600 17px/1 var(--display); letter-spacing: -.01em; color: var(--faint); }
+  .ptabs button[role="tab"].on, .ptabs > span.on { color: var(--ink); cursor: default; }
+  .ptabs button[role="tab"]:focus { outline: none; }
+  .ptabs button[role="tab"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .ptabs .season { margin-left: auto; }
   .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
   .tcap + .tl2 { padding-top: 6px; }
   .sheet { position: fixed; inset: 0; z-index: 30; background: rgba(6, 16, 10, .45); display: flex; align-items: flex-end; }
@@ -548,7 +552,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw93e5l2";
+var BUILD = "mw93ky9w";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1112,7 +1116,7 @@ function profileSection(c, name) {
   return h + teamBlock([c], name, c.kind);
 }
 
-// Профиль: Чемпионат и Кубок, в порядке вкладок. keep — перерисовать открытый профиль, не трогая прокрутку
+// Открытый профиль: игрок и вкладка турнира
 var PROF = null;
 function yearOf(x) { return Number(String(x).split('/')[0]) || 0; }
 function allSeasons() {
@@ -1120,23 +1124,27 @@ function allSeasons() {
   comps().forEach(function (c) { (c.seasons && c.seasons.length ? c.seasons : [c.season]).forEach(function (x) { if (x && out.indexOf(x) < 0) out.push(x); }); });
   return out.sort(function (a, b) { return yearOf(b) - yearOf(a); });
 }
+// Профиль: сверху награды за все сезоны, ниже — статистика по вкладкам турниров. Открыта вкладка турнира,
+// из которого открыли профиль; справа — выбор сезона. keep — перерисовать открытый профиль, не трогая прокрутку
 function profile(kind, name, keep) {
   var list = allSeasons(), scope = S.pscope && (S.pscope === 'all' || list.indexOf(S.pscope) >= 0) ? S.pscope : (comps()[0] || {}).season;
   var pick = list.length > 1 ? pickBtn('pscope', list.concat(['all']), scope) : '';
-  var h = comps().map(function (c0) {
-    if (scope === 'all') return allSection(c0, name);
-    if (scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) return '';
+  var cs = comps(), tab = cs.some(function (c) { return c.kind === kind; }) ? kind : (cs[0] || {}).kind, c0 = comp(tab), body = '';
+  if (c0 && scope === 'all') body = allSection(c0, name);
+  else if (c0 && scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) body = '<div class="tnote">В сезоне ' + esc(scope) + ' этого турнира нет.</div>';
+  else if (c0) {
     var r = seasonComp(c0, scope);
-    if (!r.c) return '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон…') + '</div>';
-    return profileSection(r.c, name) || '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">В этом сезоне не играл.</div>';
-  }).join('');
-  PROF = { kind: kind, name: name };
+    body = !r.c ? '<div class="tnote">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон…') + '</div>'
+      : profileSection(r.c, name) || '<div class="tnote">В этом сезоне не играл.</div>';
+  }
+  // Заголовок раздела («Чемпионат, сезон 26/27») не нужен: турнир — во вкладке, сезон — на кнопке
+  body = body.replace(/^<div class="psec">[\s\S]*?<\/div>/, '');
+  var tabs = cs.length > 1 ? cs.map(function (c) {
+    return '<button role="tab" data-ptab="' + c.kind + '" class="' + (c.kind === tab ? 'on' : '') + '" aria-selected="' + (c.kind === tab) + '">' + esc(c.title) + '</button>';
+  }).join('') : '<span class="on">' + esc(c0 ? c0.title : '') + '</span>';
+  PROF = { kind: tab, name: name };
   $('prof-h').textContent = name;
-  // Выбор сезона — справа в заголовке первого раздела статистики: он относится к статистике, а не к наградам
-  var i = h.indexOf('<div class="psec">');
-  if (pick && i >= 0) { var j = h.indexOf('</div>', i); h = h.slice(0, i) + '<div class="psec has-pick">' + h.slice(i + 18, j) + pick + h.slice(j); }
-  else if (pick) h = '<div class="pscope">' + pick + '</div>' + h;
-  $('profbody').innerHTML = awardsBlock(name) + (h || '<div class="tnote">Нет данных.</div>');
+  $('profbody').innerHTML = awardsBlock(name) + '<div class="ptabs" role="tablist">' + tabs + pick + '</div>' + (body || '<div class="tnote">Нет данных.</div>');
   if (!keep) sheet('prof', true);
 }
 // Награды игрока за все сезоны: печать чемпиона (сова) и обладателя Кубка (осьминог) за каждый оконченный сезон, где он первый
@@ -1820,6 +1828,7 @@ document.addEventListener('click', function (e) {
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
   if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
+  if (b.dataset.ptab) { if (PROF && PROF.kind !== b.dataset.ptab) profile(b.dataset.ptab, PROF.name, true); return; }
   if (b.dataset.tctab) { if (TC && TC.kind !== b.dataset.tctab) { TC.kind = b.dataset.tctab; TC.more = false; drawTeamCard(); $('team').querySelector('.sheet-in').scrollTop = 0; } return; }
   if (b.dataset.tcmore) { if (TC) { TC.more = true; drawTeamCard(); } return; }
   if (b.dataset.gopred) return goPred(b.dataset.gopred, b.dataset.gokind, b.dataset.golabel);
