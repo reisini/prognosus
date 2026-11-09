@@ -196,7 +196,7 @@
   .sheet[hidden] { display: none; }
   .sheet-in { width: 100%; max-width: 520px; margin: 0 auto; max-height: 88vh; overflow: auto; background: var(--surface);
     border-radius: 20px 20px 0 0; padding: 4px 0 calc(22px + env(safe-area-inset-bottom)); }
-  .sheet-in .ptitle { align-items: center; padding-bottom: 6px; }
+  .sheet-in .ptitle { align-items: center; }
   .rules { padding: 0 16px; font-size: 14.5px; line-height: 1.45; }
   .rules h3 { margin: 16px 0 6px; font: 600 14px/1.2 var(--display); letter-spacing: -.01em; }
   .rules p { margin: 0 0 8px; }
@@ -276,8 +276,20 @@
     opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.on { opacity: 1; }
   /* «Закрыть» — красная карточка: закрыть значит удалить с поля. По нажатию судья поднимает карточку */
-  .icon-btn svg.rc rect { fill: var(--red); stroke: none; }
+  .icon-btn svg.rc .cd { fill: var(--red); stroke: none; }
+  .icon-btn svg.rc .cx { stroke: #fff; stroke-width: 1.9; }
   .icon-btn svg.rc { transform-box: view-box; transform-origin: 12px 22px; }
+  /* Кнопка закрытия: поле нажатия 44 px. Карточка закрашена, поэтому она чуть ниже прописной заголовка с запасом на наклон
+     (17,6 px при прописной 15,75 px); правый край — по краю текста листа (16 px), середина — между серединами прописных и строчных */
+  .sheet-in .ptitle { padding: 14px 16px 8px; }
+  .sheet-in .ptitle .icon-btn { position: relative; top: 1px; width: 44px; height: 44px; margin: -10px -13.5px -10px 0; flex: none; }
+  .sheet-in .ptitle .icon-btn svg { width: 24px; height: 24px; }
+  .sheet-in .ptitle .icon-btn:active { background: none; }
+  /* Лист выезжает снизу и так же уходит вниз */
+  .sheet:not([hidden]) .sheet-in { animation: sheetUp .26s cubic-bezier(.2, .8, .2, 1); }
+  .sheet.closing { background: rgba(12, 10, 34, 0); transition: background .22s; }
+  .sheet.closing .sheet-in { transform: translateY(105%); transition: transform .22s cubic-bezier(.4, 0, 1, 1); }
+  @keyframes sheetUp { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
   .icon-btn svg.rc.play { animation: card .32s cubic-bezier(.3, 1.5, .5, 1); }
   @keyframes card { 0% { transform: none; } 45% { transform: translateY(-3px) rotate(-10deg) scale(1.1); } 100% { transform: translateY(-1px) rotate(-6deg) scale(1.04); } }
   /* Значки оживают по нажатию: звёзды встают на пьедестал, свисток свистит, стрелка с мячом крутится, пока идёт обновление */
@@ -339,11 +351,11 @@
 </div></nav>
 <div class="toast" id="toast"></div>
 <div class="sheet" id="prof" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="prof-h">
-  <div class="ptitle"><h2 id="prof-h"></h2><button class="icon-btn" id="profclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><rect x="5.6" y="2.2" width="12.8" height="19.6" rx="2.4" transform="rotate(14 12 12)"/></svg></button></div>
+  <div class="ptitle"><h2 id="prof-h"></h2><button class="icon-btn" id="profclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><g transform="rotate(10 12 12)"><rect class="cd" x="5.4" y="3.2" width="13.2" height="17.6" rx="2.3"/><path class="cx" d="M9.6 9.6l4.8 4.8M14.4 9.6l-4.8 4.8"/></g></svg></button></div>
   <div id="profbody"></div>
 </div></div>
 <div class="sheet" id="rules" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="rules-h">
-  <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><rect x="5.6" y="2.2" width="12.8" height="19.6" rx="2.4" transform="rotate(14 12 12)"/></svg></button></div>
+  <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><g transform="rotate(10 12 12)"><rect class="cd" x="5.4" y="3.2" width="13.2" height="17.6" rx="2.3"/><path class="cx" d="M9.6 9.6l4.8 4.8M14.4 9.6l-4.8 4.8"/></g></svg></button></div>
   <div class="rules">
     <h3>Прогноз</h3>
     <p>Прогноз на матч делается и редактируется до стартового свистка. Другим игрокам он становится виден с началом матча, а до этого соперники видят только отметку ✓.</p>
@@ -1114,15 +1126,19 @@ document.addEventListener('change', function (e) {
 });
 function sheet(id, open) { $(id).hidden = !open; document.body.style.overflow = open ? 'hidden' : ''; if (open) $(id + 'close').focus(); }
 function rules(open) { sheet('rules', open); }
+// Закрытие: карточка взлетает, лист сразу уходит вниз — отклик мгновенный
+function closeSheet(id) {
+  var el = $(id);
+  if (el.hidden || el.classList.contains('closing')) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return sheet(id, false);
+  play($(id + 'close').querySelector('svg'));
+  el.classList.add('closing');
+  setTimeout(function () { el.classList.remove('closing'); sheet(id, false); $(id + 'close').querySelector('svg').classList.remove('play'); }, 230);
+}
 $('rulesbtn').addEventListener('click', function () { play($('rulesbtn').querySelector('svg')); rules(true); });
 ['rules', 'prof'].forEach(function (id) {
-  $(id + 'close').addEventListener('click', function () {
-    // Сначала карточка взлетает, потом лист закрывается
-    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return sheet(id, false);
-    var c = $(id + 'close').querySelector('svg'); play(c);
-    setTimeout(function () { sheet(id, false); c.classList.remove('play'); }, 300);
-  });
-  $(id).addEventListener('click', function (e) { if (e.target === $(id)) sheet(id, false); });
+  $(id + 'close').addEventListener('click', function () { closeSheet(id); });
+  $(id).addEventListener('click', function (e) { if (e.target === $(id)) closeSheet(id); });
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ['rules', 'prof'].forEach(function (id) { if (!$(id).hidden) sheet(id, false); }); });
 window.addEventListener('resize', measure);
