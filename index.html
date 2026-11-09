@@ -262,6 +262,59 @@
   @media (prefers-reduced-motion: reduce) { .pmark.fresh.go svg { animation: none; opacity: 1; } }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .pmark svg { mix-blend-mode: multiply; } }
   :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .pmark svg { mix-blend-mode: multiply; }
+  /* Поздравления. Тур — плашка сверху; сезон — экран-«стадион» в одной тёмной гамме при любой теме */
+  .vbanner { position: fixed; z-index: 90; left: 50%; top: calc(10px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; width: min(92vw, 400px);
+    padding: 12px 16px 12px 12px; border-radius: 16px; background: #14231b; color: #e7f2eb; box-shadow: 0 10px 30px rgba(8, 20, 14, .35);
+    transform: translate(-50%, -140%); transition: transform .5s cubic-bezier(.2, 1.3, .4, 1); cursor: pointer; }
+  .vbanner.in { transform: translate(-50%, 0); }
+  .vbanner.out { transform: translate(-50%, -140%); transition-timing-function: cubic-bezier(.5, 0, .9, .4); transition-duration: .4s; }
+  .vb-ico { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(242, 193, 78, .14); }
+  .vb-ico svg { width: 26px; height: 26px; fill: #f2c14e; }
+  .vbanner.in .vb-ico svg { animation: vbpop .6s .3s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .vb-ico i { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; background: #f2c14e; opacity: 0;
+    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+  .vbanner.in .vb-ico i { animation: vbspark .8s .35s ease-out forwards; }
+  @keyframes vbpop { 0% { transform: scale(.4) rotate(-30deg); } 100% { transform: none; } }
+  @keyframes vbspark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(.6); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1.2); } }
+  .vb-txt b { display: block; font: 600 17px/1.2 var(--display); color: #f2c14e; }
+  .vb-txt small { display: block; margin-top: 2px; font-size: 13px; color: #b6c8bd; }
+  .vwin { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; color: #e7f2eb; opacity: 0; transition: opacity .35s;
+    background: radial-gradient(120% 80% at 50% 38%, #1d3a29 0%, #0c1611 62%, #070d0a 100%); }
+  .vwin.in { opacity: 1; }
+  .vwin.out { opacity: 0; transition-duration: .4s; }
+  .vw-fx { position: fixed; inset: 0; pointer-events: none; }
+  .vwin:focus { outline: none; }
+  .vw-card { position: relative; width: min(100%, 360px); text-align: center; }
+  .vw-stage { position: relative; width: 230px; height: 230px; margin: 0 auto 6px; display: grid; place-items: center; }
+  .vw-rays { position: absolute; inset: -60px; border-radius: 50%; opacity: 0;
+    background: repeating-conic-gradient(from 0deg, rgba(242, 193, 78, .22) 0 7deg, transparent 7deg 20deg);
+    -webkit-mask: radial-gradient(closest-side, #000 30%, transparent 100%); mask: radial-gradient(closest-side, #000 30%, transparent 100%); }
+  .vwin.in .vw-rays { animation: vwrays 24s linear infinite, vwfade 1s .7s forwards; }
+  .vw-seal { position: relative; width: 210px; height: 210px; color: #f2c14e; filter: drop-shadow(0 6px 24px rgba(242, 193, 78, .25)); opacity: 0; }
+  .vw-seal svg { display: block; width: 100%; height: 100%; }
+  .vwin.champ.in .vw-seal { animation: vwslam .62s .15s cubic-bezier(.55, 0, .7, .2) forwards; }
+  .vwin.cup.in .vw-seal { animation: vwspin 1.05s .1s cubic-bezier(.2, .7, .3, 1) forwards; }
+  .vwin.champ.in .vw-card { animation: vwthud .35s .7s ease-out; }
+  .vwin h2 { margin: 0; font: 600 34px/1.1 var(--display); letter-spacing: -.01em; color: #f2c14e; opacity: 0; }
+  .vw-sub { margin: 10px 0 0; font-size: 14px; color: #b6c8bd; opacity: 0; }
+  .vw-tag { margin: 6px 0 0; font: 600 16px/1.3 var(--display); color: #e7f2eb; opacity: 0; }
+  .vwin.in h2 { animation: vwup .5s 1s forwards; }
+  .vwin.in .vw-sub { animation: vwup .5s 1.15s forwards; }
+  .vwin.in .vw-tag { animation: vwup .5s 1.3s forwards; }
+  .vw-ok { margin-top: 22px; padding: 12px 36px; border: 0; border-radius: 14px; background: #f2c14e; color: #14231b; font: 600 17px/1 var(--display); cursor: pointer; opacity: 0; }
+  .vwin.in .vw-ok { animation: vwup .5s 1.5s forwards; }
+  .vw-ok:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  @keyframes vwrays { to { transform: rotate(360deg); } }
+  @keyframes vwfade { to { opacity: 1; } }
+  @keyframes vwslam { 0% { opacity: 0; transform: rotate(-20deg) scale(2.6); } 70% { opacity: 1; transform: rotate(-8deg) scale(.94); } 85% { transform: rotate(-8deg) scale(1.03); } 100% { opacity: 1; transform: rotate(-8deg) scale(1); } }
+  @keyframes vwspin { 0% { opacity: 0; transform: rotate(-560deg) scale(.15); } 60% { opacity: 1; } 100% { opacity: 1; transform: rotate(-8deg) scale(1); } }
+  @keyframes vwthud { 0%, 100% { transform: none; } 30% { transform: translateY(3px); } 60% { transform: translateY(-1px); } }
+  @keyframes vwup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .vbanner, .vbanner.out { transition: none; } .vbanner.in .vb-ico svg, .vbanner.in .vb-ico i { animation: none; }
+    .vwin.in .vw-seal, .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.in .vw-rays, .vwin.champ.in .vw-card { animation: none; opacity: 1; transform: rotate(-8deg); }
+    .vwin.in h2, .vwin.in .vw-sub, .vwin.in .vw-tag, .vwin.in .vw-ok, .vwin.champ.in .vw-card { transform: none; }
+  }
   /* Тонкое подчёркивание — намёк, что имя нажимается: команды в таблицах, игроки в нашей таблице */
   .lrow:not(.head) .ln b, button.srow .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
   .lrow:active .ln b, button.srow:active .nm { text-decoration-color: currentColor; }
@@ -553,7 +606,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw93nxs5";
+var BUILD = "mw93yvwg";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1871,6 +1924,8 @@ function gotData(d) {
   var k = dataKey();
   if (k && d && d.comps) { try { localStorage.setItem(k, JSON.stringify({ at: Date.now(), d: d })); } catch (e) {} }
   if (d && d.comps) setTimeout(prefetchSeasons, 1500);
+  // Поздравление — по свежим данным, когда заставка уже ушла
+  if (d && d.comps) setTimeout(celebrate, 1300);
 }
 function savedData() {
   var k = dataKey(); if (!k) return null;
@@ -1931,6 +1986,176 @@ function startView() {
   var saved = remember('comp');
   var need = comps().filter(function (c) { return todo(c.kind); })[0];
   S.comp = comp(start) ? start : S.view === 'pred' && need ? need.kind : (comp(saved) ? saved : (need ? need.kind : (comps()[0] || {}).kind));
+}
+
+// ---------- Поздравления: победа в туре — скромно, сезон чемпионата и Кубка — роскошно ----------
+// Показываем самому победителю при первом заходе после победы — один раз (помним в памяти телефона).
+// Тур — только последний сыгранный и не старше недели; сезон — когда он окончен
+var CELE_STARTED = false;
+function celeSeen(key, set) {
+  var list = []; try { list = JSON.parse(localStorage.getItem('prognozus.cele') || '[]'); } catch (e) {}
+  if (!set) return list.indexOf(key) >= 0;
+  if (list.indexOf(key) < 0) { list.push(key); try { localStorage.setItem('prognozus.cele', JSON.stringify(list.slice(-60))); } catch (e) {} }
+}
+function celebrations() {
+  var out = [], now = DATA.now || Date.now();
+  comps().forEach(function (c) {
+    var me = meOf(c); if (me < 0) return;
+    var name = c.players[me];
+    if (seasonOver(c)) {
+      var st = c.standings.filter(function (x) { return x.name === name; })[0];
+      if (st && st.place === 1) out.push({ type: c.kind === 'cup' ? 'cup' : 'champ', key: 'season|' + c.kind + '|' + c.season, c: c, st: st });
+    }
+    var t = (c.tours || []).filter(function (x) { return x.state === 'done' && x.pp; })[0];
+    if (!t) return;
+    var pp = t.pp.map(Number), mx = Math.max.apply(null, pp), tie = pp.every(function (x) { return x === mx; });
+    var end = Math.max.apply(null, (t.matches || []).map(function (m) { return m.start || 0; }).concat([0]));
+    if (tie || pp[me] !== mx || (end && now - end > 7 * 864e5)) return;
+    out.push({ type: 'tour', key: 'tour|' + c.kind + '|' + c.season + '|' + t.label, c: c, t: t, pts: mx,
+      co: c.players.filter(function (p, j) { return j !== me && pp[j] === mx; }) });
+  });
+  var ord = { champ: 0, cup: 1, tour: 2 };
+  return out.filter(function (x) { return !celeSeen(x.key); }).sort(function (a, b) { return ord[a.type] - ord[b.type]; });
+}
+function celebrate() {
+  if (CELE_STARTED || !DATA.comps) return;
+  CELE_STARTED = true;
+  var q = celebrations();
+  (function next() { var x = q.shift(); if (x) (x.type === 'tour' ? tourBanner : seasonWin)(x, next); })();
+}
+function haptic(kind) {
+  try { if (TG && TG.HapticFeedback) kind === 'success' ? TG.HapticFeedback.notificationOccurred('success') : TG.HapticFeedback.impactOccurred(kind); } catch (e) {}
+}
+var CALM = function () { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; };
+// Посмотреть все поздравления: пять быстрых нажатий на логотип (для проверки; ничего не запоминает)
+function celeDemo() {
+  var champ = comp('champ') || comps()[0], cup = comp('cup') || champ, q = [];
+  [[champ, 'champ'], [cup, 'cup']].forEach(function (z) {
+    var c = z[0], me = meOf(c), st = c && c.standings.filter(function (x) { return x.name === c.players[Math.max(0, me)]; })[0];
+    if (st) q.push({ type: z[1], c: c, st: st, demo: true });
+  });
+  var t = champ && (champ.tours || []).filter(function (x) { return x.state === 'done' && x.pp; })[0];
+  if (t) q.push({ type: 'tour', c: champ, t: t, pts: Math.max.apply(null, t.pp.map(Number)), co: [], demo: true });
+  (function next() { var x = q.shift(); if (x) (x.type === 'tour' ? tourBanner : seasonWin)(x, next); })();
+}
+var logoTaps = [];
+document.querySelector('.brand').addEventListener('click', function () {
+  var now = Date.now(); logoTaps = logoTaps.filter(function (t) { return now - t < 2500; }).concat([now]);
+  if (logoTaps.length >= 5 && DATA.comps && !document.querySelector('.vwin, .vbanner')) { logoTaps = []; celeDemo(); }
+});
+// Скромно: плашка сверху с тремя искрами, они разлетаются; сама уходит через 6 с или по нажатию
+function tourBanner(x, done) {
+  if (!x.demo) celeSeen(x.key, true);
+  var el = document.createElement('div');
+  el.className = 'vbanner'; el.setAttribute('role', 'status');
+  var sparks = '';
+  for (var i = 0; i < 8; i++) sparks += '<i style="--a:' + (i * 45 + 20) + 'deg;--d:' + (26 + (i % 3) * 8) + 'px"></i>';
+  el.innerHTML = '<span class="vb-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.3 2.5Q13.42 8.38 19.3 9.5Q13.42 10.62 12.3 16.5Q11.18 10.62 5.3 9.5Q11.18 8.38 12.3 2.5Z"/>' +
+    '<path d="M4.7 12.1Q5.37 15.63 8.9 16.3Q5.37 16.97 4.7 20.5Q4.03 16.97 0.5 16.3Q4.03 15.63 4.7 12.1Z"/><path d="M20.1 14.7Q20.64 17.56 23.5 18.1Q20.64 18.64 20.1 21.5Q19.56 18.64 16.7 18.1Q19.56 17.56 20.1 14.7Z"/></svg>' + sparks + '</span>' +
+    '<span class="vb-txt"><b>Победа в туре!</b><small>' + esc(x.c.title) + ' · ' + esc(x.t.label) + ' · ' + ptsWord(x.pts) + (x.co.length ? ', поровну с ' + esc(x.co.join(' и ')) : '') + '</small></span>';
+  document.body.appendChild(el);
+  requestAnimationFrame(function () { el.classList.add('in'); });
+  setTimeout(function () { haptic('success'); }, 350);
+  var gone = false;
+  function close() { if (gone) return; gone = true; el.classList.remove('in'); el.classList.add('out'); setTimeout(function () { el.remove(); done(); }, 420); }
+  el.addEventListener('click', close);
+  setTimeout(close, 6500);
+}
+// Роскошно: тёмный «стадион», за печатью вращаются лучи. Чемпионат — печать с ударом опускается, сверху сыплется
+// конфетти; Кубок — печать влетает с вращением, вокруг салют
+function seasonWin(x, done) {
+  if (!x.demo) celeSeen(x.key, true);
+  var cup = x.type === 'cup', st = x.st, el = document.createElement('div');
+  el.className = 'vwin ' + x.type; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'vw-h');
+  el.innerHTML = '<canvas class="vw-fx" aria-hidden="true"></canvas><div class="vw-card"><div class="vw-stage"><div class="vw-rays" aria-hidden="true"></div>' +
+    '<div class="vw-seal">' + sealSVG(x.type, x.c.season) + '</div></div>' +
+    '<h2 id="vw-h">' + (cup ? 'Кубок твой!' : 'Чемпион!') + '</h2>' +
+    '<p class="vw-sub">' + esc(x.c.title) + ' ' + esc(x.c.season) + ' · ' + num(st.tp) + '&nbsp;' + (st.tp % 1 ? 'очка' : plural(st.tp, 'очко', 'очка', 'очков')) + ' · ' + ptsWord(st.pp).replace(' ', '&nbsp;') + '</p>' +
+    '<p class="vw-tag">' + (cup ? 'Знал заранее.' : 'Прогноз верен.') + '</p>' +
+    '<button type="button" class="vw-ok">Ура!</button></div>';
+  document.body.appendChild(el);
+  document.body.style.overflow = 'hidden';
+  var stop = function () {};
+  requestAnimationFrame(function () {
+    el.classList.add('in');
+    if (!CALM()) stop = (cup ? fireworks : confetti)(el.querySelector('canvas'));
+  });
+  setTimeout(function () { haptic('heavy'); }, cup ? 900 : 620);
+  setTimeout(function () { haptic('success'); }, cup ? 1150 : 900);
+  var gone = false;
+  function close() {
+    if (gone) return; gone = true; stop(); el.classList.add('out'); document.body.style.overflow = '';
+    document.removeEventListener('keydown', esc1);
+    setTimeout(function () { el.remove(); done(); }, 450);
+  }
+  function esc1(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', esc1);
+  el.querySelector('.vw-ok').addEventListener('click', close);
+  try { el.focus({ preventScroll: true }); } catch (e) {}
+}
+// Холст во весь экран с учётом плотности пикселей; возвращает контекст и размеры
+function fxCanvas(cv) {
+  var d = Math.min(window.devicePixelRatio || 1, 2), w = innerWidth, h = innerHeight;
+  cv.width = w * d; cv.height = h * d; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  var ctx = cv.getContext('2d'); ctx.scale(d, d);
+  return { ctx: ctx, w: w, h: h };
+}
+var FX_COLORS = ['#f2c14e', '#ffe08a', '#e9b740', '#3fcf88', '#ffffff', '#c98f12'];
+function sparkPath(ctx, r) {
+  var k = r * .17;
+  ctx.beginPath(); ctx.moveTo(0, -r); ctx.quadraticCurveTo(k, -k, r, 0); ctx.quadraticCurveTo(k, k, 0, r); ctx.quadraticCurveTo(-k, k, -r, 0); ctx.quadraticCurveTo(-k, -k, 0, -r); ctx.fill();
+}
+// Конфетти: бумажки и искры падают с верха, кружатся и покачиваются; около 6 с
+function confetti(cv) {
+  var f = fxCanvas(cv), ctx = f.ctx, P = [], t0 = performance.now(), raf = 0, alive = true;
+  function add(n) {
+    for (var i = 0; i < n; i++) P.push({ x: Math.random() * f.w, y: -20 - Math.random() * 80, vx: (Math.random() - .5) * 1.6, vy: 1.6 + Math.random() * 2.4,
+      r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, w: 5 + Math.random() * 5, h: 8 + Math.random() * 7, c: FX_COLORS[i % FX_COLORS.length],
+      sp: Math.random() < .18, ph: Math.random() * 6.28 });
+  }
+  add(70);
+  (function frame(now) {
+    if (!alive) return;
+    var t = now - t0;
+    if (t < 1800 && P.length < 220) add(6);
+    ctx.clearRect(0, 0, f.w, f.h);
+    P.forEach(function (p) {
+      p.ph += .05; p.x += p.vx + Math.sin(p.ph) * .7; p.y += p.vy; p.vy = Math.min(p.vy + .02, 4.2); p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+      if (p.sp) sparkPath(ctx, p.w * .9); else { ctx.scale(1, Math.cos(p.ph * 1.6)); ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+      ctx.restore();
+    });
+    P = P.filter(function (p) { return p.y < f.h + 30; });
+    if (t < 7000 && P.length) raf = requestAnimationFrame(frame); else ctx.clearRect(0, 0, f.w, f.h);
+  })(t0);
+  return function () { alive = false; cancelAnimationFrame(raf); };
+}
+// Салют: залпы из искр в верхней половине экрана, с затухающими хвостами; около 5 с
+function fireworks(cv) {
+  var f = fxCanvas(cv), ctx = f.ctx, P = [], t0 = performance.now(), raf = 0, alive = true;
+  var shots = [500, 950, 1400, 1900, 2500, 3100, 3600].map(function (t, i) {
+    return { t: t, x: f.w * (.18 + ((i * .37) % .64)), y: f.h * (.14 + ((i * .23) % .3)), c: FX_COLORS[i % 4], done: false };
+  });
+  (function frame(now) {
+    if (!alive) return;
+    var t = now - t0;
+    shots.forEach(function (s) {
+      if (s.done || t < s.t) return; s.done = true;
+      for (var i = 0; i < 64; i++) { var a = i / 64 * 6.283 + Math.random() * .1, v = 1.6 + Math.random() * 3.2;
+        P.push({ x: s.x, y: s.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, dl: .009 + Math.random() * .008, c: Math.random() < .25 ? '#ffffff' : s.c, r: 1.6 + Math.random() * 1.4 }); }
+      haptic('light');
+    });
+    ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.fillRect(0, 0, f.w, f.h);
+    ctx.globalCompositeOperation = 'lighter';
+    P.forEach(function (p) {
+      p.vx *= .985; p.vy = p.vy * .985 + .035; p.x += p.vx; p.y += p.vy; p.life -= p.dl;
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+    });
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    P = P.filter(function (p) { return p.life > 0; });
+    if (t < 6000) raf = requestAnimationFrame(frame); else ctx.clearRect(0, 0, f.w, f.h);
+  })(t0);
+  return function () { alive = false; cancelAnimationFrame(raf); };
 }
 
 // Уборка памяти телефона: копии сезонов и снимки старых версий и всё, что старше срока хранения (60 и 14 дней).
