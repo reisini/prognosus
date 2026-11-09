@@ -12,17 +12,17 @@
 <style>
   :root {
     --bg: #ecebf4; --surface: #ffffff; --soft: #f5f4fa; --ink: #1c1940; --muted: #6d6992; --line: #e3e0ef;
-    --accent: #4a3dcc; --accent-soft: #e8e5fb; --faint: #8581a8; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
+    --accent: #4a3dcc; --accent-soft: #e8e5fb; --faint: #8581a8; --red: #e0393e; --gold: #8f6300; --gold-bg: #f7e6b5; --live: #0f9a52;
     --display: 'Unbounded', 'Onest', system-ui, sans-serif;
     --text: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --hdr: 96px; --nav: 58px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; }
+      --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; --red: #f0525a; }
   }
   :root[data-theme="dark"] { --bg: #110f26; --surface: #1a1737; --soft: #211d44; --ink: #eeecff; --muted: #9a96c4; --line: #2c2858;
-    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; }
+    --accent: #a99eff; --accent-soft: #2d2766; --gold: #f2c14e; --gold-bg: rgba(242, 193, 78, .17); --live: #3ddc84; --faint: #625e8f; --red: #f0525a; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.35 var(--text); font-variant-numeric: tabular-nums; }
@@ -274,6 +274,11 @@
     background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-size: 13.5px; max-width: 90%; text-align: center;
     opacity: 0; transition: opacity .2s; pointer-events: none; }
   .toast.on { opacity: 1; }
+  /* «Закрыть» — красная карточка: закрыть значит удалить с поля. По нажатию судья поднимает карточку */
+  .icon-btn svg.rc rect { fill: var(--red); stroke: none; }
+  .icon-btn svg.rc { transform-box: view-box; transform-origin: 12px 22px; }
+  .icon-btn svg.rc.play { animation: card .32s cubic-bezier(.3, 1.5, .5, 1); }
+  @keyframes card { 0% { transform: none; } 45% { transform: translateY(-3px) rotate(-10deg) scale(1.1); } 100% { transform: translateY(-1px) rotate(-6deg) scale(1.04); } }
   /* Значки оживают по нажатию: звёзды встают на пьедестал, свисток свистит, стрелка с мячом крутится, пока идёт обновление */
   .s1, .s2, .s3, .wb, .ws, .rr, .rb { transform-box: view-box; }
   .s1 { transform-origin: 12.3px 16.5px; } .s2 { transform-origin: 4.7px 20.5px; } .s3 { transform-origin: 20.1px 21.5px; }
@@ -333,11 +338,11 @@
 </div></nav>
 <div class="toast" id="toast"></div>
 <div class="sheet" id="prof" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="prof-h">
-  <div class="ptitle"><h2 id="prof-h"></h2><button class="icon-btn" id="profclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
+  <div class="ptitle"><h2 id="prof-h"></h2><button class="icon-btn" id="profclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><rect x="5.6" y="2.2" width="12.8" height="19.6" rx="2.4" transform="rotate(14 12 12)"/></svg></button></div>
   <div id="profbody"></div>
 </div></div>
 <div class="sheet" id="rules" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="rules-h">
-  <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
+  <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><rect x="5.6" y="2.2" width="12.8" height="19.6" rx="2.4" transform="rotate(14 12 12)"/></svg></button></div>
   <div class="rules">
     <h3>Прогноз</h3>
     <p>Прогноз на матч делается и редактируется до стартового свистка. Другим игрокам он становится виден с началом матча, а до этого соперники видят только отметку ✓.</p>
@@ -1110,7 +1115,12 @@ function sheet(id, open) { $(id).hidden = !open; document.body.style.overflow = 
 function rules(open) { sheet('rules', open); }
 $('rulesbtn').addEventListener('click', function () { play($('rulesbtn').querySelector('svg')); rules(true); });
 ['rules', 'prof'].forEach(function (id) {
-  $(id + 'close').addEventListener('click', function () { sheet(id, false); });
+  $(id + 'close').addEventListener('click', function () {
+    // Сначала карточка взлетает, потом лист закрывается
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return sheet(id, false);
+    var c = $(id + 'close').querySelector('svg'); play(c);
+    setTimeout(function () { sheet(id, false); c.classList.remove('play'); }, 300);
+  });
   $(id).addEventListener('click', function (e) { if (e.target === $(id)) sheet(id, false); });
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ['rules', 'prof'].forEach(function (id) { if (!$(id).hidden) sheet(id, false); }); });
