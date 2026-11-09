@@ -234,7 +234,9 @@
   .srow.champ { position: relative; z-index: 2; }
   .srow.champ .nm { overflow: visible; }
   .sealw { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; pointer-events: none; }
-  .sealw svg { position: absolute; left: 4px; top: -56px; width: 78px; height: 78px; transform: rotate(-11deg); color: var(--gold-mark); }
+  /* Печать поставлена на строку победителя, как настоящая: по центру строки, накрывает конец имени и подпись под ним,
+     края заходят на соседние строки; краска чуть прозрачная, чтобы имя читалось */
+  .sealw svg { position: absolute; left: -14px; top: -22px; width: 88px; height: 88px; transform: rotate(-12deg); color: var(--gold-mark); opacity: .9; }
   /* Штемпель тура: круг заходит на конец названия («14»), волны гашения уходят вправо; шапка тура выше, чтобы штемпель
      помещался целиком и не уходил под строку имён */
   .ptitle.done { min-height: 92px; padding-bottom: 0; }
@@ -244,8 +246,8 @@
   .awards i { display: block; width: 84px; height: 84px; margin: 0 auto; color: var(--gold-mark); }
   .awards svg { display: block; width: 100%; height: 100%; }
   .sealw.mp svg, .awards i.mp { color: var(--silver); }
-  /* Серебряная печать — во второй строке: меньше и в пределах своей строки, чтобы не наезжать на золотую */
-  .sealw.mp svg { top: -40px; width: 66px; height: 66px; transform: rotate(7deg); }
+  /* Серебряная печать — во второй строке: меньше и ниже, чтобы не наезжать на золотую */
+  .sealw.mp svg { left: -8px; top: -12px; width: 72px; height: 72px; transform: rotate(8deg); }
   .awards figcaption { margin-top: 2px; font-size: 11.5px; line-height: 1.25; color: var(--muted); }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .awards svg { mix-blend-mode: multiply; } }
   :root[data-theme="light"] .awards svg { mix-blend-mode: multiply; }
@@ -543,7 +545,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw937k0g";
+var BUILD = "mw93b74q";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1148,9 +1150,9 @@ function awardsOf(name) {
 function awardsBlock(name) {
   var a = awardsOf(name), h = '<div class="psec">Награды<small>все сезоны</small></div>';
   if (!a.list.length) return h + '<div class="tnote">' + (a.wait ? 'Загружаю прошлые сезоны…' : 'Пока нет. Печать получает победитель сезона.') + '</div>';
-  // Оттиски чуть повёрнуты по-разному, как поставленные от руки
-  return h + '<div class="awards">' + a.list.map(function (x, i) {
-    return '<figure><i class="' + x.kind + '" style="transform:rotate(' + [-9, 6, -4, 9, -12, 3][i % 6] + 'deg)">' + sealSVG(x.kind, x.season) + '</i>' +
+  // Все печати в одном ракурсе — ровно, как в витрине
+  return h + '<div class="awards">' + a.list.map(function (x) {
+    return '<figure><i class="' + x.kind + '">' + sealSVG(x.kind, x.season) + '</i>' +
       '<figcaption>' + ({ champ: 'Чемпион', cup: 'Обладатель Кубка', mp: 'Кубок Матч Премьер' })[x.kind] + '<br>' + esc(x.season) + '</figcaption></figure>';
   }).join('') + '</div>' + (a.wait ? '<div class="tnote">Загружаю прошлые сезоны…</div>' : '');
 }
