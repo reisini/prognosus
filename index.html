@@ -138,17 +138,22 @@
   .hint { padding: 10px 14px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
 
   /* Рекорды */
-  /* Подпись рекорда — строкой сверху; ниже на одной базовой линии: кто и сколько */
-  .rec { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 12px; row-gap: 4px; padding: 11px 14px 12px; border-top: 1px solid var(--line); }
-  .rec .rt { grid-column: 1 / -1; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
-  .rec .rh { font-size: 15px; font-weight: 600; line-height: 1.35; }
-  .rec .rh i { font-style: normal; font-weight: 400; color: var(--muted); }
-  .rec .rv { text-align: right; white-space: nowrap; font: 600 22px/1 var(--display); }
-  .rec .rv small { margin-left: 5px; font: 500 12px/1 var(--text); color: var(--muted); }
-  .rec .rv.gold { color: var(--gold); }
+  /* Рекорд: подпись сверху, ниже места по убыванию — число и кто. Первое место крупнее и золотом */
+  .rec { padding: 11px 14px 12px; border-top: 1px solid var(--line); }
+  .rec .rt { font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+  .rec .rl { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: baseline; margin-top: 7px; }
+  .rec .rl b { font: 600 22px/1.1 var(--display); white-space: nowrap; }
+  .rec .rl span { font-size: 15px; font-weight: 600; line-height: 1.35; }
+  .rec .rl.r1 b { color: var(--gold); }
+  .rec .rl.r2, .rec .rl.r3 { margin-top: 5px; }
+  .rec .rl.r2 b, .rec .rl.r3 b { font-size: 16px; }
+  .rec .rl.r2 span, .rec .rl.r3 span { font-size: 13.5px; font-weight: 500; }
 
   /* Профиль игрока */
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); margin: 6px 16px 4px; border-radius: 14px; background: var(--soft); }
+  .psec { margin: 14px 16px 0; padding-top: 14px; border-top: 1px solid var(--line); font: 600 15px/1.2 var(--display); letter-spacing: -.01em; }
+  .psec:first-child { margin-top: 2px; padding-top: 0; border-top: 0; }
+  .psec small { margin-left: 6px; font: 400 13px/1 var(--text); color: var(--muted); letter-spacing: 0; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); margin: 10px 16px 4px; border-radius: 14px; background: var(--soft); }
   .kpis div { padding: 12px 4px 11px; text-align: center; }
   .kpis b { display: block; font: 600 21px/1.1 var(--display); }
   .kpis b.p1 { color: var(--gold); }
@@ -274,7 +279,7 @@
     <p>Место в таблице считается по сумме очков, при равенстве очков — по сумме баллов, при равенстве и по этому показателю — по количеству точно угаданных результатов. У Чемпионата и Кубка таблицы отдельные.</p>
     <h3>Рекорды и серии</h3>
     <p>Победа в туре — первое место по баллам, в том числе разделённое. Если у всех поровну, победителя нет.</p>
-    <p>Победная серия — туры подряд с победой. Серия с очками — туры подряд, в которых игрок получил хотя бы 0,5 очка. Считаются только завершённые туры сезона.</p>
+    <p>Победы подряд — туры подряд с победой. Беспроигрышная серия — туры подряд, в которых игрок получил хотя бы 0,5 очка. Считаются только завершённые туры сезона.</p>
   </div>
 </div></div>
 
@@ -471,7 +476,7 @@ function renderTable(kind) {
       '<span class="num pp">' + num(s.pp) + (c.live.length ? '<small>' + signed(s.dpp) + '</small>' : '') + '</span>' +
       '<span class="num ex">' + num(s.ex) + (c.live.length ? '<small>&nbsp;</small>' : '') + '</span></button>';
   });
-  h += '<div class="hint">Нажми на игрока, чтобы увидеть его серии.</div></section>';
+  h += '<div class="hint">Нажми на игрока, чтобы увидеть его профиль.</div></section>';
   return h + renderRecords(c);
 }
 
@@ -504,15 +509,30 @@ function season(c) {
   return { done: done, players: P };
 }
 
+// «тур 9», «туры 9 и 12», «туры 3, 7 и 9»
+function toursText(list) {
+  if (list.length === 1) return 'тур ' + list[0];
+  return 'туры ' + list.slice(0, -1).join(', ') + ' и ' + list[list.length - 1];
+}
+// Кто: по игроку на строку, в порядке листа
+function whoLines(c, hits) {
+  return c.players.map(function (name) {
+    var t = hits.filter(function (x) { return x.name === name; }).map(function (x) { return x.tour; });
+    return t.length ? name + ', ' + toursText(t) : '';
+  }).filter(Boolean);
+}
+
 function records(c) {
   var S = season(c), out = [];
-  function top(get) {
-    var best = 0, who = [];
+  // Три места по убыванию значения; одинаковые значения — одно место
+  function podium(get) {
+    var hits = [];
     S.done.forEach(function (t) { (get(t) || []).forEach(function (x, j) {
-      if (x > best) { best = x; who = []; }
-      if (x === best && x > 0) who.push(c.players[j] + ', тур ' + tourNo(t.label));
+      if (x > 0) hits.push({ v: x, name: c.players[j], tour: tourNo(t.label) });
     }); });
-    return { v: best, who: who };
+    var vals = hits.map(function (x) { return x.v; }).filter(function (v, k, a) { return a.indexOf(v) === k; })
+      .sort(function (a, b) { return b - a; }).slice(0, 3);
+    return vals.map(function (v) { return { v: v, who: whoLines(c, hits.filter(function (x) { return x.v === v; })) }; });
   }
   function streak(key) {
     var best = 0, who = [];
@@ -520,14 +540,14 @@ function records(c) {
       if (s.best > best) { best = s.best; who = []; }
       if (s.best === best && best > 0) who.push(p.name + ', ' + span(s.from, s.to));
     });
-    return { v: best, who: who };
+    return best ? [{ v: best, who: who }] : [];
   }
-  var pp = top(function (t) { return t.pp; }), ex = top(function (t) { return t.ex; });
+  var pp = podium(function (t) { return t.pp; }), ex = podium(function (t) { return t.ex; });
   var ws = streak('win'), ps = streak('pts');
-  if (pp.v) out.push({ t: 'Больше всего баллов за тур', r: pp, unit: plural(pp.v, 'балл', 'балла', 'баллов') });
-  if (ex.v) out.push({ t: 'Больше всего точных счетов за тур', r: ex, unit: 'точн' + plural(ex.v, 'ый', 'ых', 'ых'), gold: true });
-  if (ws.v) out.push({ t: 'Самая длинная победная серия', r: ws, unit: plural(ws.v, 'тур', 'тура', 'туров') + (ws.v > 1 ? ' подряд' : '') });
-  if (ps.v) out.push({ t: 'Самая длинная серия с очками', r: ps, unit: plural(ps.v, 'тур', 'тура', 'туров') + (ps.v > 1 ? ' подряд' : '') });
+  if (pp.length) out.push({ t: 'Баллы за тур', rows: pp });
+  if (ex.length) out.push({ t: 'Точные прогнозы за тур', rows: ex });
+  if (ws.length) out.push({ t: 'Победы подряд', rows: ws });
+  if (ps.length) out.push({ t: 'Беспроигрышная серия (туров подряд)', rows: ps });
   return out;
 }
 
@@ -537,28 +557,36 @@ function renderRecords(c) {
   if (!rs.length) return h + '<div class="pnote">Появятся после первого завершённого тура.</div></section>';
   h += '<div style="height:6px"></div>';
   rs.forEach(function (x) {
-    var who = x.r.who.slice(0, 2).map(esc).join('<br>') + (x.r.who.length > 2 ? '<br><i>и ещё ' + (x.r.who.length - 2) + '</i>' : '');
-    h += '<div class="rec"><span class="rt">' + x.t + '</span><span class="rh">' + who + '</span>' +
-      '<span class="rv' + (x.gold ? ' gold' : '') + '">' + num(x.r.v) + '<small>' + x.unit + '</small></span></div>';
+    h += '<div class="rec"><div class="rt">' + x.t + '</div>' + x.rows.map(function (r, k) {
+      return '<div class="rl r' + (k + 1) + '"><b>' + num(r.v) + '</b><span>' + r.who.map(esc).join('<br>') + '</span></div>';
+    }).join('') + '</div>';
   });
   return h + '<div style="height:4px"></div></section>';
 }
 
-function profile(kind, name) {
-  var c = comp(kind); if (!c) return;
+function profileSection(c, name) {
   var st = c.standings.filter(function (x) { return x.name === name; })[0];
-  var p = season(c).players.filter(function (x) { return x.name === name; })[0];
-  if (!st || !p) return;
-  var played = season(c).done.length;
-  $('prof-h').textContent = name;
-  var h = '<div class="pnote">' + esc(c.title) + (c.season ? ', сезон ' + esc(c.season) : '') + '</div>';
+  var S = season(c), p = S.players.filter(function (x) { return x.name === name; })[0];
+  if (!st || !p) return '';
+  function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
+  var h = '<div class="psec">' + esc(c.title) + (c.season ? '<small>сезон ' + esc(c.season) + '</small>' : '') + '</div>';
   h += '<div class="kpis"><div><b class="' + (st.place === 1 ? 'p1' : '') + '">' + st.place + '</b><span>место</span></div>' +
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
-  function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
-  h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + played);
-  h += row('Победная серия', 'туры подряд с победой', p.win.cur, 'рекорд ' + p.win.best + (p.win.best ? ', ' + span(p.win.from, p.win.to) : ''));
-  h += row('Серия с очками', 'туры подряд хотя бы с 0,5 очка', p.pts.cur, 'рекорд ' + p.pts.best + (p.pts.best ? ', ' + span(p.pts.from, p.pts.to) : ''));
+  if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>';
+  h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
+  // Справа — текущая серия, слева под названием — рекорд игрока
+  function best(x) { return x.best ? 'рекорд ' + x.best + ', ' + span(x.from, x.to) : 'пока не было'; }
+  h += row('Победы подряд', best(p.win), p.win.cur, 'сейчас');
+  h += row('Беспроигрышная серия', best(p.pts), p.pts.cur, 'сейчас');
   if (p.best) h += row('Лучший тур', null, num(p.best.v), plural(p.best.v, 'балл', 'балла', 'баллов') + ', тур ' + esc(tourNo(p.best.label)));
+  return h;
+}
+
+// Профиль: Чемпионат и Кубок, в порядке вкладок
+function profile(kind, name) {
+  var h = (DATA.comps || []).map(function (c) { return profileSection(c, name); }).join('');
+  if (!h) return;
+  $('prof-h').textContent = name;
   $('profbody').innerHTML = h;
   sheet('prof', true);
 }
