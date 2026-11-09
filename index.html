@@ -197,7 +197,7 @@
   .tm .tmd.my.ex { color: var(--gold); font-weight: 600; }
   .tm .tmp { font: 500 11px/1.3 var(--text); color: var(--muted); text-align: right; white-space: nowrap; }
   .rs.LV { width: auto; padding: 0 6px; color: var(--live); box-shadow: inset 0 0 0 1px var(--live); font-size: 11px; font-weight: 600; }
-  .tgo { padding: 0 16px 6px; }
+  .tgo { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 6px; }
   .tgo .retry { margin-top: 0; }
   .tsub2 { padding: 14px 16px 6px; font-size: 12.5px; color: var(--muted); }
   .tnote.tk { padding-top: 0; }
@@ -488,7 +488,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw8zfkrx";
+var BUILD = "mw8zk2s7";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1215,7 +1215,13 @@ function teamCard(name, from) {
   var ms = L.all.filter(function (m) { return m.h === name || m.a === name; });
   var h = '<div class="tsum">' + (pl ? '<span><b>' + pl.n + '</b>' + (pl.group ? 'место в группе ' + esc(pl.group.replace(/^Группа\s*/, '')) : 'место') + '</span>' : '') +
     (r ? '<span><b>' + r.pts + '</b>' + plural(r.pts, 'очко', 'очка', 'очков') + '</span><span><b>' + r.p + '</b>' + plural(r.p, 'игра', 'игры', 'игр') + '</span><span><b>' + r.gf + '–' + r.ga + '</b>мячи</span>' : '') + '</div>';
-  if (from !== 'table' && r) h += '<div class="tgo"><button class="retry" data-goleague="' + esc(name) + '">Таблица ' + (cup ? 'Кубка' : 'РПЛ') + '</button></div>';
+  // Ссылки на таблицы: сначала турнира, из которого открыли команду, затем второго (если команда в нём играет).
+  // Из самой таблицы турнира — только на второй.
+  var other = cup ? 'champ' : 'cup', LO = leagueData(other), go = [];
+  function goBtn(k) { return '<button class="retry" data-goleague="' + esc(name) + '" data-gokind="' + k + '">' + (k === 'cup' ? 'Таблица Кубка России' : 'Таблица РПЛ') + '</button>'; }
+  if (from !== 'table' && r) go.push(goBtn(kind));
+  if (LO && LO.T[name]) go.push(goBtn(other));
+  if (go.length) h += '<div class="tgo">' + go.join('') + '</div>';
   var last = ms.slice(-5).reverse(), older = ms.slice(0, -5).reverse();
   h += '<div class="tsec">Последние матчи</div>' + (last.length ? last.map(function (m) { return teamMatchRow(c, m, name); }).join('') : '<div class="tnote">Матчей пока нет.</div>');
   // Мои прогнозы на все её матчи: итог и всё, что раньше последних пяти
@@ -1245,9 +1251,10 @@ function teamCard(name, from) {
   if ($('team').hidden) sheet('team', true); else $('team').querySelector('.sheet-in').scrollTop = 0;
 }
 // Из карточки — в таблицу турнира, к строке команды
-function goLeague(name) {
+function goLeague(name, kind) {
   closeSheet('team');
   S.tbl = 'league'; remember('tbl', 'league');
+  if (kind && kind !== S.comp) { S.comp = kind; remember('comp', kind); }
   setView('table');
   // прокручиваем, когда лист уже закрылся (пока он открыт, страница не прокручивается)
   setTimeout(function () {
@@ -1508,7 +1515,7 @@ document.addEventListener('click', function (e) {
   if (b.dataset.pick) return openPick(b);
   if (b.dataset.tbl) { if (S.tbl !== b.dataset.tbl) { S.tbl = b.dataset.tbl; remember('tbl', S.tbl); shownKey = ''; render(); } return; }
   if (b.dataset.team) return teamCard(b.dataset.team, b.dataset.from);
-  if (b.dataset.goleague) return goLeague(b.dataset.goleague);
+  if (b.dataset.goleague) return goLeague(b.dataset.goleague, b.dataset.gokind);
   if (b.dataset.reseason) { b.dataset.reseason.split(',').forEach(function (id) { delete SEASONS[id]; }); render(); return refreshProfile(); }
   if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
