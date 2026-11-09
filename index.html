@@ -505,7 +505,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw90q26h";
+var BUILD = "mw90sot3";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1042,7 +1042,7 @@ function teamBlock(list, name, kind) {
     return '<li><span>' + esc(t.name) + '<small>' + matchesWord(t.n) + '</small></span><b>' + Math.round(100 * t.trust / t.n) + '<span class="pc">%</span></b></li>';
   });
   var pm = ts.filter(function (t) { return t.pm >= min; }), fe = ends(pm, function (t) { return t.pts / t.pm; }, 3);
-  if (fe[0].length) h += '<div class="tcap">Средний балл за прогноз на матч команды и сумма; баллы матча делятся поровну между соперниками.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
+  if (fe[0].length) h += '<div class="tcap">Средний балл за прогноз на матч команды и сумма; баллы матча делятся поровну между двумя командами.</div>' + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   });
   return h;
@@ -1053,7 +1053,7 @@ function renderTeams(c) {
   var h = '<section class="panel"><div class="ptitle"><h2>Кормильцы и обманщики</h2></div>';
   if (ts.length < 2) return h + '<div class="pnote">Появятся, когда команды сыграют по несколько матчей.</div></section>';
   var fe = ends(ts, function (t) { return t.pts / t.pm; }, 3);
-  h += '<div class="pnote">Средний балл за прогноз на матч команды и сумма на всех; баллы матча делятся поровну между соперниками.</div>';
+  h += '<div class="pnote">Средний балл за прогноз на матч команды и сумма на всех; баллы матча делятся поровну между двумя командами.</div>';
   return h + teamLists(fe[0], fe[1], 'Кормильцы', 'Обманщики', function (t) {
     return '<li><span>' + esc(t.name) + '<small>всего ' + pointsWord(t.pts / 2) + '</small></span><b>' + num(Math.round(10 * t.pts / t.pm) / 10) + '</b></li>';
   }) + '</section>';
@@ -1212,7 +1212,7 @@ function renderMine(kind, head) {
       [r.p, r.k[4], r.k[3], r.k[2], r.k[0]].map(function (x) { return '<span>' + x + '</span>'; }).join('') +
       '<span class="lwl">' + num(r.win) + '</span><span class="lwl">' + num(r.lose) + '</span><span class="lpts">' + num(r.pts) + '</span></button>';
   }).join('');
-  return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между соперниками.</span>' + TAP_TEAM + '</div></section>';
+  return h + '</div><div class="lleg"><span>Число прогнозов: точный счёт (4), разница мячей (3), исход (2), мимо (0).</span><span>Баллы команды в её победах (В), поражениях (П) и всего (Б). Баллы за матч делятся поровну между двумя командами.</span>' + TAP_TEAM + '</div></section>';
 }
 
 // ---------- Карточка команды: место, последние матчи, мои прогнозы на её матчи ----------
