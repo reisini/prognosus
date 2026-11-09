@@ -235,11 +235,26 @@
   .srow.champ .nm { overflow: visible; }
   .sealw { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; pointer-events: none; }
   .sealw svg { position: absolute; left: 4px; top: -56px; width: 78px; height: 78px; transform: rotate(-11deg); color: var(--gold-mark); }
-  .ptitle.done { min-height: 50px; align-items: flex-start; }
-  .tstamp { margin: -2px -2px -10px 0; pointer-events: none; color: var(--accent); }
-  .tstamp svg { display: block; transform: rotate(-5deg); }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .tstamp svg { mix-blend-mode: multiply; } }
-  :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .tstamp svg { mix-blend-mode: multiply; }
+  /* Штемпель тура: круг заходит на конец названия («14»), волны гашения уходят вправо; шапка тура выше, чтобы штемпель
+     помещался целиком и не уходил под строку имён */
+  .ptitle.done { min-height: 86px; padding-bottom: 0; }
+  /* Награды в профиле: печати в ряд, подпись под каждой */
+  .awards { display: flex; flex-wrap: wrap; gap: 4px 2px; padding: 4px 8px 6px; }
+  .awards figure { margin: 0; width: 112px; text-align: center; }
+  .awards i { display: block; width: 84px; height: 84px; margin: 0 auto; color: var(--gold-mark); }
+  .awards svg { display: block; width: 100%; height: 100%; }
+  .awards figcaption { margin-top: 2px; font-size: 11.5px; line-height: 1.25; color: var(--muted); }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .awards svg { mix-blend-mode: multiply; } }
+  :root[data-theme="light"] .awards svg { mix-blend-mode: multiply; }
+  .pmark { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; pointer-events: none; z-index: 1; }
+  .pmark svg { position: absolute; left: -6px; top: -5px; width: 104px; height: 71px; transform: rotate(-8deg); transform-origin: 34.6px 35.6px; color: var(--accent); }
+  .pmark.fresh svg { opacity: 0; }
+  /* Падение: крупно и прозрачно → удар чуть с перебором → на место; удар совпадает с толчком телефона (260 мс) */
+  .pmark.fresh.go svg { animation: stampdown .46s cubic-bezier(.55, 0, .7, .2) forwards; }
+  @keyframes stampdown { 0% { opacity: 0; transform: rotate(-15deg) scale(2); } 56% { opacity: 1; transform: rotate(-8deg) scale(.93); } 76% { transform: rotate(-8deg) scale(1.025); } 100% { opacity: 1; transform: rotate(-8deg) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .pmark.fresh.go svg { animation: none; opacity: 1; } }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .sealw svg, :root:not([data-theme="dark"]) .pmark svg { mix-blend-mode: multiply; } }
+  :root[data-theme="light"] .sealw svg, :root[data-theme="light"] .pmark svg { mix-blend-mode: multiply; }
   /* Тонкое подчёркивание — намёк, что имя нажимается: команды в таблицах, игроки в нашей таблице */
   .lrow:not(.head) .ln b, button.srow .nm { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: color-mix(in srgb, var(--ink) 18%, transparent); }
   .lrow:active .ln b, button.srow:active .nm { text-decoration-color: currentColor; }
@@ -524,7 +539,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mw92mv2q";
+var BUILD = "mw92try3";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -687,6 +702,12 @@ function isOpenTour(g, i, gs) {
   return g === firstOpen || soon;
 }
 
+// Штемпель на заголовке завершённого тура; дата — последнего матча тура
+function postmark(g) {
+  var last = g.matches.filter(function (m) { return m.start; }).sort(function (a, b) { return b.start - a.start; })[0];
+  var date = last && last.when ? (last.when.split(' ')[1] || '') : '', key = g.kind + '|' + g.label + '|' + (last ? last.start : '');
+  return '<i class="pmark' + (stampSeen(key) ? '' : ' fresh') + '" data-stamp="' + esc(key) + '" role="img" aria-label="Тур завершён' + (date ? ' ' + esc(date) : '') + '">' + tourPostSVG(g.label, date) + '</i>';
+}
 function renderPred(kind) {
   var gs = groupsOf(kind);
   if (!gs.length) return '<div class="panel blank">Открытых туров нет. Бот напишет в группу, когда откроется следующий.</div>';
@@ -702,7 +723,7 @@ function renderPred(kind) {
     var unfolded = isOpenTour(g, i, gs), key = 'p:' + g.kind + ':' + g.label;
     var title = g.state === 'done'
       // Завершённый тур — зелёный штамп с датами вместо строки «Тур завершён»
-      ? '<div class="ptitle done"><h2>' + esc(g.label) + '</h2><i class="tstamp" role="img" aria-label="Тур завершён, ' + esc(g.dates) + '">' + tourStampSVG(g.dates) + '</i></div>'
+      ? '<div class="ptitle done"><h2>' + esc(g.label) + postmark(g) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>'
       : '<div class="ptitle"><h2>' + esc(g.label) + '</h2><span class="meta">' + esc(g.dates) + '</span></div>' + '<div class="pnote">' + (note || '&nbsp;') + '</div>';
     if (g.state === 'open') title = '<button class="fold" data-ptour="' + esc(key) + '" aria-expanded="' + unfolded + '">' + title + '<span class="chev">›</span></button>';
     if (!unfolded) return '<section class="panel">' + title + '</section>';
@@ -798,15 +819,42 @@ function sealSVG(kind, season) {
     '<g stroke="none">' + arcText(id + 't', top, 33.6, true, ts) + arcText(id + 'b', bot, 40.3, false, bs) + starPath(13.4, 50, 2.4) + starPath(86.6, 50, 2.4) + '</g>' +
     '<g transform="translate(28.6 23.6) scale(.428)" stroke-width="0">' + (cup ? octopusTrophy(id) : owlTrophy(id)) + '</g></g></svg>';
 }
-// Штамп завершённого тура: «ЗАВЕРШЁН» и даты тура; ширина — по длине дат
-function tourStampSVG(dates) {
-  var id = 'st' + (++STAMP_N), l2 = String(dates || '').toUpperCase(), w = Math.max(8 * 10.4, l2.length * 7.2) + 26;
-  return '<svg class="tbox" viewBox="0 0 ' + w + ' 40" style="width:' + (w * .82).toFixed(1) + 'px" aria-hidden="true"><defs>' + inkFilter(id + 'f', STAMP_N * 3) + '</defs>' +
-    '<g fill="currentColor" stroke="currentColor" filter="url(#' + id + 'f)" font-family="Tektur, Onest, sans-serif" font-weight="600">' +
-    '<rect x="2.5" y="2.5" width="' + (w - 5) + '" height="35" rx="3" fill="none" stroke-width="2.4"/>' +
-    '<g stroke="none"><text x="' + w / 2 + '" y="19" font-size="13" letter-spacing="1.6" text-anchor="middle">ЗАВЕРШЁН</text>' +
-    (l2 ? '<text x="' + w / 2 + '" y="31.5" font-size="9.4" letter-spacing="1" text-anchor="middle">' + esc(l2) + '</text>' : '') + '</g></g></svg>';
+// Почтовый штемпель завершённого тура: по кругу «ТУР 14 · ЗАВЕРШЁН», в центре — дата последнего матча,
+// справа — волнистые линии гашения. Круг слева, им штемпель заходит на номер тура
+function tourPostSVG(label, date) {
+  var id = 'st' + (++STAMP_N), waves = '';
+  for (var i = 0; i < 4; i++) waves += '<path d="M93 ' + (34.6 + i * 7.6) + 'q6.4-3.6 12.8 0t12.8 0 12.8 0 12.8 0" fill="none" stroke-width="1.5"/>';
+  return '<svg class="tpost" viewBox="0 0 146 100" aria-hidden="true"><defs>' + inkFilter(id + 'f', STAMP_N * 3) + '</defs>' +
+    '<g fill="currentColor" stroke="currentColor" filter="url(#' + id + 'f)" font-family="Tektur, Onest, sans-serif" font-weight="600">' + waves +
+    '<circle cx="50" cy="50" r="45" fill="none" stroke-width="2.6"/><circle cx="50" cy="50" r="30" fill="none" stroke-width="1"/>' +
+    '<g stroke="none">' + arcText(id + 't', String(label).toUpperCase(), 34.2, true, 10.5) + arcText(id + 'b', 'ЗАВЕРШЁН', 40.6, false, 9.4) +
+    '<text x="50" y="55.5" font-size="15" text-anchor="middle">' + esc(date) + '</text>' + starPath(14.6, 50, 2.4) + starPath(85.4, 50, 2.4) + '</g></g></svg>';
 }
+// Штемпель «падает» на тур один раз — при первом показе после окончания тура (запоминаем в памяти телефона)
+function stampSeen(key, set) {
+  var list = []; try { list = JSON.parse(localStorage.getItem('prognozus.stamped') || '[]'); } catch (e) {}
+  if (!set) return list.indexOf(key) >= 0;
+  if (list.indexOf(key) < 0) { list.push(key); try { localStorage.setItem('prognozus.stamped', JSON.stringify(list.slice(-40))); } catch (e) {} }
+}
+// Новые штемпели оживают, когда видны на экране: падают, слегка пружинят, телефон отзывается лёгким толчком
+var stampObs = null;
+function animateStamps() {
+  var fresh = document.querySelectorAll('.pmark.fresh:not(.go)');
+  if (!fresh.length) return;
+  var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function go(el) {
+    if (el.classList.contains('go')) return;
+    el.classList.add('go'); stampSeen(el.dataset.stamp, true);
+    if (calm) return;
+    setTimeout(function () { try { if (TG && TG.HapticFeedback) TG.HapticFeedback.impactOccurred('medium'); } catch (e) {} }, 260);
+  }
+  if (!('IntersectionObserver' in window)) return [].forEach.call(fresh, go);
+  if (!stampObs) stampObs = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting && e.intersectionRatio > .6) { stampObs.unobserve(e.target); go(e.target); } });
+  }, { threshold: [.6] });
+  [].forEach.call(fresh, function (el) { stampObs.observe(el); });
+}
+
 // Сезон окончен: прошлый сезон или все туры сыграны (чемпионат — 30 туров, Кубок — сыгран финал или суперфинал)
 function seasonOver(c) {
   if (c.past) return true;
@@ -1048,8 +1096,30 @@ function profile(kind, name, keep) {
   }).join('');
   PROF = { kind: kind, name: name };
   $('prof-h').textContent = name;
-  $('profbody').innerHTML = pick + (h || '<div class="tnote">Нет данных.</div>');
+  $('profbody').innerHTML = awardsBlock(name) + pick + (h || '<div class="tnote">Нет данных.</div>');
   if (!keep) sheet('prof', true);
+}
+// Награды игрока за все сезоны: печать чемпиона (сова) и обладателя Кубка (осьминог) за каждый оконченный сезон, где он первый
+function awardsOf(name) {
+  var out = [], wait = false;
+  comps().forEach(function (c0) {
+    (c0.seasons && c0.seasons.length ? c0.seasons : [c0.season]).forEach(function (x) {
+      var r = seasonComp(c0, x);
+      if (r.loading) { wait = true; return; }
+      if (r.c && seasonOver(r.c) && r.c.standings.some(function (s) { return s.name === name && s.place === 1; })) out.push({ kind: c0.kind, season: x });
+    });
+  });
+  out.sort(function (a, b) { return yearOf(b.season) - yearOf(a.season) || (a.kind === 'champ' ? -1 : 1); });
+  return { list: out, wait: wait };
+}
+function awardsBlock(name) {
+  var a = awardsOf(name), h = '<div class="psec">Награды<small>все сезоны</small></div>';
+  if (!a.list.length) return h + '<div class="tnote">' + (a.wait ? 'Загружаю прошлые сезоны…' : 'Пока нет. Печать получает победитель сезона.') + '</div>';
+  // Оттиски чуть повёрнуты по-разному, как поставленные от руки
+  return h + '<div class="awards">' + a.list.map(function (x, i) {
+    return '<figure><i style="transform:rotate(' + [-9, 6, -4, 9, -12, 3][i % 6] + 'deg)">' + sealSVG(x.kind, x.season) + '</i>' +
+      '<figcaption>' + (x.kind === 'cup' ? 'Обладатель Кубка' : 'Чемпион') + '<br>' + esc(x.season) + '</figcaption></figure>';
+  }).join('') + '</div>' + (a.wait ? '<div class="tnote">Загружаю прошлые сезоны…</div>' : '');
 }
 // Все сезоны соревнования: суммы, места по сезонам, лучшие серии и туры, команды
 function allSection(c0, name) {
@@ -1064,7 +1134,7 @@ function allSection(c0, name) {
   function row(k, note, v, sub) { return prow(k, note, v, sub); }
   var st = list.map(function (c) { return c.standings.filter(function (x) { return x.name === name; })[0]; });
   var tot = function (k) { return st.reduce(function (s, x) { return s + (Number(x[k]) || 0); }, 0); };
-  var titles = list.filter(function (c, i) { return c.past && st[i].place === 1; }).length;
+  var titles = list.filter(function (c, i) { return seasonOver(c) && st[i].place === 1; }).length;
   h += '<div class="kpis"><div><b class="' + (titles ? 'p1' : '') + '">' + titles + '</b><span>' + plural(titles, 'титул', 'титула', 'титулов') + '</span></div>' +
     '<div><b>' + num(tot('tp')) + '</b><span>очки</span></div><div><b>' + num(tot('pp')) + '</b><span>баллы</span></div><div><b>' + num(tot('ex')) + '</b><span>точные</span></div></div>';
   h += row('Места по сезонам', list.some(function (c) { return !c.past; }) ? 'текущий сезон ещё идёт' : null,
@@ -1660,6 +1730,7 @@ function render() {
   }).join('');
   [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.dataset.view === S.view); });
   app.innerHTML = S.view === 'table' ? renderTable(S.comp) : S.view === 'tours' ? renderTours(S.comp) : renderPred(S.comp);
+  setTimeout(animateStamps, 120);
   var key = S.view + '|' + S.comp;
   var cur = comp(S.comp), sel = S.season[S.comp];
   if (S.view === 'table' && tblMode(cur) === 'ours' && key !== shownKey && (!sel || !cur || sel === cur.season)) animateTable(cur);
