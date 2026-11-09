@@ -277,6 +277,8 @@
     </ul>
     <h3>Таблица</h3>
     <p>Место в таблице считается по сумме очков, при равенстве очков — по сумме баллов, при равенстве и по этому показателю — по количеству точно угаданных результатов. У Чемпионата и Кубка таблицы отдельные.</p>
+    <h3>Угаданные исходы</h3>
+    <p>Процент сыгранных матчей, в которых прогнозист угадал исход: победу хозяев, ничью или победу гостей. Счёт и разница мячей не важны. Матчи без прогноза не считаются.</p>
     <h3>Рекорды и серии</h3>
     <p>Победа в туре — первое место по баллам, в том числе разделённое. Если у всех поровну, победителя нет.</p>
     <p>Победы подряд — туры подряд с победой. Беспроигрышная серия — туры подряд, в которых игрок получил хотя бы 0,5 очка. Считаются только завершённые туры сезона.</p>
@@ -469,9 +471,10 @@ function renderTable(kind) {
   h += '<div class="pnote">' + sub + '</div>';
   h += '<div class="srow head"><span>место</span><span></span><span class="num">очки</span><span class="num">баллы</span><span class="num">точные</span></div>';
   c.standings.forEach(function (s) {
+    var oc = outcomes(c, c.players.indexOf(s.name));
     var mv = s.dplace > 0 ? '<span class="mv up">▲' + s.dplace + '</span>' : s.dplace < 0 ? '<span class="mv down">▼' + (-s.dplace) + '</span>' : '';
     h += '<button class="srow' + (s.me ? ' me' : '') + '" data-player="' + esc(s.name) + '"><span class="pl' + (s.place === 1 ? ' p1' : '') + '">' + s.place + '</span>' +
-      '<span class="nm">' + esc(s.name) + mv + '</span>' +
+      '<span class="nm">' + esc(s.name) + mv + (oc.n ? '<small>' + oc.pct + '% исходов</small>' : '') + '</span>' +
       '<span class="num tp">' + num(s.tp) + (c.live.length ? '<small class="' + (s.dtp > 0 ? 'up' : '') + '">' + signed(s.dtp) + ' в туре</small>' : '') + '</span>' +
       '<span class="num pp">' + num(s.pp) + (c.live.length ? '<small>' + signed(s.dpp) + '</small>' : '') + '</span>' +
       '<span class="num ex">' + num(s.ex) + (c.live.length ? '<small>&nbsp;</small>' : '') + '</span></button>';
@@ -484,6 +487,18 @@ function renderTable(kind) {
 function tourNo(label) { return String(label || '').replace(/^тур\s*/i, ''); }
 function plural(n, one, few, many) { var a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many; }
 function span(from, to) { return from === to ? 'тур ' + tourNo(to) : 'туры ' + tourNo(from) + '–' + tourNo(to); }
+
+// Угаданные исходы: доля сыгранных матчей, где верно угадан победитель или ничья (счёт не важен).
+// Матчи без прогноза не считаются.
+function outcomes(c, j) {
+  var ok = 0, n = 0;
+  (c.tours || []).forEach(function (t) { (t.matches || []).forEach(function (m) {
+    var x = m.cells && m.cells[j];
+    if (m.phase !== 'ft' || m.hs === null || m.hs === undefined || !x || x.h === null || x.h === undefined) return;
+    n++; if (Math.sign(m.hs - m.as) === Math.sign(x.h - x.a)) ok++;
+  }); });
+  return { ok: ok, n: n, pct: n ? Math.round(100 * ok / n) : null };
+}
 
 // Сезон по завершённым турам: победы, серии, лучший тур каждого игрока
 function season(c) {
@@ -574,6 +589,8 @@ function profileSection(c, name) {
   var h = '<div class="psec">' + esc(c.title) + (c.season ? '<small>сезон ' + esc(c.season) + '</small>' : '') + '</div>';
   h += '<div class="kpis"><div><b class="' + (st.place === 1 ? 'p1' : '') + '">' + st.place + '</b><span>место</span></div>' +
     '<div><b>' + num(st.tp) + '</b><span>очки</span></div><div><b>' + num(st.pp) + '</b><span>баллы</span></div><div><b>' + num(st.ex) + '</b><span>точные</span></div></div>';
+  var oc = outcomes(c, c.players.indexOf(name));
+  if (oc.n) h += row('Угаданные исходы', 'исход матча, счёт не важен', oc.pct + '%', oc.ok + ' из ' + oc.n + ' ' + plural(oc.n, 'матча', 'матчей', 'матчей'));
   if (!S.done.length) return h + '<div class="pnote" style="padding:8px 16px 0">Серии появятся после первого завершённого тура.</div>';
   h += row('Победы в турах', 'первое место по баллам', p.wins, 'из ' + S.done.length);
   // Справа — текущая серия, слева под названием — рекорд игрока
