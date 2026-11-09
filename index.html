@@ -192,6 +192,7 @@
   .tl2 .top li:first-child b { color: var(--gold); }
   .tnote { padding: 8px 16px 14px; font-size: 13px; color: var(--muted); }
   .pc { font-family: var(--text); font-weight: 600; margin-left: 1px; }
+  .retry { margin-top: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--accent); font: 600 14px/1 var(--text); cursor: pointer; }
   .pscope { padding: 0 16px 6px; }
   .tcap { padding: 12px 16px 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
   .tcap + .tl2 { padding-top: 6px; }
@@ -398,12 +399,18 @@ var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.ini
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
 var DATA = { loading: true };
-function call(api, extra, ok, fail) {
+// Запрос к серверу: при сбое сети или ответе-ошибке Google повторяем ещё раз через 1,5 с; в тексте ошибки — что именно случилось
+function call(api, extra, ok, fail, tries) {
   var body = JSON.stringify(Object.assign({}, AUTH, extra || {}));
   fetch(BASE + '?api=' + api, { method: 'POST', body: body, headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (d) { if (d && d.error && api !== 'data') fail({ message: d.error }); else ok(d); })
-    .catch(function () { fail({ message: 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.' }); });
+    .then(function (r) { if (!r.ok) throw { http: r.status }; return r.text(); })
+    .then(function (t) { var d; try { d = JSON.parse(t); } catch (e) { throw { parse: true }; } return d; })
+    .then(function (d) { if (d && d.error && api !== 'data') fail({ message: d.error }); else ok(d); }, function (e) {
+      if (!tries) return setTimeout(function () { call(api, extra, ok, fail, 1); }, 1500);
+      fail({ message: e && e.http ? 'Сервер не ответил (код ' + e.http + '). Попробуй ещё раз через минуту.'
+        : e && e.parse ? 'Сервер Google ответил ошибкой. Попробуй ещё раз через минуту.'
+        : 'Нет связи с сервером. Проверь интернет и попробуй ещё раз.' });
+    });
 }
 var API = {
   load: function (ok, fail) { call('data', null, ok, fail); },
@@ -576,7 +583,7 @@ function renderTable(kind) {
   if (!c0) return '<div class="panel blank">Нет данных.</div>';
   var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
   var head = '<section class="panel"><div class="ptitle"><h2>Таблица</h2>' + seasonPick(c0) + '</div>';
-  if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
+  if (!c) return head + '<div class="pnote" style="padding-bottom:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   var sub = c.past ? 'Итоговая таблица сезона' : c.after ? 'После тура ' + esc(c.after.replace(/^тур\s*/i, '')) : 'Сезон только начался';
   if (c.live.length) sub += ', идёт ' + esc(c.live.join(', ').toLowerCase());
   var h = head;
@@ -785,7 +792,7 @@ function profile(kind, name, keep) {
     if (scope === 'all') return allSection(c0, name);
     if (scope !== c0.season && (c0.seasons || []).indexOf(scope) < 0) return '';
     var r = seasonComp(c0, scope);
-    if (!r.c) return '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">' + (r.error ? esc(r.error) : 'Загружаю сезон…') + '</div>';
+    if (!r.c) return '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон…') + '</div>';
     return profileSection(r.c, name) || '<div class="psec">' + esc(c0.title) + '<small>сезон ' + esc(scope) + '</small></div><div class="tnote">В этом сезоне не играл.</div>';
   }).join('');
   PROF = { kind: kind, name: name };
@@ -796,9 +803,11 @@ function profile(kind, name, keep) {
 // Все сезоны соревнования: суммы, места по сезонам, лучшие серии и туры, команды
 function allSection(c0, name) {
   var past = (c0.seasons || []).filter(function (x) { return x !== c0.season; }), list = [c0], wait = false;
-  past.forEach(function (x) { var r = seasonComp(c0, x); if (r.c) list.push(r.c); else if (r.loading) wait = true; });
+  var errs = [];
+  past.forEach(function (x) { var r = seasonComp(c0, x); if (r.c) list.push(r.c); else if (r.loading) wait = true; else if (r.error) errs.push(r); });
   var h = '<div class="psec">' + esc(c0.title) + '<small>все сезоны</small></div>';
   if (wait) return h + '<div class="tnote">Загружаю прошлые сезоны…</div>';
+  if (errs.length) h += '<div class="tnote">Не все прошлые сезоны загрузились: ' + esc(errs[0].error) + retryBtn({ retry: errs.map(function (r) { return r.retry; }).join(',') }) + '</div>';
   list = list.filter(function (c) { return c.players.indexOf(name) >= 0 && c.standings.some(function (x) { return x.name === name; }); });
   if (!list.length) return h + '<div class="tnote">Не играл.</div>';
   function row(k, note, v, sub) { return '<div class="prow"><span class="pk">' + k + (note ? '<small>' + note + '</small>' : '') + '</span><span class="pv"><b>' + v + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>'; }
@@ -931,9 +940,10 @@ function seasonComp(c0, sel) {
   if (!sel || sel === c0.season) return { c: c0 };
   var d = SEASONS[c0.kind + '|' + sel];
   if (!d) { loadSeason(c0.kind, sel); return { loading: true }; }
-  if (d.error) return { error: d.error };
+  if (d.error) return { error: d.error, retry: c0.kind + '|' + sel };
   return { c: d.comp || (d.comp = pastComp(c0, d)) };
 }
+function retryBtn(r) { return r.retry ? '<div><button class="retry" data-reseason="' + esc(r.retry) + '">Повторить</button></div>' : ''; }
 function pastComp(c0, d) {
   var P = d.players, last = d.tours[0];
   function sum(key) { return P.map(function (x, j) { return d.tours.reduce(function (s, t) { return s + (Number((t[key] || [])[j]) || 0); }, 0); }); }
@@ -949,7 +959,7 @@ function renderTours(kind) {
   if (!c0) return '<div class="panel blank">Сыгранных туров пока нет.</div>';
   var sel = S.season[kind] || c0.season, r = seasonComp(c0, sel), c = r.c;
   if (!c) return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c0.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div>' +
-    '<div class="pnote" style="padding:14px">' + (r.error ? esc(r.error) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
+    '<div class="pnote" style="padding:14px">' + (r.error ? esc(r.error) + retryBtn(r) : 'Загружаю сезон ' + esc(sel) + '…') + '</div></section>';
   if (!c.tours.length) return '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div><div class="g names tl-head" style="--cols:' + cols(c.players.length, -1) + '"><div class="lbl">' + seasonPick(c0) + '</div></div><div class="pnote" style="padding:14px">Сыгранных туров пока нет.</div></section>';
   var n = c.players.length, gc = cols(n, -1); // те же столбцы, что у матчей внутри тура: вертикали совпадают
   var h = '<section class="panel tlist"><div class="ptitle"><h2>Результаты</h2></div>';
@@ -1026,7 +1036,7 @@ function render() {
   if (DATA.loading || DATA.error || DATA.claim) {
     $('comps').innerHTML = ''; $('savebar').hidden = true; tabs.hidden = true;
     if (DATA.loading) app.innerHTML = '<div class="panel blank">Загружаю…</div>';
-    else if (DATA.error) app.innerHTML = '<div class="panel blank">' + esc(DATA.error) + '</div>';
+    else if (DATA.error) app.innerHTML = '<div class="panel blank">' + esc(DATA.error) + '<div><button class="retry" data-retry="1">Повторить</button></div></div>';
     else app.innerHTML = DATA.claim.length
       ? '<section class="panel"><div class="ptitle"><h2>Кто ты в таблице?</h2></div><div class="pnote">Выбери себя один раз — дальше приложение будет узнавать тебя само.</div>' +
         '<div class="claim">' + DATA.claim.map(function (n) { return '<button data-claim="' + esc(n) + '">' + esc(n) + '</button>'; }).join('') + '</div></section>'
@@ -1083,6 +1093,8 @@ document.addEventListener('click', function (e) {
     b.disabled = true;
     return API.claim(b.dataset.claim, function (d) { DATA = d; startView(); render(); }, function (err) { b.disabled = false; toast(err && err.message ? err.message : 'Не получилось'); });
   }
+  if (b.dataset.retry) { DATA = { loading: true }; render(); return API.load(function (d) { DATA = d; startView(); render(); }, function (err) { DATA = { error: err && err.message ? err.message : 'Нет связи с сервером.' }; render(); }); }
+  if (b.dataset.reseason) { b.dataset.reseason.split(',').forEach(function (id) { delete SEASONS[id]; }); render(); return refreshProfile(); }
   if (b.dataset.player) { S.pscope = (S.view === 'table' && S.season[S.comp]) || (comp(S.comp) || {}).season; return profile(S.comp, b.dataset.player); }
   if (b.dataset.comp) return setComp(b.dataset.comp);
   if (b.dataset.view) return setView(b.dataset.view);
