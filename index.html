@@ -120,6 +120,7 @@
   .pts.p2, .pts.p3 { background: var(--accent-soft); color: var(--accent); }
   .pts.p4 { background: var(--gold-bg); color: var(--gold); }
   .note { padding: 4px 14px 0; font-size: 12px; color: var(--gold); }
+  .note .hl { color: var(--live); font-weight: 600; }
 
   .st { display: flex; align-items: center; justify-content: center; gap: 3px; }
   .st button { width: 27px; height: 26px; padding: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--surface);
@@ -127,7 +128,10 @@
   .st button:active { transform: scale(.92); }
   .st b { width: 20px; text-align: center; font-size: 16px; }
   .st b.nil { color: var(--muted); font-weight: 500; opacity: .7; }
-  .add { width: 27px; height: 26px; padding: 0; border-radius: 8px; border: 1px dashed var(--gold); background: none; color: var(--gold); font-size: 16px; cursor: pointer; }
+  .c.lt { position: relative; align-self: stretch; }
+  .add { position: absolute; z-index: 2; left: 50%; top: 100%; width: 80px; height: 44px; margin: -22px 0 0 -40px; padding: 0; border-radius: 22px; border: 1.5px dashed var(--gold);
+    background: none; color: var(--gold); font-family: inherit; font-size: 12px; font-weight: 600; line-height: 14px; cursor: pointer; }
+  .add:active { transform: scale(.97); }
   .txtbtn { border: 0; background: none; padding: 0; color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; }
 
   /* Таблица */
@@ -689,7 +693,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwa6i3f0";
+var BUILD = "mwa7ow6q";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -823,7 +827,7 @@ function matchRow(g, m, gridCols, editable) {
   if (editable && lateOpen[m.key]) h += '<div class="note">Матч уже начался: прогноз попадёт в таблицу, если согласятся остальные.</div>';
   else if (editable && m.pending && !dirty) h += '<div class="note">Твой прогноз ' + m.pending[0] + ':' + m.pending[1] + ' ждёт согласия остальных.</div>';
   // Без своего прогноза на идущий матч не видно ни счёт, ни чужие прогнозы — только минуту
-  else if (m.locked && !dirty) h += '<div class="note">Матч уже идёт. Счёт и прогнозы соперников откроются, когда сделаешь свой прогноз.</div>';
+  else if (m.locked && !dirty) h += '<div class="note"><b class="hl">Матч идёт.</b> Поторопись с прогнозом!</div>';
   return h + '</div>';
 }
 
@@ -836,7 +840,8 @@ function cell(g, m, j, side, editable) {
   if (!m.started) return '<div class="c p hid">' + (c.has ? '✓' : '·') + '</div>';
   if (m.locked && !isMe) return '<div class="c p hid"></div>';
   if (editable && isMe && m.pending) return '<div class="c p pend">' + m.pending[side === 'h' ? 0 : 1] + '</div>';
-  if (editable && isMe && side === 'h' && canLate(g, m)) return '<div class="c"><button class="add" data-late="' + esc(m.key) + '" aria-label="Прогноз после начала матча">+</button></div>';
+  // Кнопка позднего прогноза — с подписью, на обе строки своего столбца; строка гостей под ней пустая
+  if (editable && isMe && canLate(g, m)) return side === 'h' ? '<div class="c lt"><button class="add" data-late="' + esc(m.key) + '">Сделать<br>прогноз</button></div>' : '<div class="c"></div>';
   return '<div class="c p' + (isMe ? ' me' : '') + '">' + v(side === 'h' ? c.h : c.a) + '</div>';
 }
 
@@ -867,7 +872,7 @@ function renderPred(kind) {
   var gs = groupsOf(kind);
   if (!gs.length) return '<div class="panel blank">Открытых туров нет. Бот напишет в группу, когда откроется следующий.</div>';
   return gs.map(function (g, i) {
-    var wide = g.me && g.matches.some(function (m) { return !m.started || lateOpen[m.key]; });
+    var wide = g.me && g.matches.some(function (m) { return !m.started || lateOpen[m.key] || canLate(g, m); });
     var gc = cols(g.players.length, wide ? meOf(g) : -1);
     var open = g.matches.filter(function (m) { return !m.started && m.phase !== 'off'; });
     var done = open.filter(function (m) { return m.mine || edits[m.key]; }).length;
@@ -1715,7 +1720,7 @@ function renderFan(c, head, sub, pick) {
   var P = c.players, j = P.indexOf(S.fanP), cup = c.kind === 'cup';
   if (j < 0) j = meOf(c) >= 0 ? meOf(c) : 0;
   // Подзаголовок — во всю строку, сезон — справа от переключателя игроков
-  var h = head + sub('Ваши ожидания — это ваши проблемы', true) +
+  var h = head + sub('Твои ожидания, твои проблемы', true) +
     '<div class="fanp"><div role="group" aria-label="Чьи прогнозы">' + P.map(function (n, k) {
       return '<button data-fanp="' + esc(n) + '" class="' + (k === j ? 'on' : '') + '" aria-pressed="' + (k === j) + '">' + esc(n) + '</button>'; }).join('') + '</div>' + pick + '</div>';
   var F = fanData(c, j);
@@ -2061,7 +2066,7 @@ function render() {
     else app.innerHTML = DATA.claim.length
       ? '<section class="panel"><div class="ptitle"><h2>Кто ты в таблице?</h2></div><div class="pnote">Выбери себя один раз — дальше приложение будет узнавать тебя само.</div>' +
         '<div class="claim">' + DATA.claim.map(function (n) { return '<button data-claim="' + esc(n) + '">' + esc(n) + '</button>'; }).join('') + '</div></section>'
-      : '<div class="panel blank">Все места в таблице заняты. Чтобы добавить игрока, добавьте ему столбцы в таблице.</div>';
+      : '<div class="panel blank">Все места в таблице заняты. Чтобы добавить игрока, добавь ему столбцы в таблице.</div>';
     measure(); return;
   }
   tabs.hidden = false;
