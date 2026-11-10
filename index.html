@@ -355,6 +355,38 @@
   @keyframes gbgild { from { clip-path: circle(0% at 32% 28%); } to { clip-path: circle(80% at 32% 28%); } }
   @keyframes gbshine { to { transform: translateX(260%) skewX(-18deg); } }
   @keyframes gbtitle { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+  /* Жёлтая карточка: опоздал с прогнозом на начавшийся матч. Арбитр показывает её при входе; карточки копятся в профиле */
+  .ycw { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(7, 13, 10, .9); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); opacity: 0; transition: opacity .3s; }
+  .ycw.in { opacity: 1; }
+  .ycw.out { opacity: 0; transition-duration: .3s; }
+  .ycw:focus { outline: none; }
+  .yc-box { width: min(100%, 330px); text-align: center; color: #e7f2eb; }
+  .yc-card { width: 112px; height: 156px; margin: 0 auto 22px; border-radius: 10px; background: linear-gradient(155deg, #ffe680 0%, #f7c923 38%, #e9b308 100%);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .55); position: relative; overflow: hidden; transform: translateY(70px) rotate(14deg); opacity: 0; }
+  .yc-card::after { content: ''; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); transform: skewX(-18deg); }
+  .ycw.in .yc-card { animation: ycUp .5s cubic-bezier(.2, .9, .3, 1.25) .1s forwards; }
+  .ycw.in .yc-card::after { animation: ycShine .7s ease-in-out .6s forwards; }
+  @keyframes ycUp { to { transform: rotate(-7deg); opacity: 1; } }
+  @keyframes ycShine { to { left: 130%; } }
+  .ycw h2 { margin: 0 0 8px; font: 600 26px/1.1 var(--display); color: #f7c923; opacity: 0; }
+  .ycw p { margin: 0 0 6px; font-size: 15px; line-height: 1.4; opacity: 0; }
+  .ycw p.yc-small { font-size: 13px; color: #9fb3a7; }
+  .ycw.in h2 { animation: vwup .4s .45s forwards; }
+  .ycw.in p { animation: vwup .4s .55s forwards; }
+  .yc-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; opacity: 0; }
+  .ycw.in .yc-btns { animation: vwup .4s .65s forwards; }
+  .yc-go { padding: 14px 20px; border: 0; border-radius: 14px; background: #f7c923; color: #14231b; font: 600 16px/1 var(--display); cursor: pointer; }
+  .yc-later { padding: 10px; border: 0; background: none; color: #9fb3a7; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1; cursor: pointer; }
+  .yc-go:focus-visible, .yc-later:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .ycards { display: flex; flex-direction: column; gap: 8px; padding: 4px 16px 4px; }
+  .ycards .gb small b { color: var(--ink); }
+  .ystack { display: inline-flex; flex: none; align-items: flex-end; height: 24px; padding-left: 2px; }
+  .ycd { display: block; width: 14px; height: 19px; border-radius: 2.5px; margin-left: -7px; background: linear-gradient(155deg, #ffe680, #f7c923 45%, #e2ab00);
+    box-shadow: -1px 0 1.5px rgba(60, 40, 0, .3); transform: rotate(-7deg); }
+  .ycd:first-child { margin-left: 0; }
+  .ycd:nth-child(2n) { transform: rotate(4deg); }
+  .ycd:nth-child(3n) { transform: rotate(-2deg); }
+  @media (prefers-reduced-motion: reduce) { .ycw.in .yc-card { animation: none; transform: rotate(-7deg); opacity: 1; } .ycw.in h2, .ycw.in p, .ycw.in .yc-btns { animation: none; opacity: 1; } }
   .vwin { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; color: #e7f2eb; opacity: 0; transition: opacity .35s;
     background: radial-gradient(120% 80% at 50% 38%, #1d3a29 0%, #0c1611 62%, #070d0a 100%); }
   .vwin.in, .vwin.gate { opacity: 1; }
@@ -693,7 +725,7 @@
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwa99i2a";
+var BUILD = "mwaak7t2";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -1387,9 +1419,27 @@ function awardsOf(name) {
   balls.sort(function (a, b) { return yearOf(b.season) - yearOf(a.season) || ord[a.kind] - ord[b.kind]; });
   return { list: out, balls: balls, wait: wait };
 }
+// Жёлтые карточки игрока по турнирам и сезонам: за матчи, которые начались без его прогноза
+function cardsOf(name) {
+  var by = {}, out = [];
+  ((DATA.cards || {})[name] || []).forEach(function (c) {
+    var k = c.kind + '|' + c.s;
+    if (!by[k]) { by[k] = { kind: c.kind, title: c.n, season: c.s, list: [] }; out.push(by[k]); }
+    by[k].list.push(c);
+  });
+  var ord = { champ: 0, cup: 1 };
+  return out.sort(function (a, b) { return yearOf(b.season) - yearOf(a.season) || ord[a.kind] - ord[b.kind]; });
+}
+function cardsBlock(name) {
+  var g = cardsOf(name); if (!g.length) return '';
+  return '<div class="gbcap">Жёлтые карточки за опоздания с прогнозом</div><div class="ycards">' + g.map(function (x) {
+    var st = ''; x.list.forEach(function (c) { st += '<i class="ycd" title="' + esc(c.m) + '"></i>'; });
+    return '<span class="gb"><span class="ystack" aria-hidden="true">' + st + '</span><small><b>' + x.list.length + '</b> · ' + esc(x.title) + ' ' + esc(x.season) + '</small></span>';
+  }).join('') + '</div>';
+}
 function awardsBlock(name) {
-  var a = awardsOf(name), h = '<div class="psec">Награды<small>все сезоны</small></div>';
-  if (!a.list.length && !a.balls.length) return h + '<div class="tnote">' + (a.wait ? 'Загружаю прошлые сезоны…' : 'Пока нет. За победу в туре — Золотой мяч, за сезон — печать.') + '</div>';
+  var a = awardsOf(name), cards = cardsBlock(name), h = '<div class="psec">Достижения<small>все сезоны</small></div>';
+  if (!a.list.length && !a.balls.length) return h + (cards || '<div class="tnote">' + (a.wait ? 'Загружаю прошлые сезоны…' : 'Пока нет. За победу в туре — Золотой мяч, за сезон — печать.') + '</div>');
   // Все печати в одном ракурсе — ровно, как в витрине
   if (a.list.length) h += '<div class="awards">' + a.list.map(function (x) {
     return '<figure><i class="' + x.kind + '">' + sealSVG(x.kind, x.season) + '</i>' +
@@ -1401,7 +1451,7 @@ function awardsBlock(name) {
     var st = ''; for (var i = 0; i < x.n; i++) st += goldBall();
     return '<span class="gb"><span class="gstack">' + st + '</span><small><b>' + x.n + '</b> · ' + esc(x.title) + ' ' + esc(x.season) + '</small></span>';
   }).join('') + '</div>';
-  return h + (a.wait ? '<div class="tnote">Загружаю прошлые сезоны…</div>' : '');
+  return h + cards + (a.wait ? '<div class="tnote">Загружаю прошлые сезоны…</div>' : '');
 }
 // Все сезоны соревнования: суммы, места по сезонам, лучшие серии и туры, команды
 function allSection(c0, name) {
@@ -2184,6 +2234,7 @@ function gotData(d) {
   if (d && d.comps) setTimeout(prefetchSeasons, 1500);
   // Поздравление — по свежим данным, когда заставка уже ушла
   if (d && d.comps) setTimeout(celebrate, 1300);
+  if (d && d.comps) setTimeout(yellowCard, 1700);
 }
 function savedData() {
   var k = dataKey(); if (!k) return null;
@@ -2294,6 +2345,8 @@ function noise(t, dur, gain, type, freq, q, rise) {
   src.connect(fl); fl.connect(g); g.connect(c.out); src.start(t, Math.random()); src.stop(t + dur + .05);
 }
 var SND = {
+  // Жёлтая карточка: короткий свисток арбитра и взмах
+  card: function (t) { tone(t, 2900, .28, 'sine', .16); tone(t, 2970, .28, 'sine', .1); noise(t + .02, .12, .2, 'bandpass', 1800, .8); },
   // Штемпель: глухой удар резины о бумагу
   stamp: function (t) { noise(t, .1, .9, 'lowpass', 700); tone(t, 120, .16, 'sine', .9, 50); noise(t + .004, .05, .25, 'highpass', 2600); },
   // Отскок мяча: k — номер отскока, каждый тише и выше
@@ -2324,6 +2377,56 @@ var SND = {
 };
 function sound(name, delay, arg) { if (!soundOn()) return; try { SND[name](AU.currentTime + (delay || 0), arg); } catch (e) {} }
 
+// ---------- Жёлтая карточка: зашёл, а матч уже идёт без твоего прогноза ----------
+// Показываем один раз на матч (помним в памяти телефона); после поздравлений, если они есть
+function lateMine() {
+  var out = [];
+  (DATA.groups || []).forEach(function (g) { (g.matches || []).forEach(function (m) { if (m.locked && m.key) out.push({ g: g, m: m }); }); });
+  return out;
+}
+function ycSeen(key, set) {
+  var list = []; try { list = JSON.parse(localStorage.getItem('prognozus.yc') || '[]'); } catch (e) {}
+  if (!set) return list.indexOf(key) >= 0;
+  if (list.indexOf(key) < 0) { list.push(key); try { localStorage.setItem('prognozus.yc', JSON.stringify(list.slice(-80))); } catch (e) {} }
+}
+function yellowCard() {
+  if (!DATA.groups || document.querySelector('.ycw')) return;
+  if (document.querySelector('.vwin')) return setTimeout(yellowCard, 800);
+  var fresh = lateMine().filter(function (x) { return !ycSeen(x.m.key); });
+  if (!fresh.length) return;
+  fresh.forEach(function (x) { ycSeen(x.m.key, true); });
+  var many = fresh.length > 1, games = fresh.map(function (x) { return '<b>' + esc(x.m.home) + ' — ' + esc(x.m.away) + '</b>'; }).join(', ');
+  var el = document.createElement('div');
+  el.className = 'ycw'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'yc-h');
+  el.innerHTML = '<div class="yc-box"><div class="yc-card" aria-hidden="true"></div><h2 id="yc-h">Жёлтая карточка</h2>' +
+    '<p>' + (many ? 'Матчи ' : 'Матч ') + games + (many ? ' уже идут' : ' уже идёт') + ', а твоего прогноза нет.</p>' +
+    '<p class="yc-small">Карточка уходит в достижения. Поздний прогноз ещё можно сделать: его засчитают, если согласятся остальные.</p>' +
+    '<div class="yc-btns"><button type="button" class="yc-go">Сделать прогноз</button><button type="button" class="yc-later">Позже</button></div></div>';
+  document.body.appendChild(el); document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function () { el.classList.add('in'); });
+  setTimeout(function () { sound('card'); haptic('heavy'); }, 260);
+  var gone = false;
+  function close(then) {
+    if (gone) return; gone = true; el.classList.add('out'); document.body.style.overflow = '';
+    document.removeEventListener('keydown', esc1);
+    setTimeout(function () { el.remove(); if (then) then(); }, 300);
+  }
+  function esc1(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', esc1);
+  el.querySelector('.yc-later').addEventListener('click', function () { close(); });
+  el.querySelector('.yc-go').addEventListener('click', function () {
+    unlockAudio();
+    var key = fresh[0].m.key;
+    close(function () {
+      if (S.view !== 'pred') setView('pred');
+      var row = document.querySelector('[data-mkey="' + key + '"]');
+      if (row) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      var b = document.querySelector('.add[data-late="' + key + '"]');
+      if (b) setTimeout(function () { b.click(); }, 350);
+    });
+  });
+  try { el.focus({ preventScroll: true }); } catch (e) {}
+}
 // ---------- Поздравления: победа в туре — скромно, сезон чемпионата и Кубка — роскошно ----------
 // Показываем самому победителю при первом заходе после победы — один раз (помним в памяти телефона).
 // Тур — только последний сыгранный и не старше недели; сезон — когда он окончен
