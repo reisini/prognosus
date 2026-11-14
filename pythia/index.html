@@ -1015,6 +1015,42 @@
 @keyframes sc-lfTw{0%,100%{opacity:0;transform:scale(.4)}45%{opacity:1;transform:scale(1.1)}}
 @keyframes sc-lfOn{from{opacity:0;transform:scale(.4)}to{opacity:.9;transform:none}}
 @media (prefers-reduced-motion:reduce){#app .lyb *,#app .stc .st,#app .ve .eye *,#save .bsc,#save .bsc *{animation:none!important}}
+/* 91 «Вскрытие»: --e — когда трубят этому глазу, --el — сколько уже прошло (карточку могли перерисовать посреди), --z — последний глаз */
+#app .mc.rvl{--d0:calc(var(--e, 0s) - var(--el, 0s))}
+#app .mc.rvl .lxw{position:relative;align-self:center;justify-self:center;width:30px;height:30px;z-index:2;pointer-events:none}
+#app .mc.rvl .lx{position:absolute;inset:0;animation:rv-fade .25s calc(var(--e) - var(--el) + 2.3s) both}
+#app .mc.rvl .lx .eye{display:block;width:30px;height:30px;overflow:visible;color:var(--mut);animation:rv-ink .2s calc(var(--e) - var(--el) + .7s) both}
+#app .mc.rvl .eye .op,#app .mc.rvl .eye .pu,#app .mc.rvl .eye .sts path{transform-box:fill-box;transform-origin:50% 50%}
+#app .mc.rvl .eye .al{fill:none;stroke:currentColor;stroke-width:7.4;stroke-linejoin:round}
+#app .mc.rvl .eye .pw{fill:var(--card);stroke:currentColor;stroke-width:3.33}
+#app .mc.rvl .eye .pk{fill:currentColor}
+#app .mc.rvl .eye .cl path{fill:none;stroke:currentColor;stroke-width:7.4;stroke-linecap:round}
+#app .mc.rvl .eye .op{animation:rv-open .22s ease-out calc(var(--e) - var(--el) + .7s) both,rv-wink .34s ease-in-out calc(var(--e) - var(--el) + 1.45s)}
+#app .mc.rvl .eye .cl{animation:rv-out .1s calc(var(--e) - var(--el) + .7s) both}
+#app .mc.rvl .eye .pu{animation:rv-look .55s ease-in-out calc(var(--e) - var(--el) + .9s)}
+#app .mc.rvl .eye .sts path{fill:var(--pur);opacity:0;animation:rv-star .5s ease-out calc(var(--e) - var(--el) + 1.5s) forwards}
+#app .mc.rvl .eye .sts path:nth-child(2){animation-delay:calc(var(--e) - var(--el) + 1.58s)}
+#app .mc.rvl .eye .sts path:nth-child(3){animation-delay:calc(var(--e) - var(--el) + 1.66s)}
+#app .mc.rvl .pr.sealed{animation:rv-in .3s ease-out calc(var(--e) - var(--el) + 2.55s) both}
+#app .mc.rvl .mn,#app .mc.rvl .sc{animation:rv-show .4s calc(var(--z) - var(--el) + 3s) both}
+#app .mc.rvl .pl,#app .mc.rvl .pt{animation:rv-show .3s calc(var(--z) - var(--el) + 3.45s) both}
+#app .mc.rvl .smk{position:absolute;left:50%;top:50%;width:44px;height:70px;margin:-70px 0 0 -22px;pointer-events:none;z-index:3}
+#app .mc.rvl .smk i{position:absolute;left:5px;bottom:-10px;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,240,.95),rgba(255,250,240,0) 70%);opacity:0;filter:blur(1.2px);--dx:9px;--dy:-72px;--s:3;--d:0s;animation:rv-smoke 2.3s ease-out calc(var(--e) - var(--el) + var(--d)) forwards}
+:root[data-theme="dark"] #app .mc.rvl .smk i{background:radial-gradient(circle,rgba(241,222,196,.7),rgba(241,222,196,0) 70%)}
+#app .mc.rvl .smk i:nth-child(2){--d:.12s;left:-2px;--dx:-14px;--dy:-60px;--s:2.7}
+#app .mc.rvl .smk i:nth-child(3){--d:.26s;left:12px;--dx:22px;--dy:-64px;--s:2.8}
+#app .mc.rvl .smk i:nth-child(4){--d:.4s;left:1px;--dx:-4px;--dy:-84px;--s:3.3}
+#app .mc.rvl .smk i:nth-child(5){--d:.55s;left:9px;--dx:12px;--dy:-90px;--s:3.4}
+@keyframes rv-smoke{0%{opacity:0;transform:translateY(8px) scale(.6)}22%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(var(--s))}}
+@keyframes rv-open{from{transform:scaleY(.07);opacity:0}to{transform:none;opacity:1}}
+@keyframes rv-wink{0%,100%{transform:scaleY(1)}45%,55%{transform:scaleY(.07)}}
+@keyframes rv-look{0%,100%{transform:translateX(0)}30%{transform:translateX(-10px)}70%{transform:translateX(10px)}}
+@keyframes rv-star{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:none}}
+@keyframes rv-out{from{opacity:1}to{opacity:0}}
+@keyframes rv-fade{from{opacity:1}to{opacity:0}}
+@keyframes rv-ink{from{color:var(--mut)}to{color:var(--ink)}}
+@keyframes rv-in{0%{opacity:0;transform:scaleY(.08)}100%{opacity:1;transform:none}}
+@keyframes rv-show{from{opacity:0}to{opacity:1}}
 
 /* 87: шапка, меню, свиток */
 :root{--k-bg:var(--dz-e7eaf6);--k-surface:var(--dz-f4f5fc);--k-soft:var(--dz-fafbfe);--k-ink:var(--dz-161a3a);--k-muted:var(--dz-5a5f80);--k-faint:var(--dz-a0a4c0);--k-line:var(--dz-d8dcef);--k-accent:var(--dz-2f3fa8);--k-gold:var(--dz-9a6b0c);--k-badge:var(--dz-e2a92b);--k-red:var(--dz-d63a4a);
@@ -2682,7 +2718,7 @@ function g3card(g, m, meth) {
       out += g3cell(col, '1/span 2', '<button class="lyb" data-late="' + esc(m.key) + '" aria-label="Сделать прогноз"><span class="lyw">' + LY_SVG + '</span></button>', 'pr me lyc'); return; }
     out += (c.h === null || c.h === undefined) ? g3cell(col, 1, '–', 'pr no') + g3cell(col, 2, '–', 'pr no') : g3cell(col, 1, c.h, pc) + g3cell(col, 2, c.a, pc);
   });
-  var sc = '';
+  var sc = '', rv = rvPlan(m, me);
   if (ed && !m.started && me >= 0) sc = drEye(m, dirty);
   if (m.locked) sc = '<div class="sc"><span class="scey">' + EYE + '</span></div>';
   else if (m.started && m.hs !== null && m.hs !== undefined) sc = '<div class="sc">' + g3static(G3.scenes[meth], Math.min(9, m.hs), Math.min(9, m.as)) + '</div>';
@@ -2696,8 +2732,9 @@ function g3card(g, m, meth) {
   if (ed && lateOpen[m.key]) note = 'Прогноз будет принят, если все бросят белый камешек.';
   else if (ed && m.pending && !dirty) note = 'Прогноз на рассмотрении у судей. Да поможет тебе Аполлон!';
   else if (m.locked && !dirty) note = '<b>Матч идёт.</b> Проспал начало? Тронь струны лиры.';
-  var cls = 'mc' + (done ? ' done' : '') + (done || live ? '' : ' next') + (dirty ? (m.started ? ' late' : ' dirty') : '');
-  return '<div class="' + cls + '" data-mkey="' + esc(m.key || '') + '"><div class="tm"><span>' + esc(g3when(m.when)) + '</span>' + right + '</div><div class="g">' + out + sc + pts + '</div>'
+  var cls = 'mc' + (done ? ' done' : '') + (done || live ? '' : ' next') + (dirty ? (m.started ? ' late' : ' dirty') : '') + (rv ? ' rvl' : '');
+  if (rv) out = rv.mark(out) + rv.html;
+  return '<div class="' + cls + '" data-mkey="' + esc(m.key || '') + '"' + (rv ? ' style="' + rv.style + '"' : '') + '><div class="tm"><span>' + esc(g3when(m.when)) + '</span>' + right + '</div><div class="g">' + out + sc + pts + '</div>'
     + (m.stage ? '<div class="mst">' + esc(m.stage) + '</div>' : '') + (note ? '<div class="lnote">' + note + '</div>' : '') + '</div>';
 }
 function pyPred() {
@@ -2893,6 +2930,45 @@ document.addEventListener('click', function (e) {
   setTimeout(function () { b.classList.add('op'); }, 340);
   setTimeout(function () { LY.open = b.dataset.late; LY.t = Date.now(); LY.pass = true; try { b.click(); } finally { LY.pass = false; } }, 540);
 }, true);
+// --- 91 «Вскрытие»: сальпинга трубит старт — дымок треножника, глаз открывается, оглядывается, подмигивает и уступает место прогнозу;
+// когда открыты все — встаёт табло, последними баллы. Глаза — вместе или по очереди, порядок случайный. Только при первом показе идущего матча.
+var RV = { start: {}, plan: {}, seen: null, n: 0 };
+var RV_EYE = "<svg class=\"eye\" viewBox=\"0 0 100 100\" aria-hidden=\"true\"><defs><clipPath id=\"__ID__\"><circle cx=\"50\" cy=\"50\" r=\"19\"></circle></clipPath></defs><g class=\"op\"><path class=\"al\" d=\"M6,50 Q50,8 94,50 Q50,92 6,50 Z\"></path><g class=\"pu\"><circle class=\"pw\" cx=\"50\" cy=\"50\" r=\"19\"></circle><path clip-path=\"url(#__ID__)\" class=\"pk\" d=\"M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z\"></path><path class=\"pk\" d=\"M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z\"></path></g></g><g class=\"cl\"><path d=\"M8,50 Q50,80 92,50\"></path><path d=\"M29,62 L23,75 M50,66 L50,80 M71,62 L77,75\"></path></g><g class=\"sts\"><path d=\"M50.00 23.50C44.76 17.80 45.63 9.82 50.00 4.50C54.37 9.82 55.24 17.80 50.00 23.50Z\"></path><path d=\"M27.00 27.50C21.84 26.27 19.29 21.41 19.73 16.72C24.24 18.07 27.79 22.26 27.00 27.50Z\"></path><path d=\"M73.00 27.50C72.21 22.26 75.76 18.07 80.27 16.72C80.71 21.41 78.16 26.27 73.00 27.50Z\"></path></g></svg>";
+function rvSeen(key, set) {
+  if (!RV.seen) { try { RV.seen = JSON.parse(localStorage.getItem('pythia.rev') || '[]'); } catch (e) { RV.seen = []; } }
+  if (!set) return RV.seen.indexOf(key) >= 0;
+  if (RV.seen.indexOf(key) < 0) { RV.seen.push(key); try { localStorage.setItem('pythia.rev', JSON.stringify(RV.seen.slice(-200))); } catch (e) {} }
+}
+function rvPlan(m, me) {
+  if (!m.key || m.phase !== 'live' || !m.started || m.locked) return null;
+  var cols = []; m.cells.forEach(function (c, j) { if (j !== me && c.h !== null && c.h !== undefined) cols.push(j); });
+  if (!cols.length) return null;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  var now = Date.now();
+  if (!RV.start[m.key]) {
+    if (rvSeen(m.key)) return null;
+    rvSeen(m.key, true); RV.start[m.key] = now;
+    // порядок глаз — случайно: все вместе или по очереди
+    var ord = cols.slice().sort(function () { return Math.random() - .5; }), sync = Math.random() < 1 / 3, e = {};
+    ord.forEach(function (j, i) { e[j] = sync ? (i ? .1 : 0) : i * 1.6; });
+    RV.plan[m.key] = e;
+  }
+  var el = (now - RV.start[m.key]) / 1000, plan = RV.plan[m.key], z = 0;
+  Object.keys(plan).forEach(function (j) { z = Math.max(z, plan[j]); });
+  if (el > z + 3.9) return null;
+  return {
+    style: '--el:' + el.toFixed(2) + 's;--z:' + z.toFixed(2) + 's',
+    // цифры игроков с глазами появляются, когда их глаз уступит место
+    mark: function (out) {
+      return out.replace(/<span class="pr( me)?" style="grid-column:(\d+);grid-row:([12])">/g, function (all, isMe, col, row) {
+        var j = +col - 2; return plan[j] === undefined ? all : '<span class="pr sealed" style="grid-column:' + col + ';grid-row:' + row + ';--e:' + plan[j] + 's">'; });
+    },
+    html: Object.keys(plan).map(function (j) {
+      var id = 'rvx' + (++RV.n);
+      return '<span class="lxw" style="grid-column:' + (2 + +j) + ';grid-row:1/span 2;--e:' + plan[j] + 's" aria-hidden="true"><span class="smk"><i></i><i></i><i></i><i></i><i></i></span><span class="lx">' + RV_EYE.split('__ID__').join(id) + '</span></span>';
+    }).join('')
+  };
+}
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
@@ -2995,7 +3071,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgvz2vq";
+var BUILD = "mwgw2zo1";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
