@@ -2300,6 +2300,12 @@ nav.tabs .tb-l.pyhop{animation:pyTbHop .55s cubic-bezier(.3,.7,.3,1) calc(var(--
 .pycw{position:relative;z-index:1}
 .pycw > nav.comps{margin:0!important;padding:14px 16px 2px!important}
 #hdr .wrap > nav.comps:empty{display:none}
+/* 113 · масло льётся из амфоры в чашу (снимок 110 прятал струю и масло; цвет — масло, как на доске) */
+#app .fdc .st,#app .fdc .oil,#profbody .fdc .st,#profbody .fdc .oil{display:inline!important}
+.fdc .amph .st{fill:none;stroke:#56662a;stroke-width:2;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:100}
+.fdc .amph .oil{fill:#56662a}
+:root[data-theme="dark"] .fdc .amph .st{stroke:#b9c672}
+:root[data-theme="dark"] .fdc .amph .oil{fill:#b9c672}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -3826,8 +3832,22 @@ function g4Fdc(e) {
     f.classList.remove(p + '-a', p + '-b'); void f.offsetWidth; f.classList.add(p + (k % 2 ? '-a' : '-b'));
   } else f.classList.toggle('flip');
 }
+// --- «Крылья Советов» (правило, 15.11): не помещаются — «Крылья Сов.»; если и сокращение шире столбца (карточка матча 108),
+// сокращение чуть ужимаем, но не многоточие. Приложение само ставит .short (fitNames) — дополняем его после каждой проверки
+function g4Fit() {
+  if (typeof window.fitNames !== 'function' || window.fitNames.py) return;
+  var orig = window.fitNames, f = function () {
+    var r = orig.apply(this, arguments);
+    [].forEach.call(document.querySelectorAll('.fit.short'), function (el) {
+      var p = el.parentNode, sh = el.querySelector('.sh'); if (!sh) return; sh.style.fontSize = '';
+      for (var k = 98; k >= 84 && p.scrollWidth > p.clientWidth + .5; k -= 2) sh.style.fontSize = k + '%';
+    });
+    return r;
+  };
+  f.py = 1; window.fitNames = f;
+}
 function applyG4() {
-  g4Play(); g4Sheet(); g4LiveThumbs();
+  g4Play(); g4Sheet(); g4LiveThumbs(); g4Fit();
   if (!G4.on) {
     G4.on = true; document.addEventListener('click', function (e) { try { g4Zoom(e); if (e.defaultPrevented) return; g4Tab(e); g4One(e); g4TeamTap(e); g4Icon(e); g4Tablet(e); g4Fdc(e); } catch (x) {} }, true);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ZM.el) { e.stopImmediatePropagation(); g4ZoomShut(); } }, true);
@@ -3941,7 +3961,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh1qo35";
+var BUILD = "mwh1v88u";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
