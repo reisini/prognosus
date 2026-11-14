@@ -2188,10 +2188,11 @@ nav.comps button .pygz,.ptabs button[role="tab"] .pygz{position:absolute;inset:3
 @keyframes pyWob{20%{transform:translateX(-5px)}45%{transform:translateX(2px)}70%{transform:translateX(-1px)}100%{transform:none}}
 /* 112 · лист сворачивается в бумажную капсулу (кадры — в g4.js под высоту листа) */
 .sheet .pyroll{position:absolute;height:0;z-index:2;pointer-events:none}
-.sheet .pyroll .pap{position:absolute;left:0;right:0;top:0;height:8px;transform:translateY(-50%);border-radius:999px;opacity:0;
-  background:linear-gradient(180deg,rgba(27,18,13,.34),rgba(27,18,13,0) 32%,rgba(255,255,255,.22) 46%,rgba(27,18,13,0) 60%,rgba(27,18,13,.4)),repeating-linear-gradient(180deg,transparent 0 5px,var(--pi) 5px 6px),var(--pc)}
+.sheet .pyroll .pap{position:absolute;left:0;right:0;top:0;height:8px;border-radius:999px;opacity:0;
+  background:linear-gradient(180deg,rgba(27,18,13,.28),rgba(27,18,13,0) 35%,rgba(27,18,13,0) 65%,rgba(27,18,13,.34)),repeating-linear-gradient(180deg,transparent 0 5px,var(--pi) 5px 6px),var(--pc)}
+/* 15.11 (Эмиль: «как будто полоса призмы над закрывающейся табличкой»): свёрток лежит на листе — верх свёртка по краю, над листом ничего; без стеклянного блика */
 .sheet.pygo,.sheet.pyback{overflow:hidden}
-.sheet.pygo{background:transparent!important;transition:background .25s}
+.sheet.pygo{background:transparent!important;transition:none}
 .sheet.pyback{animation:pyDim .3s ease-out .6s both}
 @keyframes pyDim{from{background:transparent}}
 .sheet.pypre .sheet-in{visibility:hidden;animation:none!important}
@@ -2204,7 +2205,9 @@ nav.comps button .pygz,.ptabs button[role="tab"] .pygz{position:absolute;inset:3
 :root .cmp-swch .smenu.pysm:not(.v) button{margin:0 auto}
 :root .cmp-swch .smenu.pysm.tight:not(.v) button{padding:0}
 /* 100а · карточка команды: камешек между РПЛ и Кубком */
-#team .tctabs.pyt{display:flex;align-items:center;gap:4px}
+/* без камешка (первый кадр после перерисовки) слова стоят там же, где с камешком: промежуток 38 = 4 + 30 + 4 — иначе слова дёргаются */
+#team .tctabs{display:flex;align-items:center;gap:38px}
+#team .tctabs.pyt{gap:4px}
 #team .tctabs.pyt .tpeb{position:relative;display:block;flex:none;width:30px;height:10px}
 #team .tctabs.pyt .tpeb svg{position:absolute;left:9px;top:1px;width:12px;height:8px;overflow:visible;transform:translateX(-6px)}
 #team .tctabs.pyt .tpeb ellipse{fill:#1b120d}
@@ -2291,6 +2294,12 @@ nav.tabs .tb-l.pyhop{animation:pyTbHop .55s cubic-bezier(.3,.7,.3,1) calc(var(--
 /* лист: строка с заголовком и «Закрыть» остаётся наверху, когда листаешь */
 .sheet .sheet-in > .ptitle{position:sticky;top:0;z-index:6;background:inherit}
 .sheet .sheet-in > .ptitle::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:14px;background:inherit;pointer-events:none}
+
+/* 15.11 (Эмиль: «Чемпионат и Кубок так и подвешены, а не как в набросках»): как на 110 — вкладки на странице под шапкой,
+   уходят вместе со страницей; в липкой шапке остаётся только строка со знаком. Лак не упирается в карточку — под ним 14 px */
+.pycw{position:relative;z-index:1}
+.pycw > nav.comps{margin:0!important;padding:14px 16px 2px!important}
+#hdr .wrap > nav.comps:empty{display:none}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -2949,6 +2958,10 @@ function pyHdr() {
     var bk = box.querySelector('.bmk circle[fill]'); if (bk) { var gg = document.createElementNS('http://www.w3.org/2000/svg', 'g'); gg.setAttribute('class', 'pu'); bk.parentNode.insertBefore(gg, bk);
       var n = gg.nextSibling; while (n && !(n.classList && n.classList.contains('bms'))) { var nx = n.nextSibling; gg.appendChild(n); n = nx; } }
     bar.style.display = 'none'; bar.parentNode.insertBefore(box, bar);
+    // 15.11: «Чемпионат / Кубок» — из липкой шапки на страницу (как на 110); приложение находит их по id, как и раньше
+    var cps = document.getElementById('comps'), hdr = document.getElementById('hdr');
+    if (cps && hdr && cps.closest('#hdr')) { var cw = document.createElement('div'); cw.className = 'wrap pycw'; hdr.parentNode.insertBefore(cw, hdr.nextSibling); cw.appendChild(cps);
+      if (typeof measure === 'function') setTimeout(measure, 0); }
   }
   // имя и место: лавровые листья по месту — у первого три, у второго два, у третьего один
   var p = myPlace(), nm = box.querySelector('.nmt .sc-interp'); if (nm) nm.textContent = DATA.name || '';
@@ -3928,7 +3941,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh1ia93";
+var BUILD = "mwh1qo35";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
