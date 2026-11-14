@@ -521,6 +521,11 @@
   .sheet-in { width: 100%; max-width: 520px; margin: 0 auto; max-height: 88vh; overflow: auto; background: var(--surface);
     border-radius: 20px 20px 0 0; padding: 4px 0 calc(22px + env(safe-area-inset-bottom)); }
   .sheet-in .ptitle { align-items: center; }
+  /* Оформление: обычное или «Пифия» — выбор помним на этом устройстве */
+  .stylepick { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; flex-wrap: wrap; }
+  .stylepick span { margin-right: auto; font-size: 13px; color: var(--muted); }
+  .stylepick button { height: 36px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); background: none; color: var(--ink); font: 600 14px/1 var(--text); cursor: pointer; }
+  .stylepick button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
   .rules { padding: 0 16px; font-size: 14.5px; line-height: 1.45; }
   .rules h3 { margin: 16px 0 6px; font: 600 14px/1.2 var(--display); letter-spacing: -.01em; }
   .rules p { margin: 0 0 8px; }
@@ -3454,6 +3459,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 <div class="sheet" id="rules" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="rules-h" tabindex="-1">
   <div class="ptitle"><h2 id="rules-h">Правила игры</h2><button class="icon-btn" id="rulesclose" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true" class="rc"><g transform="rotate(10 12 12)"><rect class="cd" x="4.85" y="2.5" width="14.3" height="19" rx="2.5"/><path class="cx" d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2"/></g></svg></button></div>
   <div class="rules">
+    <div class="stylepick" id="stylepick" role="group" aria-label="Оформление" hidden><span>Оформление</span><button type="button" data-style="base">Обычное</button><button type="button" data-style="pythia">Пифия</button></div>
     <h3>Прогноз</h3>
     <p>Прогноз на матч делается и редактируется до стартового свистка. Другим игрокам он становится виден с началом матча, а до этого соперники видят только отметку ✓.</p>
     <p>Если забыл или не успел, прогноз можно сделать и во время матча, но он будет зачтён, только если согласятся остальные игроки. Они получат уведомление об опоздании: на какой минуте и при каком счёте сделан прогноз. Поменять уже сделанный прогноз после стартового свистка нельзя.</p>
@@ -3488,7 +3494,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgxokhq";
+var BUILD = "mwgyfect";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -3535,6 +3541,19 @@ var lateOpen = {};   // key -> true
 var S = { cmpT: {}, cmpM: /^(tp|pp|pl)$/.test(remember('cmpm') || '') ? remember('cmpm') : 'tp', comp: null, view: null, open: {}, tbl: /^(league|mine|fan)$/.test(remember('tbl') || '') ? remember('tbl') : 'ours', fanP: remember('fanp') || '' };
 
 function $(id) { return document.getElementById(id); }
+// Оформление: обычное (корень сайта) или «Пифия» (папка pythia/). Только в собранном приложении (GitHub Pages);
+// данные Telegram (#…) и личная ссылка (?u=…&k=…) переходят вместе со страницей. Выбор помним на устройстве и открываем сразу его.
+var STYLE_PY = /\/pythia\/?$/.test(location.pathname.replace(/index\.html$/, ''));
+function styleGo(py) {
+  try { localStorage.setItem('prognozus.style', py ? 'pythia' : 'base'); } catch (e) {}
+  if (py === STYLE_PY) return;
+  var base = location.pathname.replace(/index\.html$/, '').replace(/pythia\/?$/, '');
+  location.replace(base + (py ? 'pythia/' : '') + location.search + location.hash);
+}
+(function () {
+  if (typeof BUILD === 'undefined') return;
+  try { var want = localStorage.getItem('prognozus.style'); if (want === 'pythia' && !STYLE_PY) styleGo(true); else if (want === 'base' && STYLE_PY) styleGo(false); } catch (e) {}
+})();
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function num(x) { return x === null || x === undefined ? '–' : String(Math.round(x * 100) / 100).replace('.', ','); }
 function signed(x) { return (x > 0 ? '+' : x < 0 ? '−' : '') + num(Math.abs(x)); }
@@ -4965,6 +4984,7 @@ document.addEventListener('click', function (e) {
   var b = e.target.closest('button');
   if (!b) return;
   if (b.dataset.k) return bump(b.dataset.k, b.dataset.s, Number(b.dataset.d));
+  if (b.dataset.style) { if (Object.keys(edits).length) return toast('Сначала сохрани прогнозы'); return styleGo(b.dataset.style === 'pythia'); }
   if (b.dataset.vote) return castVote(b);
   if (b.dataset.late) {
     var k = b.dataset.late;
@@ -5057,7 +5077,11 @@ function sheet(id, open) {
   // Фокус — на сам лист, а не на кнопку закрытия: иначе Safari рисует вокруг карточки рамку фокуса
   if (open) $(id).querySelector('.sheet-in').focus({ preventScroll: true });
 }
-function rules(open) { sheet('rules', open); }
+function rules(open) {
+  var sp = $('stylepick');
+  if (sp && typeof BUILD !== 'undefined') { sp.hidden = false; [].forEach.call(sp.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String((b.dataset.style === 'pythia') === STYLE_PY)); }); }
+  sheet('rules', open);
+}
 // Закрытие: карточка взлетает, лист сразу уходит вниз — отклик мгновенный
 function closeSheet(id) {
   var el = $(id);
