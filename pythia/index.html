@@ -2158,7 +2158,8 @@ main{padding-bottom:calc(var(--nav) + 84px + env(safe-area-inset-bottom))!import
 #profbody .thm.aw.stk{gap:0!important;flex-wrap:nowrap;align-items:flex-start}
 #profbody .thm.aw.stk figure{width:52px!important;flex:none}
 #profbody .thm.aw.stk figure + figure{margin-left:-49.4px}
-#profbody .thm.aw.stk figure img{box-shadow:-1px 0 0 rgba(27,18,13,.35),0 2px 6px rgba(27,18,13,.18)!important}
+#profbody .thm.aw.stk figure img{box-shadow:-1px 0 0 color-mix(in srgb,var(--ink) 40%,transparent),0 2px 6px rgba(27,18,13,.18)!important}
+:root[data-theme="dark"] #profbody .arl .aic.stk .dzball{filter:drop-shadow(-.9px 0 0 var(--bg))}
 #profbody .stkc{margin-top:6px;font:400 12px/1.3 'Onest',sans-serif;color:var(--muted)}
 #profbody .stkc b{font:400 15px/1 'VazopisetsPrint','Onest',sans-serif;font-size-adjust:.7;color:var(--ink)}
 /* лист игрока никогда не уезжает вбок: длинный ряд прокручивается сам, а не весь лист */
@@ -2196,8 +2197,40 @@ nav.comps button.pyin,.ptabs button[role="tab"].pyin{transition:color .3s}
 /* свиток сезона: годы не разъезжаются в обе стороны, когда тесно (space-evenly при нехватке места центрирует и режет начало) */
 :root .cmp-swch .smenu.pysm:not(.v){justify-content:flex-start}
 :root .cmp-swch .smenu.pysm:not(.v) button{margin:0 auto}
-:root .cmp-swch .smenu.pysm.tight:not(.v) button{padding:0 1px}
-:root .cmp-swch .smenu.pysm.tight:not(.v){padding-left:8px}
+:root .cmp-swch .smenu.pysm.tight:not(.v) button{padding:0}
+/* 100а · карточка команды: камешек между РПЛ и Кубком */
+#team .tctabs.pyt{display:flex;align-items:center;gap:4px}
+#team .tctabs.pyt .tpeb{position:relative;display:block;flex:none;width:30px;height:10px}
+#team .tctabs.pyt .tpeb svg{position:absolute;left:9px;top:1px;width:12px;height:8px;overflow:visible;transform:translateX(-6px)}
+#team .tctabs.pyt .tpeb ellipse{fill:#1b120d}
+:root[data-theme="dark"] #team .tctabs.pyt .tpeb ellipse{fill:#d9783d}
+#team .tctabs.pyt .tpeb .hl{position:absolute;left:11.5px;top:2.4px;width:3px;height:1.6px;border-radius:50%;background:#fff;opacity:.45;transform:translateX(-6px)}
+#team .tctabs.pyt.t-cup .tpeb svg{transform:translateX(6px) rotate(180deg)}
+#team .tctabs.pyt.t-cup .tpeb .hl{transform:translateX(6px)}
+#team .tctabs.pyt.mv.t-cup .tpeb svg{animation:pyPeC .55s cubic-bezier(.3,.7,.4,1) both}
+#team .tctabs.pyt.mv.t-cup .tpeb .hl{animation:pyPeCh .55s cubic-bezier(.3,.7,.4,1) both}
+#team .tctabs.pyt.mv.t-rpl .tpeb svg{animation:pyPeR .55s cubic-bezier(.3,.7,.4,1) both}
+#team .tctabs.pyt.mv.t-rpl .tpeb .hl{animation:pyPeRh .55s cubic-bezier(.3,.7,.4,1) both}
+@keyframes pyPeC{0%{transform:translateX(-6px) rotate(0)}55%{transform:translate(3px,-1.5px) rotate(130deg)}80%{transform:translateX(7px) rotate(190deg)}100%{transform:translateX(6px) rotate(180deg)}}
+@keyframes pyPeCh{0%{transform:translateX(-6px)}55%{transform:translate(3px,-1.5px)}80%{transform:translateX(7px)}100%{transform:translateX(6px)}}
+@keyframes pyPeR{0%{transform:translateX(6px) rotate(180deg)}55%{transform:translate(-3px,-1.5px) rotate(50deg)}80%{transform:translateX(-7px) rotate(-10deg)}100%{transform:translateX(-6px) rotate(0)}}
+@keyframes pyPeRh{0%{transform:translateX(6px)}55%{transform:translate(-3px,-1.5px)}80%{transform:translateX(-7px)}100%{transform:translateX(-6px)}}
+/* 100а · «Таблица РПЛ» — сортировка, «Таблица Кубка России» — выбывание, «Показать ещё» — сдвиг с пружиной */
+#team .tgo .retry{position:relative}
+#team .tgo .retry .lw{position:relative;display:block;white-space:nowrap}
+#team .tgo .retry .lb{display:block}
+#team .tgo .retry .ls{position:absolute;left:0;top:0;display:none;white-space:pre}
+#team .tgo .retry .ls i{display:inline-block;font-style:normal}
+#team .tgo .retry.run .ls{display:block}
+#team .tgo .retry.run .lb{visibility:hidden}
+#team .tgo .retry.rsort.run .ls i{animation:pyRsA .85s cubic-bezier(.3,.7,.3,1) calc(var(--i) * .02s) both}
+#team .tgo .retry.rsort.run .ls i:nth-child(2n){animation-name:pyRsB}
+#team .tgo .retry.cout.run .ls i:nth-child(2n){animation:pyCoA .85s cubic-bezier(.4,0,.3,1) calc(var(--i) * .025s) both}
+#team .retry[data-tcmore].push{animation:pyMps 1s cubic-bezier(.3,.7,.3,1) both}
+@keyframes pyRsA{0%,100%{transform:none}35%,55%{transform:translate(.55em,-5px)}}
+@keyframes pyRsB{0%,100%{transform:none}35%,55%{transform:translate(-.55em,4px)}}
+@keyframes pyCoA{0%,100%{transform:none;opacity:1}30%,55%{transform:translateY(7px);opacity:0}}
+@keyframes pyMps{0%{transform:none}18%{transform:translateY(11px) scaleY(.94)}30%{transform:translateY(8.5px)}42%{transform:translateY(10.5px)}54%,72%{transform:translateY(10px)}100%{transform:none}}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -2263,11 +2296,11 @@ function PYA(grp, thmSr, PEB, AT) {
   if (w) h += grp('Время собирать камни', 'Опоздания на матч', w);
   if (b) h += grp('Малый остракизм', 'Изгнание с арены', b);
   // 15.11 (Эмиль: «сортироваться, закрывая 95 % предыдущего»): победы — стопкой, каждая следующая закрывает 95 % предыдущей;
-  // сверху — последняя; подпись одна — сколько побед и последний тур
-  if (wins.length) { var last = wins[wins.length - 1];
+  // сверху — последняя; подпись одна — сколько побед
+  if (wins.length) {
     h += grp('Лавровый венец', 'Победы в туре', '<div class="thm aw stk">' + wins.map(function (t) {
       return '<figure title="' + esc(t.tip) + '"><img src="' + AT.award + '" alt="Карточка победы в туре: ' + esc(t.tip) + '"></figure>'; }).join('')
-      + '</div><div class="stkc"><b>' + wins.length + '</b> ' + plural(wins.length, 'победа', 'победы', 'побед') + ', последняя — ' + esc(last.tip.replace(/^([^,]+), ([^,]+), /, '$1 $2, ')) + '</div>'); }
+      + '</div><div class="stkc"><b>' + wins.length + '</b> ' + plural(wins.length, 'победа', 'победы', 'побед') + '</div>'); }
   h += grp('Голос Пифии', 'Точные прогнозы', thmSr('a', ex, [10, 25, 50, 100]))
     + grp('Дар Кассандры', 'Точные прогнозы в одном туре', thmSr('t', bestEx, [3, 5, 7], true))
     + grp('Гегемония', 'Победная серия', thmSr('win', bestWin, [3, 5, 7]))
@@ -3559,9 +3592,55 @@ function g4Sheet() {
     g4Roll(el, false, function () { el.classList.remove('closing-wait'); window.sheet(id, false); });
   };
 }
+// --- карточка команды (100а, утверждена 12.11): РПЛ / Кубок — между вкладками тёмный камешек, переключил — перекатывается;
+// «Таблица РПЛ» — сортировка (буквы перепрыгивают и встают по порядку), «Таблица Кубка России» — выбывание (каждая вторая буква
+// уходит вниз и возвращается), «Показать ещё» — сдвиг вниз с пружиной. Переход по кнопке — после анимации.
+var G4PEB = '<span class="tpeb" aria-hidden="true"><svg viewBox="0 0 12 8"><ellipse cx="6" cy="4" rx="5.5" ry="3.6"></ellipse></svg><i class="hl"></i></span>';
+function g4Letters(b) {
+  if (b.querySelector('.lw')) return;
+  var t = b.textContent.trim(), i = 0;
+  b.innerHTML = '<span class="lw"><span class="lb">' + esc(t) + '</span><span class="ls" aria-hidden="true">' + Array.from(t).map(function (ch) {
+    return '<i' + (ch === ' ' ? ' class="sp"' : '') + ' style="--i:' + (i++) + '">' + esc(ch) + '</i>'; }).join('') + '</span></span>';
+}
+function g4Team() {
+  var tb = document.getElementById('teambody'); if (!tb) return;
+  var tc = tb.querySelector('.tctabs');
+  if (tc && !tc.classList.contains('pyt')) {
+    var bs = tc.querySelectorAll('button[data-tctab]');
+    if (bs.length === 2) { bs[0].insertAdjacentHTML('afterend', G4PEB); tc.classList.add('pyt'); }
+  }
+  if (tc && tc.classList.contains('pyt')) {
+    var on = tc.querySelector('button.on'), cup = !!(on && on.dataset.tctab === 'cup');
+    tc.classList.toggle('t-cup', cup); tc.classList.toggle('t-rpl', !cup);
+    if (G4.tcFrom && G4.tcFrom !== (cup ? 'cup' : 'champ')) { tc.classList.add('mv'); setTimeout(function () { tc.classList.remove('mv'); }, 600); }
+    G4.tcFrom = null;
+  }
+  tb.querySelectorAll('.tgo .retry[data-gokind]').forEach(function (b) { g4Letters(b); b.classList.add(b.dataset.gokind === 'cup' ? 'cout' : 'rsort'); });
+  var more = tb.querySelector('.retry[data-tcmore]');
+  if (more && G4.moreAt && Date.now() - G4.moreAt < 1000) { more.style.animationDelay = (-(Date.now() - G4.moreAt) / 1000).toFixed(2) + 's'; more.classList.add('push'); setTimeout(function () { more.classList.remove('push'); more.style.animationDelay = ''; }, 1000 - (Date.now() - G4.moreAt)); }
+  G4.moreAt = 0;
+}
+function g4TeamTap(e) {
+  var t = e.target; if (!t.closest || !t.closest('#team')) return;
+  var tab = t.closest('.tctabs button[data-tctab]');
+  if (tab) { var c = tab.parentElement.querySelector('button.on'); G4.tcFrom = c ? c.dataset.tctab : null; return; }
+  var go = t.closest('.tgo .retry[data-gokind]'), more = t.closest('.retry[data-tcmore]'), b = go || more;
+  if (!b || g4Reduced()) return;
+  if (b.dataset.pygo === '1') { delete b.dataset.pygo; return; }      // повторный клик — наш, пропускаем к приложению
+  e.stopPropagation(); e.preventDefault();
+  if (b.classList.contains('run') || b.classList.contains('push')) return;
+  var wait = go ? 800 : 260;
+  if (go) { b.classList.add('run'); setTimeout(function () { b.classList.remove('run'); }, 900); }
+  else { b.classList.add('push'); G4.moreAt = Date.now(); }
+  setTimeout(function () { if (!b.isConnected) return; b.dataset.pygo = '1'; b.click(); }, wait);
+}
 function applyG4() {
   g4Play(); g4Sheet();
-  if (!G4.on) { G4.on = true; document.addEventListener('click', function (e) { try { g4Tab(e); g4One(e); } catch (x) {} }, true); }
+  if (!G4.on) {
+    G4.on = true; document.addEventListener('click', function (e) { try { g4Tab(e); g4One(e); g4TeamTap(e); } catch (x) {} }, true);
+    var tm = document.getElementById('team');
+    if (tm) { var mo4 = new MutationObserver(function () { mo4.disconnect(); try { g4Team(); } catch (x) {} mo4.observe(tm, { childList: true, subtree: true }); }); mo4.observe(tm, { childList: true, subtree: true }); g4Team(); }
+  }
 }
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
@@ -3667,7 +3746,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh05a2u";
+var BUILD = "mwh0ci0z";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
