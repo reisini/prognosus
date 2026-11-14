@@ -2150,6 +2150,54 @@ body.pysmp > .smenu{visibility:hidden}
 @keyframes pyRlShutR{to{left:0}}
 /* 15.11: низ страницы — под меню (правило снимков 110 «main{padding-bottom:12px}» прятало конец страницы под меню) */
 main{padding-bottom:calc(var(--nav) + 84px + env(safe-area-inset-bottom))!important}
+/* 15.11 (Эмиль: «мячи и победы в турах… закрывая 95 % предыдущего»): стопки. Мяч 30 — сдвиг 1,5; карточка 52 — сдвиг 2,6.
+   Тонкая тень слева у каждого — чтобы край предыдущего читался */
+#profbody .arl .aic.stk{gap:0!important}
+#profbody .arl .aic.stk .dzball + .dzball{margin-left:-28.5px}
+#profbody .arl .aic.stk .dzball{filter:drop-shadow(-.8px 0 0 rgba(27,18,13,.55))}
+#profbody .thm.aw.stk{gap:0!important;flex-wrap:nowrap;align-items:flex-start}
+#profbody .thm.aw.stk figure{width:52px!important;flex:none}
+#profbody .thm.aw.stk figure + figure{margin-left:-49.4px}
+#profbody .thm.aw.stk figure img{box-shadow:-1px 0 0 rgba(27,18,13,.35),0 2px 6px rgba(27,18,13,.18)!important}
+#profbody .stkc{margin-top:6px;font:400 12px/1.3 'Onest',sans-serif;color:var(--muted)}
+#profbody .stkc b{font:400 15px/1 'VazopisetsPrint','Onest',sans-serif;font-size-adjust:.7;color:var(--ink)}
+/* лист игрока никогда не уезжает вбок: длинный ряд прокручивается сам, а не весь лист */
+#prof .sheet-in{overflow-x:hidden!important}
+/* четыре карточки «Голоса Пифии» в ряд — по ширине таблички, не шире (на 375 px четвёртая уходила за край) */
+#profbody .thm.sr.n4{gap:5px!important}
+#profbody .thm.sr.n4 figure{flex:1 1 0!important;min-width:0;width:auto!important;max-width:77px}
+#profbody .thm.sr.n4 img{width:100%!important;height:auto!important;aspect-ratio:77/65}
+/* ===== 15.11 отклик на нажатия (rt/g4.js) ===== */
+/* 109 · «Чемпионат / Кубок» и вкладки листа игрока: лак перетекает от прежнего слова к новому */
+nav.comps button.on.pyin::before,.ptabs button[role="tab"].on.pyin::before{animation:pyGzIn var(--t,.4s) cubic-bezier(.3,.7,.3,1) both}
+nav.comps button.on.pyin.kb::before,.ptabs button[role="tab"].on.pyin.kb::before{animation-name:pyGzInB}
+nav.comps button.pyin,.ptabs button[role="tab"].pyin{transition:color .3s}
+@keyframes pyGzIn{0%{transform:translateX(var(--dx)) scaleX(.85)}100%{transform:none}}
+@keyframes pyGzInB{0%{transform:translateX(var(--dx)) scaleX(.85)}100%{transform:none}}
+/* 109 · «Наша / РПЛ / Моя / Фанатская»: киноварь заливает новое слово слева направо */
+#app .tsw button.on.pyin{background:linear-gradient(90deg,var(--pyon) 46%,var(--pyoff) 54%) 100% 0/220% 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;animation:pyRdIn .5s cubic-bezier(.5,0,.4,1) both}
+#app .tsw button.on.pyin.kb{animation-name:pyRdInB}
+@keyframes pyRdIn{0%{background-position:100% 0}100%{background-position:0 0}}
+@keyframes pyRdInB{0%{background-position:100% 0}100%{background-position:0 0}}
+/* сезон один — свиток дёргается и пружинит обратно */
+.cmp-swch .season.one.pywob{animation:pyWob .5s cubic-bezier(.3,.7,.3,1)}
+@keyframes pyWob{20%{transform:translateX(-5px)}45%{transform:translateX(2px)}70%{transform:translateX(-1px)}100%{transform:none}}
+/* 112 · лист сворачивается в бумажную капсулу (кадры — в g4.js под высоту листа) */
+.sheet .pyroll{position:absolute;height:0;z-index:2;pointer-events:none}
+.sheet .pyroll .pap{position:absolute;left:0;right:0;top:0;height:8px;transform:translateY(-50%);border-radius:999px;opacity:0;
+  background:linear-gradient(180deg,rgba(27,18,13,.34),rgba(27,18,13,0) 32%,rgba(255,255,255,.22) 46%,rgba(27,18,13,0) 60%,rgba(27,18,13,.4)),repeating-linear-gradient(180deg,transparent 0 5px,var(--pi) 5px 6px),var(--pc)}
+.sheet.pygo,.sheet.pyback{overflow:hidden}
+.sheet.pygo{background:transparent!important;transition:background .8s .3s}
+.sheet.pypre .sheet-in{visibility:hidden;animation:none!important}
+.sheet.pygo .ptitle .icon-btn svg.chi path:nth-of-type(1){animation:pyChA .3s cubic-bezier(.2,.7,.3,1) forwards}
+.sheet.pygo .ptitle .icon-btn svg.chi path:nth-of-type(2){animation:pyChB .3s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes pyChA{to{transform:translate(-7px,-7px);opacity:0}}
+@keyframes pyChB{to{transform:translate(7px,-7px);opacity:0}}
+/* свиток сезона: годы не разъезжаются в обе стороны, когда тесно (space-evenly при нехватке места центрирует и режет начало) */
+:root .cmp-swch .smenu.pysm:not(.v){justify-content:flex-start}
+:root .cmp-swch .smenu.pysm:not(.v) button{margin:0 auto}
+:root .cmp-swch .smenu.pysm.tight:not(.v) button{padding:0 1px}
+:root .cmp-swch .smenu.pysm.tight:not(.v){padding-left:8px}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -2214,8 +2262,12 @@ function PYA(grp, thmSr, PEB, AT) {
   var w = pyPebRows(lt.white, lt.order, PEB, ''), b = pyPebRows(lt.black, lt.order, PEB.replace('class="pb w"', 'class="pb"'), 'bl');
   if (w) h += grp('Время собирать камни', 'Опоздания на матч', w);
   if (b) h += grp('Малый остракизм', 'Изгнание с арены', b);
-  if (wins.length) h += grp('Лавровый венец', 'Победы в туре', '<div class="thm aw">' + wins.map(function (t) {
-    return '<figure title="' + esc(t.tip) + '"><img src="' + AT.award + '" alt="Карточка победы в туре: ' + esc(t.tip) + '"><figcaption>' + esc(t.cap) + '</figcaption></figure>'; }).join('') + '</div>');
+  // 15.11 (Эмиль: «сортироваться, закрывая 95 % предыдущего»): победы — стопкой, каждая следующая закрывает 95 % предыдущей;
+  // сверху — последняя; подпись одна — сколько побед и последний тур
+  if (wins.length) { var last = wins[wins.length - 1];
+    h += grp('Лавровый венец', 'Победы в туре', '<div class="thm aw stk">' + wins.map(function (t) {
+      return '<figure title="' + esc(t.tip) + '"><img src="' + AT.award + '" alt="Карточка победы в туре: ' + esc(t.tip) + '"></figure>'; }).join('')
+      + '</div><div class="stkc"><b>' + wins.length + '</b> ' + plural(wins.length, 'победа', 'победы', 'побед') + ', последняя — ' + esc(last.tip.replace(/^([^,]+), ([^,]+), /, '$1 $2, ')) + '</div>'); }
   h += grp('Голос Пифии', 'Точные прогнозы', thmSr('a', ex, [10, 25, 50, 100]))
     + grp('Дар Кассандры', 'Точные прогнозы в одном туре', thmSr('t', bestEx, [3, 5, 7], true))
     + grp('Гегемония', 'Победная серия', thmSr('win', bestWin, [3, 5, 7]))
@@ -2634,7 +2686,7 @@ function applyProf() {
           + "#profbody .kpis div:nth-child(3) span{color:#9c5a2e}#profbody .kpis div:nth-child(4) span{color:var(--gold)}"
           + "#profbody .prow .pv b{font:400 23px/1 'VazopisetsPrint','Onest',sans-serif!important;font-size-adjust:.7;letter-spacing:.02em}"
           + "#profbody .prow .pv{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:8px}#profbody .prow .rpg{display:inline-flex;align-items:flex-end;gap:3px;align-self:baseline}"
-          + RP.pgcss.split('#app .rec .rpg').join('#profbody .prow .rpg').split('#app .rec .pg').join('#profbody .prow .pg');
+          + RP.pgcss.split('#app .rec .rpg').join('#profbody .prow .rpg').split('#app .rec .pg').join('#profbody .prow .pg').split('#app .rec').join('#profbody .pyx-none');   // 15.11: прочие правила #app .rec отсюда не дублируем — иначе после открытия листа игрока ломаются строки рекордов в таблице
         addStyle(st);
         const GN = { 1: 'Α′', 2: 'Β′', 3: 'Γ′', 4: 'Δ′', 5: 'Ε′', 6: 'Ϛ′', 7: 'Ζ′', 8: 'Η′', 9: 'Θ′', 10: 'Ι′' };
         const pl = pb.querySelector('.kpis div:nth-child(1) b'); if (pl && GN[pl.textContent.trim()]) pl.textContent = GN[pl.textContent.trim()];
@@ -2706,7 +2758,7 @@ function applyProf() {
       if (pb) { const MZ = (AT.css.match(/-webkit-mask:(url\("data:image\/svg\+xml[^"]*"\))/) || [])[1] || 'none';
         const row = (n, main, sub, ic) => '<div class="arl"><b>' + n + '</b><span>' + main + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (ic ? '<span class="aic" aria-hidden="true">' + ic + '</span>' : '') + '</div>';
         pb.querySelectorAll('.gballs .gb').forEach(g => { const sm = g.querySelector('small'), n = (sm && sm.querySelector('b') || {}).textContent || '', t = sm ? sm.textContent.replace(/^\s*\d+\s*·\s*/, '') : '';
-          const k = Math.min(+n || 1, 6); g.outerHTML = row(n, t, '', BALL.replace('width="30" height="30"', 'width="30" height="30"').repeat(k)); });
+          const k = Math.min(+n || 1, 60); g.outerHTML = row(n, t, '', BALL.repeat(k)).replace('class="aic"', 'class="aic stk"'); });   // 15.11: мячи — стопкой, каждый следующий закрывает 95 % предыдущего
         pb.querySelectorAll('.ycards .itm').forEach(g => { const sm = g.querySelector('small'), n = (sm && sm.querySelector('b') || {}).textContent || '', t = sm ? sm.textContent.replace(/^\s*\d+\s*·\s*/, '') : '';
           const pebs = g.querySelector('.pebs'); g.outerHTML = row(n, t, '', pebs ? pebs.outerHTML : ''); });
         const ss = (h, t) => pb.querySelectorAll('.ach-s').forEach(e => { if (e.textContent.trim() === h) e.textContent = t; });
@@ -2783,9 +2835,15 @@ function pyHdr() {
   if (!box) {
     box = document.createElement('div'); box.className = 'pyhdr'; box.appendChild(tpl(K2.hdr));
     var ics = box.querySelectorAll('button.ic'), rb = document.getElementById('rulesbtn'), rf = document.getElementById('refresh');
-    [[rb, ics[0]], [rf, ics[1]]].forEach(function (x) { if (!x[0] || !x[1]) return; x[0].className = 'ic'; x[0].innerHTML = x[1].innerHTML; x[1].replaceWith(x[0]); });
+    // 15.11: приложение уже могло начать крутить «Обновить» (запуск с сохранёнными данными) — класс busy и сам элемент .rr,
+    // на котором оно ждёт конца оборота, сохраняем; иначе кнопка навсегда «занята» и больше не обновляет
+    var rr0 = rf && rf.querySelector('.rr');
+    [[rb, ics[0]], [rf, ics[1]]].forEach(function (x) { if (!x[0] || !x[1]) return; var bz = x[0].classList.contains('busy'); x[0].className = 'ic' + (bz ? ' busy' : ''); x[0].innerHTML = x[1].innerHTML; x[1].replaceWith(x[0]); });
     // «Обновить» (102): меандр по кругу, пока идёт загрузка; приложение ждёт конца оборота — у меандра класс rr
-    var m = rf && rf.querySelector('.mnd'); if (m) m.classList.add('rr');
+    var m = rf && rf.querySelector('.mnd');
+    if (m && rr0) { while (rr0.attributes.length) rr0.removeAttribute(rr0.attributes[0].name); [].forEach.call(m.attributes, function (a) { rr0.setAttribute(a.name, a.value); });
+      while (m.firstChild) rr0.appendChild(m.firstChild); m.parentNode.replaceChild(rr0, m); m = rr0; }
+    if (m) m.classList.add('rr');
     // 92: зрачок знака — отдельной группой, чтобы знак мог смотреть на несохранённый матч
     var bk = box.querySelector('.bmk circle[fill]'); if (bk) { var gg = document.createElementNS('http://www.w3.org/2000/svg', 'g'); gg.setAttribute('class', 'pu'); bk.parentNode.insertBefore(gg, bk);
       var n = gg.nextSibling; while (n && !(n.classList && n.classList.contains('bms'))) { var nx = n.nextSibling; gg.appendChild(n); n = nx; } }
@@ -2912,7 +2970,9 @@ function smOpen(b) {
   var opts = String(b.dataset.opts || '').split(','), cur = b.dataset.val, what = b.dataset.pick, rk = /\brk-(laurel|spindle)\b/.exec(b.className);
   var w = document.createElement('span'); w.className = 'cmp cmp-swch pysmw'; w.style.display = 'contents';
   // 14.11 (Эмиль): только вбок. Слева тесно (кнопка в начале строки, «Результаты») — вбок вправо: тот же свиток зеркально
-  var rt = l < 90, x0 = Math.round(l + br.width - 11), st = rt ? 'top:' + t + 'px;left:' + x0 + 'px;width:' + Math.max(60, Math.round(hr.width) - x0) + 'px' : 'top:' + t + 'px;left:0;width:' + (l + 11) + 'px';
+  // 15.11: тесно — свиток выходит за край строки, но не ближе 8 px к краю экрана
+  var ext = Math.max(0, Math.min(16, Math.round(hr.left) - 8)), extR = Math.max(0, Math.min(16, Math.round(innerWidth - hr.right) - 8));
+  var rt = l < 90, x0 = Math.round(l + br.width - 11), st = rt ? 'top:' + t + 'px;left:' + x0 + 'px;width:' + (Math.max(60, Math.round(hr.width) - x0) + extR) + 'px' : 'top:' + t + 'px;left:' + (-ext) + 'px;width:' + (l + 11 + ext) + 'px';
   w.innerHTML = '<span class="slice v-blink" style="display:contents"><span class="smenu pysm' + (rt ? ' rt' : '') + (SM.ru ? ' ru' : '') + (rk ? ' rk-' + rk[1] : '') + '" role="listbox" style="' + st + '">' + SM_ROLL
     + opts.map(function (x, i) { var g = gyCls(x), lab = pickLabel(x, what);
       return '<button type="button" role="option" aria-selected="' + (x === cur) + '" class="y' + i + g + (g ? '' : ' tx') + (x === cur ? ' cur sel' : '') + '" data-v="' + esc(x) + '"><span class="ol">' + esc(lab) + '</span><span class="yr">' + esc(g ? x : lab) + '</span></button>'; }).join('')
@@ -2928,6 +2988,7 @@ function smOpen(b) {
     m.querySelectorAll('button.sel').forEach(function (x) { x.classList.remove('sel'); }); o.classList.add('sel', 'just');
     setTimeout(function () { smShut(function () { smApply(what, v); }); }, 40);
   });
+  if (m.scrollWidth > m.clientWidth + 1) m.classList.add('tight');
   var f = m.querySelector('button:not(.cur)'); if (f) try { f.focus({ preventScroll: true }); } catch (e) {}
 }
 function smShut(then) {
@@ -3403,6 +3464,106 @@ var U94IO = window.IntersectionObserver ? new IntersectionObserver(function (es)
 }, { threshold: .6 }) : null;
 function u94Watch() { document.querySelectorAll('#app .pyv94 .ey.hold').forEach(function (el) { if (U94IO) U94IO.observe(el); else { U94.seen[el.dataset.u94] = Date.now(); el.classList.remove('hold'); } }); }
 
+// ===== Пифия: отклик на нажатия (15.11) =====
+// На досках анимацию запускает их собственный код: по нажатию ставит класс и через время снимает. Здесь — то же для приложения:
+// меню (103/107), вкладки Дельф (109), лист (112), кнопка сезона без выбора.
+var G4 = { k: 0, on: false };
+function g4Reduced() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function g4Restart(el, cls, ms) {
+  el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls);
+  clearTimeout(el['_py' + cls]); el['_py' + cls] = setTimeout(function () { el.classList.remove(cls); }, ms);
+}
+// --- меню: приложение «играет» первый значок кнопки, а виден выбранный (пасхалка 107) — играем видимый, 2 с, как в паспорте ---
+function g4Play() {
+  if (typeof window.play !== 'function' || window.play.py) return;
+  var orig = window.play, f = function (el) {
+    var b = el && el.closest && el.closest('nav.tabs button');
+    if (b) {
+      var vis = [].filter.call(b.querySelectorAll('svg.ic.on, .iapp > svg:not(.ic)'), function (s) { return s.style.display !== 'none' && s.getBoundingClientRect().width > 0; });
+      if (vis.length) { vis.forEach(function (s) { g4Restart(s, 'play', 2000); }); return; }
+    }
+    return orig.apply(this, arguments);
+  };
+  f.py = 1; window.play = f;
+}
+// --- вкладки (109): «Чемпионат / Кубок» — лак перетекает к новому слову; «Наша / РПЛ / Моя / Фанатская» — киноварь заливает слева направо ---
+var G4TABS = [['nav.comps button', 'comp', 'gz'], ['.ptabs button[role="tab"]', 'ptab', 'gz'], ['.tsw button', 'tbl', 'rd']];
+function g4Tab(e) {
+  var t = e.target, hit = null;
+  for (var i = 0; i < G4TABS.length && !hit; i++) { var b = t.closest && t.closest(G4TABS[i][0]); if (b) hit = [b, G4TABS[i]]; }
+  if (!hit) return;
+  var b = hit[0], kind = hit[1], key = b.dataset[kind[1]];
+  if (b.classList.contains('on') || !key) return;
+  var old = b.parentElement && b.parentElement.querySelector('button.on'); if (!old || g4Reduced()) return;
+  var a = old.getBoundingClientRect(), c = b.getBoundingClientRect(), dx = (a.left + a.width / 2) - (c.left + c.width / 2);
+  var tt = Math.min(.7, .28 + Math.abs(dx) / 700), con = getComputedStyle(old).color, coff = getComputedStyle(b).color, k = ++G4.k;
+  var sel = kind[0].split(',').map(function (s) { return s.trim() + '[data-' + kind[1] + '="' + key + '"]'; }).join(',');
+  setTimeout(function () {
+    var nb = document.querySelector(sel); if (!nb || !nb.classList.contains('on')) return;
+    nb.style.setProperty('--dx', dx.toFixed(1) + 'px'); nb.style.setProperty('--t', tt.toFixed(2) + 's');
+    nb.style.setProperty('--pyon', con); nb.style.setProperty('--pyoff', coff);
+    nb.classList.remove('pyin', 'ka', 'kb'); void nb.offsetWidth; nb.classList.add('pyin', kind[2], k % 2 ? 'ka' : 'kb');
+    setTimeout(function () { nb.classList.remove('pyin', 'ka', 'kb', 'gz', 'rd'); }, (kind[2] === 'rd' ? 520 : tt * 1000) + 80);
+  }, 0);
+}
+// --- кнопка сезона, где сезон один: свиток пробует развернуться и пружинит обратно (развернуть нечего) ---
+function g4One(e) {
+  var b = e.target.closest && e.target.closest('.season.one'); if (!b || g4Reduced()) return;
+  g4Restart(b, 'pywob', 520);
+}
+// --- лист (112, утверждён 13.11): хи — мазки расходятся, лист загибается верхним краем и наматывается в бумажную капсулу,
+// капсула скатывается вниз и толстеет; открытие — капсула разматывается снизу вверх. Кадры считаются под высоту листа:
+// на доске лист 302 px, здесь — какой есть. Капсула — в пределах скруглённых углов (отступ по дуге угла).
+function g4RollKf(name, H, R) {
+  var N = 28, K = .4286, rw = [], pap = [], sh = [], P = function (x) { return (Math.round(x * 10) / 10).toFixed(1); };
+  function at(pc, y, op) {
+    var h = Math.sqrt(25 + 2 * y), ins = y < R ? R - Math.sqrt(R * R - (R - y) * (R - y)) : 0, r = Math.max(0, R - y);
+    rw.push(pc + '%{transform:translateY(' + P(y) + 'px)}');
+    pap.push(pc + '%{opacity:' + op + ';height:' + P(op ? h : 0) + 'px;left:' + P(op ? ins : R) + 'px;right:' + P(op ? ins : R) + 'px;background-position:0 0,0 ' + P(y) + 'px,0 0}');
+    sh.push(pc + '%{clip-path:inset(' + P(y) + 'px 0 0 0 round ' + P(r) + 'px ' + P(r) + 'px 0 0)}');
+  }
+  at(0, 0, 0);
+  for (var i = 0; i <= N; i++) { var s = i / N, f = s - K * Math.sin(2 * Math.PI * s) / (2 * Math.PI); at((10 + 90 * s).toFixed(1), H * f, 1); }
+  return '@keyframes ' + name + 'w{' + rw.join('') + '}@keyframes ' + name + 'p{' + pap.join('') + '}@keyframes ' + name + 's{' + sh.join('') + '}';
+}
+function g4Roll(el, back, done) {
+  var si = el.querySelector('.sheet-in'); if (!si) { if (done) done(); return; }
+  var r0 = el.getBoundingClientRect(), r = si.getBoundingClientRect(), cs = getComputedStyle(si);
+  var H = Math.max(40, Math.round(r.height)), R = parseFloat(cs.borderTopLeftRadius) || 20, dur = Math.min(1.2, .95 * Math.max(1, H / 420));
+  var name = 'pyRoll' + (++G4.k), st = document.createElement('style'); st.textContent = g4RollKf(name, H, R); document.head.appendChild(st);
+  var ink = getComputedStyle(si).color, rl = document.createElement('div'); rl.className = 'pyroll'; rl.setAttribute('aria-hidden', 'true');
+  rl.style.cssText = 'top:' + (r.top - r0.top) + 'px;left:' + (r.left - r0.left) + 'px;width:' + r.width + 'px;--pc:' + cs.backgroundColor + ';--pi:color-mix(in srgb,' + ink + ' 22%,transparent)';
+  rl.innerHTML = '<i class="pap"></i>'; el.appendChild(rl);
+  var dl = back ? 0 : .22, a = (back ? ' linear reverse both' : ' ' + dl + 's linear both');
+  rl.style.animation = name + 'w ' + dur + 's' + a; rl.firstChild.style.animation = name + 'p ' + dur + 's' + a;
+  si.style.animation = name + 's ' + dur + 's' + a;
+  el.classList.add(back ? 'pyback' : 'pygo');
+  setTimeout(function () {
+    rl.remove(); st.remove(); si.style.animation = ''; el.classList.remove('pyback', 'pygo'); if (done) done();
+  }, (dl + dur) * 1000 + 30);
+}
+function g4Sheet() {
+  if (typeof window.sheet !== 'function' || window.sheet.py || typeof window.closeSheet !== 'function') return;
+  var oSheet = window.sheet;
+  var nSheet = function (id, open) {
+    var el = document.getElementById(id), was = !!(el && el.hidden), res = oSheet.apply(this, arguments);
+    if (open && was && el && !g4Reduced()) { el.classList.add('pypre'); requestAnimationFrame(function () { el.classList.remove('pypre'); g4Roll(el, true); }); }
+    return res;
+  };
+  nSheet.py = 1; window.sheet = nSheet;
+  window.closeSheet = function (id) {
+    var el = document.getElementById(id);
+    if (!el || el.hidden || el.classList.contains('closing-wait')) return;
+    if (g4Reduced()) return window.sheet(id, false);
+    el.classList.add('closing-wait');
+    g4Roll(el, false, function () { el.classList.remove('closing-wait'); window.sheet(id, false); });
+  };
+}
+function applyG4() {
+  g4Play(); g4Sheet();
+  if (!G4.on) { G4.on = true; document.addEventListener('click', function (e) { try { g4Tab(e); g4One(e); } catch (x) {} }, true); }
+}
+
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
   try {
@@ -3423,6 +3584,7 @@ function run() {
   if (mo) mo.disconnect();
   try {
     if (typeof DATA !== 'undefined' && !DATA.loading) applyG2();
+    applyG4();
     var v = view();
     if (v === 'pred') applyG3();
     if (v) { if (v === 'fan') window.__rpl = rplPlaces(); apply110(v); if (v === 'table') greekTable();
@@ -3505,7 +3667,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgzfjxa";
+var BUILD = "mwh05a2u";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
