@@ -814,6 +814,28 @@
 #app .mc .nf{position:relative;display:inline-block;width:24px;height:26px}
 #app .mc .nf .dg{display:block;text-align:center;font:600 16px/26px 'Vazopisets','Tektur','Onest',sans-serif;color:var(--ink);text-transform:lowercase}
 #app .mc .nf.nil .dg{color:var(--pur);opacity:.55}
+#app .mc.ka.chg .pt.ch{animation:popA .45s .95s cubic-bezier(.3,1.5,.5,1) both}
+#app .mc.ka.chg .vis-brush .dg.od{animation:washA .45s ease-in both}
+#app .mc.ka.chg .vis-brush .dg.nw .ax path{animation:drawA .2s calc(.4s + var(--d)) ease-out both}
+#app .mc.ka.chg .vis-vase .cur{animation:vInA .9s .05s cubic-bezier(.45,0,.3,1) both}
+#app .mc.ka.chg .vis-vase .prev{animation:vOutA .9s .05s cubic-bezier(.45,0,.3,1) both}
+#app .mc.ka.chg .vis-abak ellipse.nw{animation:slideA .55s cubic-bezier(.3,1.2,.5,1) both}
+#app .mc.ka.chg .vis-abak g.od{animation:fadeOA .2s .35s both}
+#app .mc.ka.chg .vis-abak g.nw{animation:fadeIA .25s .45s both}
+#app .mc.ka.chg .vis-shard .old{animation:shOffA .5s ease-in both}
+#app .mc.ka.chg .vis-shard .new{animation:shOnA .45s .3s cubic-bezier(.3,1.25,.5,1) both}
+#app .mc.ka.chg .vis-shard .sd.on .ax path{animation:drawA .18s calc(.8s + var(--d)) ease-out both}
+#app .mc.kb.chg .pt.ch{animation:popB .45s .95s cubic-bezier(.3,1.5,.5,1) both}
+#app .mc.kb.chg .vis-brush .dg.od{animation:washB .45s ease-in both}
+#app .mc.kb.chg .vis-brush .dg.nw .ax path{animation:drawB .2s calc(.4s + var(--d)) ease-out both}
+#app .mc.kb.chg .vis-vase .cur{animation:vInB .9s .05s cubic-bezier(.45,0,.3,1) both}
+#app .mc.kb.chg .vis-vase .prev{animation:vOutB .9s .05s cubic-bezier(.45,0,.3,1) both}
+#app .mc.kb.chg .vis-abak ellipse.nw{animation:slideB .55s cubic-bezier(.3,1.2,.5,1) both}
+#app .mc.kb.chg .vis-abak g.od{animation:fadeOB .2s .35s both}
+#app .mc.kb.chg .vis-abak g.nw{animation:fadeIB .25s .45s both}
+#app .mc.kb.chg .vis-shard .old{animation:shOffB .5s ease-in both}
+#app .mc.kb.chg .vis-shard .new{animation:shOnB .45s .3s cubic-bezier(.3,1.25,.5,1) both}
+#app .mc.kb.chg .vis-shard .sd.on .ax path{animation:drawB .18s calc(.8s + var(--d)) ease-out both}
 #app .pyc{padding-bottom:10px}
 #app .mc .pr img{display:block;margin:0 auto}
 #app .mc .pr.ey,#app .mc .pr.lyc{align-self:center;justify-self:center}
@@ -2674,15 +2696,17 @@ function g3defs() {
   d.innerHTML = '<svg width="0" height="0" style="position:absolute"><defs>' + G3.defs + '</defs></svg>'; document.body.appendChild(d);
 }
 // неподвижная сцена счёта h:a (как delphi_live.static)
-function g3static(scene, h, a) {
+// pv — прежний счёт {h, a}, если только что забили: старая цифра уходит, новая приходит (как delphi_live.renderVals)
+function g3static(scene, h, a, pv) {
   var sc = { h: h, a: a };
   var out = scene.replace(/\{\{(\w+)\.(n?)([ha])(\d)\}\}/g, function (_, g, n, side, k) {
-    k = +k; var now = sc[side];
-    if (g === 'dg') return k === now ? 'dg on' : 'dg';
+    k = +k; var now = sc[side], was = pv ? pv[side] : now, ch = !!pv && was !== now;
+    if (g === 'dg') return 'dg' + (k === now ? ' on' : '') + (ch && k === now ? ' nw' : '') + (ch && k === was ? ' od' : '');
     if (g === 'sd') return k === now ? 'sd on' : 'sd';
-    if (g === 'so') return 'sf';
+    if (g === 'so') return 'sf' + (pv && k === was ? ' on' : '');
     if (g === 'vc') return k === now ? 'on' : '';
-    if (g === 'ab') return n ? (k === now ? 'on' : '') : (k < now ? 'on' : '');
+    if (g === 'vp') return pv && k === was ? 'on' : '';
+    if (g === 'ab') return n ? (k === now ? 'on' : '') + (ch && k === now ? ' nw' : '') + (ch && k === was ? ' od' : '') : (k < now ? 'on' : '') + (ch && k === now - 1 ? ' nw' : '');
     return '';
   });
   ['lbm', 'lsm', 'lvc'].forEach(function (a0) { out = out.split('id="' + a0).join('id="f' + a0.slice(1)).split('url(#' + a0).join('url(#f' + a0.slice(1)); });
@@ -2695,11 +2719,12 @@ function g3step(key, side, v) {
     + '<span class="nf' + (v === null || v === undefined ? ' nil' : '') + drFx(key, side, v) + '"><span class="dg">' + (v === null || v === undefined ? '?' : v) + '</span></span>'
     + '<button class="bt" data-k="' + esc(key) + '" data-s="' + side + '" data-d="1" aria-label="Больше">+</button></span>';
 }
-function g3pts(vals, me) {
+function g3pts(vals, me, pp) {
   var h = '<span class="pl" style="grid-row:3">баллы</span>';
   vals.forEach(function (v, i) {
+    var ch = pp && (pp[i] || 0) !== (v || 0) ? ' ch' : '';
     v = v || 0; var peb = ''; for (var k = 0; k < 4; k++) peb += '<i class="' + (k < v ? 'on' : '') + '" style="--n:' + k + '"></i>';
-    h += '<span class="pt' + (i === me ? ' me' : '') + (v === 4 ? ' hit' : '') + '" style="grid-column:' + (2 + i) + ';grid-row:3"><span class="pp">' + peb + '<b class="' + (v === 0 ? 'on' : '') + '"></b></span></span>';
+    h += '<span class="pt' + (i === me ? ' me' : '') + (v === 4 ? ' hit' : '') + ch + '" style="grid-column:' + (2 + i) + ';grid-row:3"><span class="pp">' + peb + '<b class="' + (v === 0 ? 'on' : '') + '"></b></span></span>';
   });
   return h;
 }
@@ -2716,13 +2741,15 @@ function g3card(g, m, meth) {
     if (ed && isMe && m.pending) { out += g3cell(col, 1, '<span class="ve">' + VE_SVG + '</span>' + m.pending[0], 'pr me q') + g3cell(col, 2, m.pending[1], 'pr me q'); return; }
     if (ed && isMe && canLate(g, m)) {
       out += g3cell(col, '1/span 2', '<button class="lyb" data-late="' + esc(m.key) + '" aria-label="Сделать прогноз"><span class="lyw">' + LY_SVG + '</span></button>', 'pr me lyc'); return; }
+    if (c.pts === 4) pc += ' hit';
     out += (c.h === null || c.h === undefined) ? g3cell(col, 1, '–', 'pr no') + g3cell(col, 2, '–', 'pr no') : g3cell(col, 1, c.h, pc) + g3cell(col, 2, c.a, pc);
   });
   var sc = '', rv = rvPlan(m, me);
   if (ed && !m.started && me >= 0) sc = drEye(m, dirty);
   if (m.locked) sc = '<div class="sc"><span class="scey">' + EYE + '</span></div>';
-  else if (m.started && m.hs !== null && m.hs !== undefined) sc = '<div class="sc">' + g3static(G3.scenes[meth], Math.min(9, m.hs), Math.min(9, m.as)) + '</div>';
-  var pts = m.started && m.cells.some(function (c) { return c.pts !== null && c.pts !== undefined; }) ? g3pts(m.cells.map(function (c) { return c.pts; }), me) : '';
+  var gl = !rv && m.started && !m.locked ? scGoal(m) : null;
+  if (!m.locked && m.started && m.hs !== null && m.hs !== undefined) sc = '<div class="sc">' + g3static(G3.scenes[meth], Math.min(9, m.hs), Math.min(9, m.as), gl && gl.pv) + '</div>';
+  var pts = m.started && m.cells.some(function (c) { return c.pts !== null && c.pts !== undefined; }) ? g3pts(m.cells.map(function (c) { return c.pts; }), me, gl && gl.pp) : '';
   var right = '';
   if (live) right = '<span class="mn"><i></i>' + esc(String(m.status || '').replace(/^идёт\s*/, '').replace(/'$/, '′') || 'идёт') + '</span>';
   else if (done) right = '<span class="ft" role="img" aria-label="матч окончен">' + G3.ft + '</span>';
@@ -2732,7 +2759,8 @@ function g3card(g, m, meth) {
   if (ed && lateOpen[m.key]) note = 'Прогноз будет принят, если все бросят белый камешек.';
   else if (ed && m.pending && !dirty) note = 'Прогноз на рассмотрении у судей. Да поможет тебе Аполлон!';
   else if (m.locked && !dirty) note = '<b>Матч идёт.</b> Проспал начало? Тронь струны лиры.';
-  var cls = 'mc' + (done ? ' done' : '') + (done || live ? '' : ' next') + (dirty ? (m.started ? ' late' : ' dirty') : '') + (rv ? ' rvl' : '');
+  var cls = 'mc' + (done ? ' done' : '') + (done || live ? '' : ' next') + (dirty ? (m.started ? ' late' : ' dirty') : '') + (rv ? ' rvl' : '')
+    + (m.started && m.cells.some(function (c) { return c.pts === 4; }) ? ' hit' : '') + (gl ? gl.cls : '');
   if (rv) out = rv.mark(out) + rv.html;
   return '<div class="' + cls + '" data-mkey="' + esc(m.key || '') + '"' + (rv ? ' style="' + rv.style + '"' : '') + '><div class="tm"><span>' + esc(g3when(m.when)) + '</span>' + right + '</div><div class="g">' + out + sc + pts + '</div>'
     + (m.stage ? '<div class="mst">' + esc(m.stage) + '</div>' : '') + (note ? '<div class="lnote">' + note + '</div>' : '') + '</div>';
@@ -2754,11 +2782,16 @@ function pyPred() {
     var pre = mm.filter(function (m) { return m.phase !== 'live' && m.phase !== 'ft'; }).sort(function (a, b) { return (a.start || 0) - (b.start || 0); });
     var wide = mm.some(function (m) { return g.me && (!m.started || lateOpen[m.key]); });
     var th = '<div class="th"><span class="tt">' + esc(isNo(tourNo(g.label)) ? tourNo(g.label) + ' тур' : tourWord(g.label)) + '</span>'
-      + (g.players || []).map(function (p, j) { return '<span class="' + (j === me ? 'me' : 'nm') + '">' + esc(p) + '</span>'; }).join('') + '<span></span></div>';
+      + (g.players || []).map(function (p, j) { return '<span class="' + (j === me ? 'me' : 'nm') + '" data-j="' + j + '">' + esc(p) + '</span>'; }).join('') + '<span></span></div>';
     var w = document.createElement('div'); w.className = 'pyc v-' + meth + (wide ? ' wide' : '');
     w.innerHTML = th + '<div class="list">' + live.concat(pre, ft).map(function (m) { return g3card(g, m, meth); }).join('') + '</div>';
     sec.querySelectorAll(':scope > .names, :scope > .m').forEach(function (e) { e.remove(); });
     sec.after(w);
+    // финальный свисток: у кого точный счёт — имя в шапке тура дважды вспухает
+    w.querySelectorAll('.mc.attA, .mc.attB').forEach(function (c) {
+      var at = c.classList.contains('attA') ? 'attA' : 'attB', mm = g.matches.filter(function (x) { return x.key === c.dataset.mkey; })[0];
+      if (mm) mm.cells.forEach(function (x, j) { if (x.pts === 4) { var t = w.querySelector('.th [data-j="' + j + '"]'); if (t) t.classList.add(at); } });
+    });
   });
 }
 function applyG3() { if (view() !== 'pred') { drHead(); return; } g3defs(); pyPred(); drAfter(); }
@@ -2969,6 +3002,30 @@ function rvPlan(m, me) {
     }).join('')
   };
 }
+// --- Гол в идущем матче — способом тура (104/108): кисть смывает и пишет, ваза поворачивается, камешек абака съезжает, черепок отлетает.
+// Прежний счёт помним и между заходами: гол, забитый, пока тебя не было, покажется при следующем открытии. Финальный свисток с точным счётом —
+// прогноз, табло и зарубки дважды вспухают, карточка уходит вниз.
+var SC = { last: null, k: 0 };
+function scStore(save) {
+  if (!SC.last) { try { SC.last = JSON.parse(localStorage.getItem('pythia.sc') || '{}'); } catch (e) { SC.last = {}; } }
+  if (save) { var ks = Object.keys(SC.last); if (ks.length > 80) ks.slice(0, ks.length - 80).forEach(function (k) { delete SC.last[k]; }); try { localStorage.setItem('pythia.sc', JSON.stringify(SC.last)); } catch (e) {} }
+  return SC.last;
+}
+function scGoal(m) {
+  if (!m.key || m.hs === null || m.hs === undefined) return null;
+  var L = scStore(), was = L[m.key], pts = m.cells.map(function (c) { return c.pts || 0; }), out = null;
+  if (was && m.phase === 'live' && was[2] === 'live' && (was[0] !== m.hs || was[1] !== m.as) && m.hs >= was[0] && m.as >= was[1]) {
+    SC.k++; out = { pv: { h: Math.min(9, was[0]), a: Math.min(9, was[1]) }, pp: was[3] || null, cls: ' chg ' + (SC.k % 2 ? 'ka' : 'kb') };
+  } else if (was && was[2] === 'live' && m.phase === 'ft') {
+    SC.k++; out = { pv: null, pp: null, cls: ' moved' + (pts.indexOf(4) >= 0 ? (SC.k % 2 ? ' attA' : ' attB') : '') };
+  }
+  if (m.phase === 'live' || m.phase === 'ft') {
+    var nw = [m.hs, m.as, m.phase, pts];
+    if (!was || was[0] !== nw[0] || was[1] !== nw[1] || was[2] !== nw[2] || String(was[3]) !== String(pts)) { L[m.key] = nw; scStore(true); }
+  }
+  if (out && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) out = null;
+  return out;
+}
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
@@ -3071,7 +3128,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgw2zo1";
+var BUILD = "mwgw8jle";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
