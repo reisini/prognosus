@@ -2181,7 +2181,47 @@ function tabletMove(go) {
     e.setAttribute('class', 'tb-l' + (go && d ? (MENU.n % 2 ? ' mvA' : ' mvB') : ''));
   });
 }
-function applyG2() { pyHdr(); pyMenu(); }
+// --- «Чья Фанатская» и свиток сезона (106): имена кистью по-гречески, под выбранным тёмный камешек; сезон — свиток с греческими годами ---
+var FX = "<span class=\"box\"><svg viewBox=\"0 0 12 12\"><path class=\"bx\" d=\"M1.5 1.5H10.5V10.5H1.5Z\"></path><path class=\"tk\" d=\"M3 6.4L5.3 8.8L10.8 1.2\"></path></svg></span><svg class=\"ring\" viewBox=\"0 0 100 40\" preserveAspectRatio=\"none\"><path d=\"M54 4C30 2 6 8 4 20S30 38 52 37 97 31 96 18 70 2 40 6\"></path></svg><svg class=\"ul\" viewBox=\"0 0 100 6\" preserveAspectRatio=\"none\"><path d=\"M1 3.8C18 2 36 4.6 55 3.3S86 2.4 99 3.6\"></path></svg><i class=\"bead\"></i><i class=\"dot\"></i><span class=\"eye\"><svg viewBox=\"0 0 16 10\"><path d=\"M1.2 5Q8 -.6 14.8 5Q8 10.6 1.2 5Z\"></path><circle class=\"pup\" cx=\"8\" cy=\"5\" r=\"2.2\"></circle></svg></span><span class=\"st s1\"><svg viewBox=\"0 0 10 10\"><path d=\"M5 0Q5.6 4.4 10 5Q5.6 5.6 5 10Q4.4 5.6 0 5Q4.4 4.4 5 0Z\"></path></svg></span><span class=\"st s2\"><svg viewBox=\"0 0 10 10\"><path d=\"M5 0Q5.6 4.4 10 5Q5.6 5.6 5 10Q4.4 5.6 0 5Q4.4 4.4 5 0Z\"></path></svg></span><span class=\"st s3\"><svg viewBox=\"0 0 10 10\"><path d=\"M5 0Q5.6 4.4 10 5Q5.6 5.6 5 10Q4.4 5.6 0 5Q4.4 4.4 5 0Z\"></path></svg></span>";   // украшения кнопки имени из паспорта (камешек и запасные знаки других вариантов)
+var SW = { rk: Math.random() < .25 ? (Math.random() < .5 ? ' rk-laurel' : ' rk-spindle') : '', from: null, k: 0 };   // валик: факел, изредка лавр или веретено
+var WRAP = function (inner) { return '<span class="cmp cmp-swch" style="display:contents"><span class="slice v-blink" style="display:contents"><span class="card" style="display:contents">' + inner + '</span></span></span>'; };
+document.addEventListener('click', function (e) {
+  // откуда перекидывают камешек: центр прежнего имени — до перерисовки
+  var b = e.target.closest && e.target.closest('#app .fanp button[data-fanp]'); if (!b) return;
+  var old = b.parentNode.querySelector('button.on'); if (!old || old === b) return;
+  var a = old.getBoundingClientRect(), c = b.getBoundingClientRect();
+  SW.from = { name: b.dataset.fanp, dx: (a.left + a.width / 2) - (c.left + c.width / 2) }; SW.k++;
+}, true);
+function pySwch() {
+  document.querySelectorAll('#app .fanp:not([data-py])').forEach(function (fp) {
+    fp.dataset.py = 1;
+    var g = fp.querySelector('[role=group]');
+    if (g) {
+      g.classList.add('seg', 'ul-pb'); g.insertAdjacentHTML('afterbegin', '<i class="rod" aria-hidden="true"></i>');
+      g.querySelectorAll('button[data-fanp]').forEach(function (b) {
+        var n = b.textContent.trim();
+        b.innerHTML = '<span class="fx" aria-hidden="true">' + FX + '</span><span class="nw"><span class="nm">' + esc(n) + '</span><span class="ls" aria-hidden="true">'
+          + Array.from(n).map(function (ch, i) { return '<i style="--i:' + i + '">' + esc(ch) + '</i>'; }).join('') + '</span></span>';
+      });
+      var on = g.querySelector('button.on');
+      if (on && SW.from && SW.from.name === on.dataset.fanp && SW.from.dx) {
+        var dx = SW.from.dx, par = SW.k % 2 ? ' ka' : ' kb';
+        on.className = 'on in' + par; on.setAttribute('style', '--dx:' + dx.toFixed(1) + 'px;--lx:' + (dx > 0 ? -2.6 : 2.6) + 'px;--t:' + Math.min(.55, .22 + Math.abs(dx) / 600).toFixed(2) + 's');
+      }
+      SW.from = null;
+    }
+    var w = document.createElement('span'); w.style.display = 'contents'; fp.parentNode.insertBefore(w, fp); w.innerHTML = WRAP(''); w.querySelector('.card').appendChild(fp);
+  });
+  document.querySelectorAll('#app .season:not([data-py]), #profbody .season:not([data-py])').forEach(function (b) {
+    b.dataset.py = 1;
+    if (b.closest('section.cmp')) return;          // сравнение сезонов — как в приложении (110)
+    var t = b.textContent.trim(); b.innerHTML = '<span class="sc-interp">' + esc(t) + '</span>';
+    b.classList.add('s0'); if (SW.rk) b.className += SW.rk;
+    var inFan = b.closest('.fanp'), pw = document.createElement('span'); pw.className = 'pw'; b.parentNode.insertBefore(pw, b); pw.appendChild(b);
+    if (!inFan) { var w = document.createElement('span'); w.style.display = 'contents'; pw.parentNode.insertBefore(w, pw); w.innerHTML = WRAP('<span class="fanp" style="display:contents"></span>'); w.querySelector('.fanp').appendChild(pw); }
+  });
+}
+function applyG2() { pyHdr(); pyMenu(); pySwch(); }
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
@@ -2283,7 +2323,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwguu3ka";
+var BUILD = "mwguz6kl";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
