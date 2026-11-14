@@ -879,6 +879,42 @@
 #app .mc .mst{margin:4px 0 0;font:400 12px/1.3 'Onest',sans-serif;color:var(--mut)}
 #app .mc.dirty,#app .mc.late{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--pur) 55%,transparent)}
 #app .mc .tm::before{display:none!important}   /* мазок между строками Таблички — не для строки даты в карточке */
+/* 88 «Око подмигивает»: кнопка «Сохранить» — как на доске, фазы — классы sv-* на #savebar */
+#savebar.sv-hold{display:block!important}
+#savebar.sv-leave #save{animation:sv-away .32s ease-in forwards}
+@keyframes sv-away{to{transform:translateY(72px);opacity:0}}
+#save.sb{position:relative;overflow:hidden;padding:0}
+#savebar[class*="sv-"] #save:disabled{opacity:1}
+#save .lb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-left:44px;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .25s;pointer-events:none;white-space:nowrap}
+#savebar.sv-idle .l0,#savebar.sv-press .l1,#savebar.sv-wait .l1,#savebar.sv-ok .l2,#savebar.sv-late .l4,#savebar.sv-err .l3{opacity:1;transform:none}
+#save .eye{position:absolute;left:12px;top:4px;width:40px;height:40px;overflow:visible}
+#save .eye .lid,#save .eye .st,#save .eye .pupil{transform-box:fill-box;transform-origin:50% 50%}
+#savebar.sv-press .lid,#savebar.sv-wait .lid{animation:sv-close .22s ease-in forwards}
+@keyframes sv-close{to{transform:scaleY(.07)}}
+#savebar.sv-wait .s1{animation:sv-tw .9s ease-in-out infinite}
+#savebar.sv-wait .s2{animation:sv-tw .9s ease-in-out .3s infinite}
+#savebar.sv-wait .s3{animation:sv-tw .9s ease-in-out .6s infinite}
+@keyframes sv-tw{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.4) rotate(45deg);opacity:.5}}
+#savebar.sv-ok .lid{animation:sv-open .22s ease-out forwards,sv-wink .34s ease-in-out 1.05s}
+@keyframes sv-open{from{transform:scaleY(.07)}to{transform:scaleY(1)}}
+@keyframes sv-wink{0%,100%{transform:scaleY(1)}45%,55%{transform:scaleY(.07)}}
+#savebar.sv-ok .pupil{animation:sv-look .8s ease-in-out .25s}
+@keyframes sv-look{0%,100%{transform:translateX(0)}30%{transform:translateX(-8px)}70%{transform:translateX(8px)}}
+#savebar.sv-ok .st{animation:sv-flash .5s ease-out 1.1s}
+@keyframes sv-flash{0%,100%{transform:scale(1)}40%{transform:scale(1.6)}}
+#savebar.sv-late .lid{animation:sv-squint .3s ease-out forwards}
+@keyframes sv-squint{from{transform:scaleY(.07)}to{transform:scaleY(.42)}}
+#savebar.sv-late .pupil{animation:sv-side .4s ease-out .2s forwards}
+@keyframes sv-side{to{transform:translateX(10px)}}
+#savebar.sv-err .lid{animation:sv-wide .3s ease-out forwards}
+@keyframes sv-wide{0%{transform:scaleY(.07)}60%{transform:scaleY(1.2)}100%{transform:scaleY(1.1)}}
+#savebar.sv-err .pupil{animation:sv-jit .12s linear .2s 4}
+@keyframes sv-jit{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+#savebar.sv-err .st{animation:sv-fall .6s ease-in .15s forwards}
+@keyframes sv-fall{to{transform:translateY(42px) rotate(70deg);opacity:0}}
+#savebar.sv-err #save{animation:sv-shake .42s ease-in-out .3s}
+@keyframes sv-shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+@media (prefers-reduced-motion:reduce){#save .eye *,#savebar #save{animation:none!important}}
 
 /* 87: шапка, меню, свиток */
 :root{--k-bg:var(--dz-e7eaf6);--k-surface:var(--dz-f4f5fc);--k-soft:var(--dz-fafbfe);--k-ink:var(--dz-161a3a);--k-muted:var(--dz-5a5f80);--k-faint:var(--dz-a0a4c0);--k-line:var(--dz-d8dcef);--k-accent:var(--dz-2f3fa8);--k-gold:var(--dz-9a6b0c);--k-badge:var(--dz-e2a92b);--k-red:var(--dz-d63a4a);
@@ -2613,6 +2649,63 @@ function g3remind(el) {
   new MutationObserver(function (rs) { rs.forEach(function (r) { [].forEach.call(r.addedNodes, function (n) { if (n.nodeType === 1 && n.classList.contains('ycw')) g3remind(n); }); }); })
     .observe(document.body, { childList: true });
 });
+// --- 88 «Око подмигивает»: кнопка «Сохранить» — глаз из знака Прогнозуса ---
+// Нажал — глаз закрылся: прогноз спрятан до свистка; пока ждём — мерцают звёзды; сохранилось — открывается и подмигивает.
+// Кнопка и сохранение — приложения (API.save); здесь только вид и фазы.
+var SV = { ph: 'idle', label: '', T: [], t0: 0, quiet: false };
+var SV_EYE = '<svg class="eye" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ebc"><circle cx="50" cy="50" r="19"></circle></clipPath></defs>'
+  + '<g class="lid"><path d="M6,50 Q50,8 94,50 Q50,92 6,50 Z" fill="none" stroke="currentColor" stroke-width="7.4" stroke-linejoin="round"></path>'
+  + '<g class="pupil"><circle cx="50" cy="50" r="19" fill="#F3F7F4" stroke="#161a3a" stroke-width="3.33"></circle><path clip-path="url(#ebc)" fill="#161a3a" d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"></path><path fill="#161a3a" d="M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z"></path></g></g>'
+  + '<path class="st s1" fill="#e2a92b" d="M50.00 23.50C44.76 17.80 45.63 9.82 50.00 4.50C54.37 9.82 55.24 17.80 50.00 23.50Z"></path>'
+  + '<path class="st s2" fill="#e2a92b" d="M27.00 27.50C21.84 26.27 19.29 21.41 19.73 16.72C24.24 18.07 27.79 22.26 27.00 27.50Z"></path>'
+  + '<path class="st s3" fill="#e2a92b" d="M73.00 27.50C72.21 22.26 75.76 18.07 80.27 16.72C80.71 21.41 78.16 26.27 73.00 27.50Z"></path></svg>';
+var SV_ARIA = { idle: '', press: 'Сохраняю', wait: 'Сохраняю', ok: 'Сохранено в тайне до начала матча', late: 'Ждём согласия соперников', err: 'Не удалось сохранить. Повторить?' };
+function svAt(ms, fn) { SV.T.push(setTimeout(fn, ms)); }
+function svSet(ph, extra) {
+  var bar = document.getElementById('savebar'), b = document.getElementById('save'); if (!bar || !b) return;
+  SV.ph = ph;
+  ['idle', 'press', 'wait', 'ok', 'late', 'err', 'leave', 'hold'].forEach(function (k) { bar.classList.remove('sv-' + k); });
+  bar.classList.add('sv-' + ph); (extra || []).forEach(function (k) { bar.classList.add('sv-' + k); });
+  b.setAttribute('aria-label', ph === 'idle' ? SV.label.replace(' · ', ', ') : SV_ARIA[ph]);
+}
+// начало: глаз закрывается; ответ — не раньше чем через секунду, чтобы мерцание звёзд успели увидеть
+function svGo() { SV.T.forEach(clearTimeout); SV.T = []; SV.t0 = Date.now(); svSet('press', ['hold']); svAt(300, function () { svSet('wait', ['hold']); }); }
+function svEnd(ph) {
+  svAt(Math.max(0, 1000 - (Date.now() - SV.t0)), function () {
+    svSet(ph, ['hold']);
+    if (ph === 'err') svAt(2000, function () { svSet('idle'); });
+    else { svAt(2400, function () { svSet(ph, ['hold', 'leave']); }); svAt(2740, function () { svSet('idle'); }); }
+  });
+}
+function svHook() {
+  if (typeof API === 'undefined' || !API.save || API.save.py) return;
+  var orig = API.save;
+  API.save = function (items, ok, fail) {
+    svGo();
+    return orig.call(API, items, function (r) {
+      var errs = r && r.errors && r.errors.length, ph = r && r.late && !r.saved ? 'late' : (errs && !(r && (r.saved || r.late)) ? 'err' : 'ok');
+      svEnd(ph);
+      // всё приняли — кнопка сама скажет «Сохранено в тайне»; про непринятые — подсказка приложения остаётся
+      SV.quiet = !errs; try { ok(r); } finally { SV.quiet = false; }
+    }, function (e) { svEnd('err'); fail(e); });
+  };
+  API.save.py = 1;
+  if (typeof toast === 'function' && !toast.py) { var t0 = toast; window.toast = function (t) { if (SV.quiet) return; return t0.apply(this, arguments); }; window.toast.py = 1; }
+}
+// Приложение пишет в кнопку текстом (при отрисовке и при нажатии). Чтобы глаз не пересоздавался посреди мигания,
+// у самой кнопки свой textContent: текст уходит в подпись «Сохранить прогнозы · N», глаз остаётся.
+function pySave() {
+  svHook();
+  var b = document.getElementById('save'); if (!b || b.dataset.py) return; b.dataset.py = 1;
+  var D = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
+  var lab = function (v) { v = String(v == null ? '' : v).trim(); if (v === 'Сохраняю…') return; SV.label = v.replace(/\s*\((\d+)\)\s*$/, ' · $1'); var l = b.querySelector('.l0'); if (l) D.set.call(l, SV.label); if (SV.ph === 'idle') svSet('idle'); };
+  var t = D.get.call(b);
+  b.innerHTML = SV_EYE + '<span class="lb l0"></span><span class="lb l1">Прячу до свистка…</span><span class="lb l2">Сохранено в тайне до начала матча</span><span class="lb l4">Ждём согласия соперников</span><span class="lb l3">Не удалось сохранить. Повторить?</span>';
+  b.classList.add('sb');
+  Object.defineProperty(b, 'textContent', { configurable: true, get: function () { return SV.label; }, set: lab });
+  lab(t);
+}
+(function (go) { if (document.body) go(); else document.addEventListener('DOMContentLoaded', go); })(pySave);
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
@@ -2715,7 +2808,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgvdqyx";
+var BUILD = "mwgvmi3f";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
