@@ -915,6 +915,40 @@
 #savebar.sv-err #save{animation:sv-shake .42s ease-in-out .3s}
 @keyframes sv-shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 @media (prefers-reduced-motion:reduce){#save .eye *,#savebar #save{animation:none!important}}
+/* 89, 92: глаз у матча — в столбце счёта карточки, пока матч не начался */
+#app .mc.next .rew{display:block;grid-column:5;grid-row:1/span 2;justify-self:center;align-self:center;width:30px;height:30px;pointer-events:none}
+#app .rew .eye{display:block;width:30px;height:30px;overflow:visible;color:var(--accent);transition:opacity .2s}
+#app .rew .eye.gone{opacity:0}
+#app .rew .eye .op,#app .rew .eye .pu{transform-box:fill-box;transform-origin:50% 50%}
+#app .rew .eye .al{fill:none;stroke:currentColor;stroke-width:7.4;stroke-linejoin:round}
+#app .rew .eye .cl path{fill:none;stroke:currentColor;stroke-width:7.4;stroke-linecap:round}
+#app .rew .eye .op{transition:transform .22s ease-out,opacity .08s}
+#app .rew .eye .cl{opacity:0;transition:opacity .1s}
+#app .rew .eye.closed .op{transform:scaleY(.07);opacity:0;transition:transform .2s ease-in,opacity .06s .16s}
+#app .rew .eye.closed .cl{opacity:1;transition:opacity .12s .16s}
+#app .rew .eye .pu{transition:transform .25s ease-out}
+#app .rew .eye.lk-h .pu{transform:translate(-10px,-6px)}
+#app .rew .eye.lk-a .pu{transform:translate(-10px,6px)}
+#app .rew .eye.jit.ka .pu{animation:dr-jitA .12s linear 3}
+#app .rew .eye.jit.kb .pu{animation:dr-jitB .12s linear 3}
+@keyframes dr-jitA{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes dr-jitB{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#app .rew .eye:not(.closed) .op{animation:dr-blink 4.2s ease-in-out 1.4s infinite}
+@keyframes dr-blink{0%,90%,100%{transform:scaleY(1)}94%,95%{transform:scaleY(.07)}}
+/* цифры моргают при каждом «+» и «−»; упёрлись в край — качнулись */
+#app .mc .nf.blink.ka .dg{animation:dr-blA .26s ease-in-out}
+#app .mc .nf.blink.kb .dg{animation:dr-blB .26s ease-in-out}
+@keyframes dr-blA{0%,100%{transform:scaleY(1)}40%{transform:scaleY(.1)}}
+@keyframes dr-blB{0%,100%{transform:scaleY(1)}40%{transform:scaleY(.1)}}
+#app .mc .nf.nope.ka{animation:dr-noA .3s ease-in-out}
+#app .mc .nf.nope.kb{animation:dr-noB .3s ease-in-out}
+@keyframes dr-noA{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes dr-noB{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+/* знак в шапке смотрит на несохранённый матч */
+#hdr .pyhdr .bmk .pu{transform-box:view-box;transition:transform .35s ease-out}
+#hdr .pyhdr .bmk.look .pu{transform:translate(12px,5px)}
+#hdr .pyhdr .bmk.look2 .pu{transform:translate(11px,10px)}
+@media (prefers-reduced-motion:reduce){#app .rew .eye *,#app .mc .nf,#app .mc .nf .dg{animation:none!important}}
 
 /* 87: шапка, меню, свиток */
 :root{--k-bg:var(--dz-e7eaf6);--k-surface:var(--dz-f4f5fc);--k-soft:var(--dz-fafbfe);--k-ink:var(--dz-161a3a);--k-muted:var(--dz-5a5f80);--k-faint:var(--dz-a0a4c0);--k-line:var(--dz-d8dcef);--k-accent:var(--dz-2f3fa8);--k-gold:var(--dz-9a6b0c);--k-badge:var(--dz-e2a92b);--k-red:var(--dz-d63a4a);
@@ -2419,6 +2453,9 @@ function pyHdr() {
     [[rb, ics[0]], [rf, ics[1]]].forEach(function (x) { if (!x[0] || !x[1]) return; x[0].className = 'ic'; x[0].innerHTML = x[1].innerHTML; x[1].replaceWith(x[0]); });
     // «Обновить» (102): меандр по кругу, пока идёт загрузка; приложение ждёт конца оборота — у меандра класс rr
     var m = rf && rf.querySelector('.mnd'); if (m) m.classList.add('rr');
+    // 92: зрачок знака — отдельной группой, чтобы знак мог смотреть на несохранённый матч
+    var bk = box.querySelector('.bmk circle[fill]'); if (bk) { var gg = document.createElementNS('http://www.w3.org/2000/svg', 'g'); gg.setAttribute('class', 'pu'); bk.parentNode.insertBefore(gg, bk);
+      var n = gg.nextSibling; while (n && !(n.classList && n.classList.contains('bms'))) { var nx = n.nextSibling; gg.appendChild(n); n = nx; } }
     bar.style.display = 'none'; bar.parentNode.insertBefore(box, bar);
   }
   // имя и место: лавровые листья по месту — у первого три, у второго два, у третьего один
@@ -2553,7 +2590,7 @@ function g3when(w) { var m = /^(\S+) (\d+)\.(\d+) (\d+:\d+)$/.exec(String(w || '
 function g3cell(col, row, html, cls) { return '<span class="' + cls + '" style="grid-column:' + col + ';grid-row:' + row + '">' + html + '</span>'; }
 function g3step(key, side, v) {
   return '<span class="st"><button class="bt" data-k="' + esc(key) + '" data-s="' + side + '" data-d="-1" aria-label="Меньше">−</button>'
-    + '<span class="nf' + (v === null || v === undefined ? ' nil' : '') + '"><span class="dg">' + (v === null || v === undefined ? '?' : v) + '</span></span>'
+    + '<span class="nf' + (v === null || v === undefined ? ' nil' : '') + drFx(key, side, v) + '"><span class="dg">' + (v === null || v === undefined ? '?' : v) + '</span></span>'
     + '<button class="bt" data-k="' + esc(key) + '" data-s="' + side + '" data-d="1" aria-label="Больше">+</button></span>';
 }
 function g3pts(vals, me) {
@@ -2580,6 +2617,7 @@ function g3card(g, m, meth) {
     out += (c.h === null || c.h === undefined) ? g3cell(col, 1, '–', 'pr no') + g3cell(col, 2, '–', 'pr no') : g3cell(col, 1, c.h, pc) + g3cell(col, 2, c.a, pc);
   });
   var sc = '';
+  if (ed && !m.started && me >= 0) sc = drEye(m, dirty);
   if (m.locked) sc = '<div class="sc"><span class="scey">' + EYE + '</span></div>';
   else if (m.started && m.hs !== null && m.hs !== undefined) sc = '<div class="sc">' + g3static(G3.scenes[meth], Math.min(9, m.hs), Math.min(9, m.as)) + '</div>';
   var pts = m.started && m.cells.some(function (c) { return c.pts !== null && c.pts !== undefined; }) ? g3pts(m.cells.map(function (c) { return c.pts; }), me) : '';
@@ -2621,7 +2659,7 @@ function pyPred() {
     sec.after(w);
   });
 }
-function applyG3() { if (view() !== 'pred') return; g3defs(); pyPred(); }
+function applyG3() { if (view() !== 'pred') { drHead(); return; } g3defs(); pyPred(); drAfter(); }
 // --- 93 «Напоминание»: остракон с именем по-гречески вместо жёлтой карточки ---
 function g3ostr(name) {
   var O = G3.ostr, t = translit(name || ''), gap = 2.4, x = 0, lay = [];
@@ -2669,7 +2707,13 @@ function svSet(ph, extra) {
   b.setAttribute('aria-label', ph === 'idle' ? SV.label.replace(' · ', ', ') : SV_ARIA[ph]);
 }
 // начало: глаз закрывается; ответ — не раньше чем через секунду, чтобы мерцание звёзд успели увидеть
-function svGo() { SV.T.forEach(clearTimeout); SV.T = []; SV.t0 = Date.now(); svSet('press', ['hold']); svAt(300, function () { svSet('wait', ['hold']); }); }
+function svGo() {
+  SV.T.forEach(clearTimeout); SV.T = []; SV.t0 = Date.now(); svSet('press', ['hold']); svAt(300, function () { svSet('wait', ['hold']); });
+  // 92: сохранил — глаз у матча засыпает, знак в шапке перестаёт смотреть на черновик
+  document.querySelectorAll('#app .rew .eye:not(.closed)').forEach(function (e) { e.setAttribute('class', 'eye closed'); });
+  Object.keys(DR.eye).forEach(function (k) { if (DR.eye[k].indexOf('closed') < 0) DR.eye[k] = 'eye closed'; });
+  if (typeof drHead === 'function') drHead();
+}
 function svEnd(ph) {
   svAt(Math.max(0, 1000 - (Date.now() - SV.t0)), function () {
     svSet(ph, ['hold']);
@@ -2706,6 +2750,56 @@ function pySave() {
   lab(t);
 }
 (function (go) { if (document.body) go(); else document.addEventListener('DOMContentLoaded', go); })(pySave);
+// --- 89 «Счёт» и 92 «Черновик»: цифры моргают при «+» и «−», у несохранённого матча открыт глаз и следит за цифрой,
+// изредка моргает; знак в шапке смотрит на несохранённый матч; сохранил — глаза засыпают. Сохранённый прогноз — закрытый глаз до свистка.
+// «Закрыл, не сохранив» (цифры растворяются, знак щурится) в приложении не показать: страница в этот миг уже закрыта.
+var DR = { tap: null, n: 0, side: {}, eye: {}, last: '' };
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('#app .pyc button.bt'); if (!b) return;
+  var st = b.closest('.mc'), was = {};
+  if (st) st.querySelectorAll('button.bt[data-d="1"]').forEach(function (x) { var d = x.parentNode.querySelector('.nf .dg'); if (d) was[x.dataset.s] = d.textContent; });
+  DR.n++; DR.tap = { k: b.dataset.k, s: b.dataset.s, was: was, t: Date.now() }; DR.side[b.dataset.k] = b.dataset.s; DR.last = b.dataset.k;
+}, true);
+function drFx(key, side, v) {
+  var t = DR.tap; if (!t || t.k !== key || Date.now() - t.t > 1500 || !(side in t.was)) return '';
+  var now = v === null || v === undefined ? '?' : String(v), par = DR.n % 2 ? ' ka' : ' kb';
+  if (t.s === side) return (now === t.was[side] ? ' nope' : ' blink') + par;
+  return now !== t.was[side] ? ' blink' + par : '';
+}
+var DR_N = 0;
+function drSvg(cls) {
+  var id = 'dre' + (++DR_N);
+  return '<svg class="' + cls + '" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="' + id + '"><circle cx="50" cy="50" r="19"></circle></clipPath><clipPath id="' + id + 'a"><path d="M6,50 Q50,16 94,50 Q50,84 6,50 Z"></path></clipPath></defs>'
+    + '<g class="op"><g clip-path="url(#' + id + 'a)"><g class="pu"><circle cx="50" cy="50" r="19" fill="#F3F7F4" stroke="#161a3a" stroke-width="3.33"></circle><path clip-path="url(#' + id + ')" fill="#161a3a" d="M50,35.56 L44.76,31.75 L46.76,25.59 L53.24,25.59 L55.24,31.75 Z M63.73,45.54 L65.73,39.38 L72.21,39.38 L74.21,45.54 L68.97,49.35 Z M58.49,61.68 L64.97,61.68 L66.97,67.84 L61.73,71.65 L56.49,67.84 Z M41.51,61.68 L43.51,67.84 L38.27,71.65 L33.03,67.84 L35.03,61.68 Z M36.27,45.54 L31.03,49.35 L25.79,45.54 L27.79,39.38 L34.27,39.38 Z"></path><path fill="#161a3a" d="M50,43.6 L56.09,48.02 L53.76,55.18 L46.24,55.18 L43.91,48.02 Z"></path></g></g><path class="al" d="M6,50 Q50,16 94,50 Q50,84 6,50 Z"></path></g>'
+    + '<g class="cl"><path d="M8,50 Q50,80 92,50"></path><path d="M29,62 L23,75 M50,66 L50,80 M71,62 L77,75"></path></g></svg>';
+}
+// какой глаз у матча сейчас: открыт и смотрит на цифру (черновик), закрыт (прогноз спрятан или сохраняется), нет (прогноза нет)
+function drWant(m, dirty) {
+  if (dirty && /^(press|wait|ok)$/.test(SV.ph)) return 'eye closed';
+  if (dirty) { var t = DR.tap, nope = t && t.k === m.key && Date.now() - t.t < 1500 && /nope/.test(drFx(m.key, t.s, current(m)[t.s])); return 'eye lk-' + (DR.side[m.key] || 'h') + (nope ? ' jit' + (DR.n % 2 ? ' ka' : ' kb') : ''); }
+  return m.mine ? 'eye closed' : 'eye closed gone';
+}
+function drEye(m, dirty) {
+  var to = drWant(m, dirty), from = DR.eye[m.key] || 'eye closed gone'; DR.eye[m.key] = to.replace(/ jit.*$/, '');
+  return '<span class="rew" data-to="' + to + '">' + drSvg(from.replace(/ jit.*$/, '')) + '</span>';
+}
+// прежнее состояние глаза → новое: переход виден, хотя карточку приложение перерисовало заново
+function drAfter() {
+  var els = document.querySelectorAll('#app .rew[data-to]');
+  if (els.length) { void els[0].offsetWidth; els.forEach(function (r) { var e = r.firstChild; getComputedStyle(e.querySelector('.pu')).transform; e.setAttribute('class', r.dataset.to); r.removeAttribute('data-to'); }); }
+  drHead();
+}
+// знак в шапке (84) смотрит на несохранённый матч: ближний — вправо, дальний — вправо и вниз
+function drHead() {
+  var bm = document.querySelector('#hdr .pyhdr .bmk'); if (!bm) return;
+  var keys = Object.keys(edits || {}), k = keys.indexOf(DR.last) >= 0 ? DR.last : keys[0], cls = '';
+  if (view() === 'pred' && k && !/^(press|wait|ok)$/.test(SV.ph)) {
+    var c = document.querySelector('#app .mc[data-mkey="' + (window.CSS && CSS.escape ? CSS.escape(k) : k) + '"]');
+    if (c) cls = c.getBoundingClientRect().top < innerHeight * .45 ? 'look' : 'look2';
+  }
+  bm.classList.toggle('look', cls === 'look'); bm.classList.toggle('look2', cls === 'look2');
+}
+addEventListener('scroll', function () { if (DR.raf) return; DR.raf = requestAnimationFrame(function () { DR.raf = 0; drHead(); }); }, { passive: true });
 
 // Какой экран сейчас: как на 110 — table (Наша), rpl, my, fan, tours, pred
 function view() {
@@ -2808,7 +2902,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwgvmi3f";
+var BUILD = "mwgvszl5";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
