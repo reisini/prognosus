@@ -2327,6 +2327,7 @@ body.pycol .names{top:calc(var(--hdr) - var(--pybar, 0px))!important;transition:
 #profbody .thm.sr figure.lock .pykt{filter:grayscale(1) brightness(.92);opacity:.72;box-shadow:none}
 .pyzoom .pz-k{position:relative;border-radius:calc(var(--w) * .045);overflow:hidden}
 .pyzoom .pz-k.lock{filter:grayscale(1) brightness(.92)}
+#profbody .thm.sr.v figcaption{white-space:nowrap;text-align:left}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -3680,21 +3681,36 @@ function g4RollKf(name, H, R) {
   return '@keyframes ' + name + 'w{' + rw.join('') + '}@keyframes ' + name + 'p{' + pap.join('') + '}@keyframes ' + name + 's{' + sh.join('') + '}';
 }
 function g4Roll(el, back, done) {
+  // 15.11: край листа и свёрток двигаются одним кадром (requestAnimationFrame) — в Safari анимация clip-path отставала от свёртка,
+  // и над свёртком оставалась полоска текста (Эмиль: «над полосами ещё остаётся часть текста»)
   var si = el.querySelector('.sheet-in'); if (!si) { if (done) done(); return; }
   si.style.animation = 'none'; void si.offsetWidth;
   var r0 = el.getBoundingClientRect(), r = si.getBoundingClientRect(), cs = getComputedStyle(si);
-  var H = Math.max(40, Math.round(r.height)), R = parseFloat(cs.borderTopLeftRadius) || 20, dur = Math.min(1.2, .95 * Math.max(1, H / 420));
-  var name = 'pyRoll' + (++G4.k), st = document.createElement('style'); st.textContent = g4RollKf(name, H, R); document.head.appendChild(st);
-  var ink = getComputedStyle(si).color, rl = document.createElement('div'); rl.className = 'pyroll'; rl.setAttribute('aria-hidden', 'true');
+  var H = Math.max(40, Math.round(r.height)), R = parseFloat(cs.borderTopLeftRadius) || 20, dur = Math.min(1.2, .95 * Math.max(1, H / 420)), dl = back ? 0 : .22, K = .4286;
+  var ink = cs.color, rl = document.createElement('div'); rl.className = 'pyroll'; rl.setAttribute('aria-hidden', 'true');
   rl.style.cssText = 'top:' + (r.top - r0.top) + 'px;left:' + (r.left - r0.left) + 'px;width:' + r.width + 'px;--pc:' + cs.backgroundColor + ';--pi:color-mix(in srgb,' + ink + ' 22%,transparent)';
   rl.innerHTML = '<i class="pap"></i>'; el.appendChild(rl);
-  var dl = back ? 0 : .22, a = (back ? ' linear reverse both' : ' ' + dl + 's linear both');
-  rl.style.animation = name + 'w ' + dur + 's' + a; rl.firstChild.style.animation = name + 'p ' + dur + 's' + a;
-  si.style.animation = name + 's ' + dur + 's' + a;
+  var pap = rl.firstChild, ended = false;
+  function put(u) {                       // u: 0 — лист открыт, 1 — свёрнут; первые 10 % — свёрток проявляется у края
+    var op = u < .1 ? u / .1 : 1, q = u < .1 ? 0 : (u - .1) / .9, y = H * (q - K * Math.sin(2 * Math.PI * q) / (2 * Math.PI));
+    var h = Math.sqrt(25 + 2 * y), ins = y < R ? R - Math.sqrt(Math.max(0, R * R - (R - y) * (R - y))) : 0, rr = Math.max(0, R - y);
+    si.style.clipPath = 'inset(' + y.toFixed(1) + 'px 0 0 0 round ' + rr.toFixed(1) + 'px ' + rr.toFixed(1) + 'px 0 0)';
+    rl.style.transform = 'translateY(' + (y - 1).toFixed(1) + 'px)';
+    pap.style.opacity = op; pap.style.height = (op ? h + 1 : 0).toFixed(1) + 'px'; pap.style.left = pap.style.right = (op ? ins : R).toFixed(1) + 'px';
+    pap.style.backgroundPosition = '0 0,0 ' + y.toFixed(1) + 'px,0 0';
+  }
+  function end() { if (ended) return; ended = true; rl.remove(); si.style.animation = ''; si.style.clipPath = ''; el.classList.remove('pyback', 'pygo'); if (done) done(); }
   el.classList.add(back ? 'pyback' : 'pygo');
-  setTimeout(function () {
-    rl.remove(); st.remove(); si.style.animation = ''; el.classList.remove('pyback', 'pygo'); if (done) done();
-  }, (dl + dur) * 1000 + 30);
+  put(back ? 1 : 0);
+  var t0 = null, total = (dl + dur) * 1000;
+  function frame(ts) {
+    if (ended) return; if (t0 === null) t0 = ts;
+    var t = (ts - t0) / 1000, u = back ? 1 - Math.min(1, t / dur) : Math.max(0, Math.min(1, (t - dl) / dur));
+    put(u);
+    if (t * 1000 < total) requestAnimationFrame(frame); else end();
+  }
+  requestAnimationFrame(frame);
+  setTimeout(end, total + 400);           // если кадры не идут (вкладка в фоне) — всё равно закончить
 }
 function g4Sheet() {
   if (typeof window.sheet !== 'function' || window.sheet.py || typeof window.closeSheet !== 'function') return;
@@ -4032,7 +4048,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh224cs";
+var BUILD = "mwh25pe7";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
