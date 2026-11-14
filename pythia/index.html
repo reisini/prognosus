@@ -2233,6 +2233,44 @@ nav.comps button.pyin,.ptabs button[role="tab"].pyin{transition:color .3s}
 @keyframes pyRsB{0%,100%{transform:none}35%,55%{transform:translate(-.55em,4px)}}
 @keyframes pyCoA{0%,100%{transform:none;opacity:1}30%,55%{transform:translateY(7px);opacity:0}}
 @keyframes pyMps{0%{transform:none}18%{transform:translateY(11px) scaleY(.94)}30%{transform:translateY(8.5px)}42%{transform:translateY(10.5px)}54%,72%{transform:translateY(10px)}100%{transform:none}}
+/* 15.11 · живые карточки наград: рисунок с доски, подписи и числа — настоящие (размеры — доли ширины --w) */
+.pylc{position:relative;display:block;line-height:0;container-type:normal}
+.pylc img{display:block;width:100%!important;height:auto!important}
+.pylc .pyl{position:absolute;line-height:1.15;pointer-events:none;font-style:normal}
+.pylc.rc .nb{left:11%;width:12.5%;text-align:center;background:#e6bd94;font:600 calc(var(--w) * .052)/1 'Tektur','Onest',sans-serif;color:#5d7280;padding:.08em 0}
+.pylc.rc .n1{top:29.5%}
+.pylc.rc .n0{top:45%;font-size:calc(var(--w) * .036);font-weight:500;color:#6a4630}
+.pylc.rc .n0.cv{height:calc(var(--w) * .05)}
+.pylc.rc.s .n1{top:17.5%;color:#8f2e1e}
+.pylc.rc.s .n0{top:31%}
+.pylc.rc .tx{left:4%;right:4%;top:69%;bottom:3%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--w) * .008);background:#f8ead1;text-align:center;color:#1b120d}
+.pylc.rc .tx small{font:500 calc(var(--w) * .034)/1.1 'Tektur','Onest',sans-serif;color:#5d7280}
+.pylc.rc.s .tx small{color:#8f2e1e}
+.pylc.rc .tx b{font:700 calc(var(--w) * .062)/1.05 'Tektur','Onest',sans-serif;letter-spacing:-.01em}
+.pylc.rc .tx span{font:400 calc(var(--w) * .03)/1.2 'Onest',sans-serif;color:#5b4636}
+.pylc.aw .tx{left:3%;right:3%;top:64%;bottom:2.5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--w) * .022);background:linear-gradient(#24120b,#1b0d07);text-align:center;color:#f1dec4;border-radius:0 0 calc(var(--w) * .06) calc(var(--w) * .06)}
+.pylc.aw .tx small{font:400 calc(var(--w) * .055)/1 'Vazopisets','Onest',sans-serif;text-transform:lowercase;letter-spacing:.06em;color:#d9783d}
+.pylc.aw .tx b{font:400 calc(var(--w) * .12)/1 'Vazopisets','Onest',sans-serif;letter-spacing:.04em;color:#f1dec4;white-space:nowrap}
+.pylc.aw .tx span{font:400 calc(var(--w) * .052)/1.2 'Onest',sans-serif;color:#a8805e;white-space:nowrap}
+.pylc.aw .tx em{font-style:normal;color:#d9783d}
+.pylc.aw .tx s{text-decoration:none;opacity:.5;margin:0 .2em}
+.pylc.aw .tx i{margin-top:calc(var(--w) * .03);padding:.35em 1.6em;border-radius:.45em;background:#d9783d;color:#1b120d;font:400 calc(var(--w) * .06)/1 'Vazopisets','Onest',sans-serif;text-transform:lowercase;font-style:normal}
+#profbody .thm figure.old .pylc .pyl{filter:grayscale(1) sepia(.3) hue-rotate(170deg) saturate(.5) brightness(1.03) contrast(.9)}
+.pz-card.old .pyl,.pz-card.old img{filter:grayscale(1) sepia(.3) hue-rotate(170deg) saturate(.5) brightness(1.03) contrast(.9)}
+/* по касанию — крупно; касание где угодно — назад */
+.pyzoom{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(18,12,9,0);transition:background .28s;cursor:zoom-out;-webkit-tap-highlight-color:transparent}
+.pyzoom.in{background:rgba(18,12,9,.72)}
+.pyzoom.out{background:rgba(18,12,9,0)}
+.pyzoom .pz-in{display:flex;flex-direction:column;align-items:center;gap:12px;max-height:100%;overflow:auto}
+.pyzoom .pz-card{flex:none;border-radius:calc(var(--w) * .06);overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.45);transition:transform .32s cubic-bezier(.2,.7,.2,1)}
+.pyzoom .pz-cap,.pyzoom .pz-list{opacity:0;transition:opacity .25s .12s;color:#f1dec4;text-align:center}
+.pyzoom.in .pz-cap,.pyzoom.in .pz-list{opacity:1}
+.pyzoom.out .pz-cap,.pyzoom.out .pz-list{opacity:0;transition-delay:0s}
+.pyzoom .pz-cap{font:400 15px/1.2 'VazopisetsPrint','Onest',sans-serif;font-size-adjust:.7;text-transform:lowercase;letter-spacing:.03em}
+.pyzoom .pz-list{max-width:320px;font:400 13px/1.45 'Onest',sans-serif;color:#c29d7c}
+.pyzoom .pz-list p{margin:0}
+.pyzoom .pz-list b{font-weight:600;color:#f1dec4}
+@media (prefers-reduced-motion:reduce){.pyzoom .pz-card{transition:none}}
 </style>
 <script id="pythia-rt">(function () {
 'use strict';
@@ -2289,7 +2327,7 @@ function PYA(grp, thmSr, PEB, AT) {
       var e = t.ex ? +t.ex[j] || 0 : 0; if (e > bestEx) bestEx = e;
       var mx = Math.max.apply(null, t.pp), tie = t.pp.every(function (v) { return v === mx; });
       // подпись — как на 110: «13 тур»; турнир и сезон — во всплывающей подсказке
-      if (t.pp[j] === mx && !tie) { var n = tourNo(t.label); wins.push({ cap: isNo(n) ? n + ' тур' : n, tip: c.title + ', ' + x.season + ', ' + tourWord(t.label) }); }
+      if (t.pp[j] === mx && !tie) { var n = tourNo(t.label); wins.push({ cap: isNo(n) ? n + ' тур' : n, tip: c.title + ', ' + x.season + ', ' + tourWord(t.label), grp: c.title + ' ' + x.season, n: n, pp: +t.pp[j] || 0, tp: t.tp ? +t.tp[j] || 0 : 2 }); }
     });
     if (p) { bestWin = Math.max(bestWin, p.win.best || 0); bestUnb = Math.max(bestUnb, p.pts.best || 0); }
   });
@@ -2301,7 +2339,7 @@ function PYA(grp, thmSr, PEB, AT) {
   // сверху — последняя; подпись одна — сколько побед
   if (wins.length) {
     h += grp('Лавровый венец', 'Победы в туре', '<div class="thm aw stk">' + wins.map(function (t) {
-      return '<figure title="' + esc(t.tip) + '"><img src="' + AT.award + '" alt="Карточка победы в туре: ' + esc(t.tip) + '"></figure>'; }).join('')
+      return '<figure title="' + esc(t.tip) + '" data-grp="' + esc(t.grp) + '" data-n="' + esc(t.n) + '" data-pp="' + t.pp + '" data-tp="' + t.tp + '"><img src="' + AT.award + '" alt="Карточка победы в туре: ' + esc(t.tip) + '"></figure>'; }).join('')
       + '</div><div class="stkc"><b>' + wins.length + '</b> ' + plural(wins.length, 'победа', 'победы', 'побед') + '</div>'); }
   h += grp('Голос Пифии', 'Точные прогнозы', thmSr('a', ex, [10, 25, 50, 100]))
     + grp('Дар Кассандры', 'Точные прогнозы в одном туре', thmSr('t', bestEx, [3, 5, 7], true))
@@ -2322,10 +2360,12 @@ function PYR(grp, AT, AS) {
   });
   if (!best) return '';
   var figs = [];
-  if (seasonRec) figs.push('<figure><img src="' + AT.rec1 + '" alt="Карточка рекорда сезона"><figcaption>сезона · ' + seasonRec + '</figcaption></figure>');
-  figs.push('<figure><img src="' + AT.rec0 + '" alt="Карточка личного рекорда"><figcaption>личный · ' + best + '</figcaption></figure>');
-  olds.reverse().slice(0, 3 - figs.length).forEach(function (v) {
-    figs.push('<figure class="old"><img src="' + AT.rec0 + '" alt="Карточка побитого личного рекорда"><figcaption>прежний · ' + v + '</figcaption></figure>'); });
+  // 15.11: числа на карточке — живые (data-v — рекорд, data-was — что было до него), рисунок — с доски
+  var prog = olds.concat([best]);
+  if (seasonRec) figs.push('<figure data-rk="season" data-v="' + seasonRec + '"><img src="' + AT.rec1 + '" alt="Карточка рекорда сезона"><figcaption>сезона · ' + seasonRec + '</figcaption></figure>');
+  figs.push('<figure data-rk="own" data-v="' + best + '" data-was="' + (olds.length ? olds[olds.length - 1] : '') + '"><img src="' + AT.rec0 + '" alt="Карточка личного рекорда"><figcaption>личный · ' + best + '</figcaption></figure>');
+  olds.slice().reverse().slice(0, 3 - figs.length).forEach(function (v) { var i = prog.indexOf(v);
+    figs.push('<figure class="old" data-rk="old" data-v="' + v + '" data-was="' + (i > 0 ? prog[i - 1] : '') + '"><img src="' + AT.rec0 + '" alt="Карточка побитого личного рекорда"><figcaption>прежний · ' + v + '</figcaption></figure>'); });
   return '<div class="psec achH recp">' + AS.l + '<span class="acht">Рекорды</span>' + AS.r + '</div><div class="achs">'
     + grp('Сверх меры', 'Рекордные баллы за тур', '<div class="thm rc">' + figs.join('') + '</div>') + '</div>';
 }
@@ -3648,10 +3688,70 @@ function g4Icon(e) {
   hosts.forEach(function (h) { h.classList.add('rpg'); h.classList.remove('ta', 'tb'); void h.getBoundingClientRect(); h.classList.add(k % 2 ? 'ta' : 'tb');
     clearTimeout(h._pyTap); h._pyTap = setTimeout(function () { h.classList.remove('ta', 'tb'); }, 2600); });
 }
+// --- карточки наград: числа живые, крупно — по касанию (15.11) ---
+// Рисунок карточки — с доски (96 — победа в туре, 48 — рекорды); подписи и числа на нём закрываем и пишем настоящие:
+// тур, баллы, очки; рекорд и что было до него. Размеры — в долях ширины карточки (--w), чтобы годилось и для миниатюры, и крупно.
+function g4Word(n, a, b, c) { return typeof plural === 'function' ? plural(n, a, b, c) : c; }
+function g4Live(fig) {
+  var d = fig.dataset, rk = d.rk;
+  if (rk) {
+    var v = +d.v, was = d.was, season = rk === 'season';
+    var line = v + ' ' + g4Word(v, 'балл', 'балла', 'баллов') + ' за тур' + (was ? (season ? ' · прежний рекорд ' : ' · было ') + was : '');
+    return '<i class="pyl nb n1">' + v + '</i>' + (was ? '<i class="pyl nb n0">' + was + '</i>' : '<i class="pyl nb n0 cv"></i>')
+      + '<span class="pyl tx"><small>' + (season ? 'Парнас' : 'Дельфы') + '</small><b>' + (season ? 'Рекорд сезона!' : rk === 'old' ? 'Прежний рекорд' : 'Личный рекорд!') + '</b><span>' + line + '</span></span>';
+  }
+  if (d.pp !== undefined) {
+    var me = typeof PROF !== 'undefined' && PROF && typeof DATA !== 'undefined' && PROF.name === DATA.name, nm = PROF && PROF.name ? (typeof translit === 'function' ? translit(PROF.name) : PROF.name) : '';
+    var n = d.n, pp = +d.pp, tp = +d.tp;
+    return '<span class="pyl tx aw"><small>' + (me ? 'золотой мяч твой' : 'золотой мяч') + '</small><b>' + (me ? 'ΠΥΘΙΟΝΙΚΗΣ' : esc(nm)) + '</b><span><em>' + esc(n) + '</em> тур <s>|</s> <em>' + pp + '</em> ' + g4Word(pp, 'балл', 'балла', 'баллов')
+      + ' <s>|</s> <em>' + tp + '</em> ' + g4Word(tp, 'очко', 'очка', 'очков') + '</span><i>ура!</i></span>';
+  }
+  return '';
+}
+function g4LiveThumbs() {
+  document.querySelectorAll('#profbody .thm.rc figure[data-rk]:not([data-lv])').forEach(function (f) {
+    f.dataset.lv = 1; var img = f.querySelector('img'); if (!img) return;
+    var w = document.createElement('span'); w.className = 'pylc rc' + (f.dataset.rk === 'season' ? ' s' : ''); img.parentNode.insertBefore(w, img); w.appendChild(img);
+    w.insertAdjacentHTML('beforeend', g4Live(f)); w.style.setProperty('--w', (img.getBoundingClientRect().width || 104) + 'px');
+  });
+}
+var ZM = { el: null };
+function g4ZoomShut() {
+  var z = ZM.el; if (!z) return; ZM.el = null;
+  var c = z.querySelector('.pz-card'), from = z._from;
+  z.classList.add('out'); if (c && from && !g4Reduced()) c.style.transform = from;
+  setTimeout(function () { z.remove(); }, 280);
+}
+function g4Zoom(e) {
+  var t = e.target; if (!t.closest) return;
+  if (ZM.el) { if (t.closest('.pyzoom')) { e.stopPropagation(); e.preventDefault(); g4ZoomShut(); } return; }
+  var fig = t.closest('#profbody .thm figure'); if (!fig) return;
+  var stk = fig.closest('.thm.stk'), top = stk ? stk.lastElementChild : fig, img = top.querySelector('img'); if (!img) return;
+  e.stopPropagation(); e.preventDefault();
+  var r = (stk || top).getBoundingClientRect(), ir = img.getBoundingClientRect(), ratio = ir.height / ir.width;
+  var W = Math.round(Math.min(window.innerWidth * .78, (window.innerHeight * .6) / ratio, ratio > 1 ? 260 : 340));
+  var cls = top.dataset.rk ? 'rc' + (top.dataset.rk === 'season' ? ' s' : '') + (top.dataset.rk === 'old' ? ' old' : '') : top.dataset.pp !== undefined ? 'aw' : '';
+  var cap = '', list = '';
+  if (stk) {
+    var G = {}, order = [];
+    [].forEach.call(stk.children, function (f) { var g = f.dataset.grp || ''; if (!G[g]) { G[g] = []; order.push(g); } G[g].push(f.dataset.n); });
+    cap = (stk.nextElementSibling && stk.nextElementSibling.classList.contains('stkc') ? stk.nextElementSibling.textContent : '');
+    list = '<div class="pz-list">' + order.reverse().map(function (g) { return '<p><b>' + esc(g) + '</b> — ' + (G[g].length > 1 ? 'туры ' : 'тур ') + G[g].map(esc).join(', ') + '</p>'; }).join('') + '</div>';
+  } else { var fc = top.querySelector('figcaption'); cap = fc ? fc.textContent : (img.alt || ''); }
+  var z = document.createElement('div'); z.className = 'pyzoom'; z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', img.alt || 'Карточка');
+  z.innerHTML = '<div class="pz-in"><div class="pz-card pylc ' + cls + '" style="--w:' + W + 'px;width:' + W + 'px"><img src="' + img.src + '" alt="' + esc(img.alt || '') + '">' + g4Live(top) + '</div>'
+    + (cap ? '<div class="pz-cap">' + esc(cap) + '</div>' : '') + list + '</div>';
+  document.body.appendChild(z); ZM.el = z;
+  var c = z.querySelector('.pz-card'), cr = c.getBoundingClientRect(), sc = ir.width / cr.width;
+  z._from = 'translate(' + ((ir.left + ir.width / 2) - (cr.left + cr.width / 2)).toFixed(1) + 'px,' + ((ir.top + ir.height / 2) - (cr.top + cr.height / 2)).toFixed(1) + 'px) scale(' + sc.toFixed(3) + ')';
+  if (!g4Reduced()) { c.style.transition = 'none'; c.style.transform = z._from; void c.offsetWidth; c.style.transition = ''; requestAnimationFrame(function () { c.style.transform = ''; z.classList.add('in'); }); }
+  else z.classList.add('in');
+}
 function applyG4() {
-  g4Play(); g4Sheet();
+  g4Play(); g4Sheet(); g4LiveThumbs();
   if (!G4.on) {
-    G4.on = true; document.addEventListener('click', function (e) { try { g4Tab(e); g4One(e); g4TeamTap(e); g4Icon(e); } catch (x) {} }, true);
+    G4.on = true; document.addEventListener('click', function (e) { try { g4Zoom(e); if (e.defaultPrevented) return; g4Tab(e); g4One(e); g4TeamTap(e); g4Icon(e); } catch (x) {} }, true);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ZM.el) { e.stopImmediatePropagation(); g4ZoomShut(); } }, true);
     var tm = document.getElementById('team');
     if (tm) { var mo4 = new MutationObserver(function () { mo4.disconnect(); try { g4Team(); } catch (x) {} mo4.observe(tm, { childList: true, subtree: true }); }); mo4.observe(tm, { childList: true, subtree: true }); g4Team(); }
   }
@@ -3685,6 +3785,7 @@ function run() {
       document.querySelectorAll('#app .tbsub > span:first-child:not(.dzsub)').forEach(function (e) { e.classList.add('dzsub'); }); }
     else apply110('');
     var pr = document.getElementById('prof'); if (pr && !pr.hidden) applyProf();
+    if (pr && !pr.hidden) g4LiveThumbs();
   } catch (e) { if (window.console) console.error('Пифия:', e); }
   if (mo) { mo.takeRecords(); watch(); }
   busy = false;
@@ -3760,7 +3861,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh0j08i";
+var BUILD = "mwh0oo4n";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
