@@ -1174,6 +1174,9 @@
 #savebar.sv-court .sclw{display:block}
 #savebar.sv-court #save .eye{display:none}
 #savebar #save .sv-s,#savebar.sv-court #save .sv-e{display:none}
+/* 20.11 отказ от прогноза: «Стираю…», глаз открывается без подмигивания, «Прогноз отменён» */
+#savebar #save .sv-c,#savebar.sv-cx #save .sv-e{display:none}#savebar.sv-cx #save .sv-c{display:inline}
+#savebar.sv-del .l5{opacity:1;transform:none}#savebar.sv-del .lid{animation:sv-open .22s ease-out forwards}
 #savebar.sv-court #save .sv-s{display:inline}
 #save .bsc{position:absolute;left:12px;top:4px;width:40px;height:40px;overflow:visible;--sca:0deg;--scp:0deg}
 #save .bsc path{fill:currentColor}
@@ -3343,6 +3346,7 @@ function g3card(g, m, meth) {
   if (ed && lateOpen[m.key]) right = '<button class="txtbtn" data-late="' + esc(m.key) + '">отменить</button>';
   var note = '';
   if (ed && lateOpen[m.key]) note = 'Прогноз будет принят, если все бросят белый камешек.';
+  else if (ed && dirty && !m.started && edits[m.key].h === null) note = 'Прогноз отменится, когда сохранишь.';   // 20.11: отказ от прогноза
   else if (ed && m.pending && !dirty) note = 'Прогноз на рассмотрении у судей. Да поможет тебе Аполлон!';
   else if (m.locked && !dirty) note = '<b>Матч идёт.</b> Проспал начало? Тронь струны лиры.';
   var cls = 'mc' + (done ? ' done' : '') + (done || live ? '' : ' next') + (dirty ? (m.started ? ' late' : ' dirty') : '') + (rv ? ' rvl' : '')
@@ -3419,12 +3423,12 @@ var SV_EYE = '<svg class="eye" viewBox="0 0 100 100" aria-hidden="true"><defs><c
   + '<path class="st s1" fill="#e2a92b" d="M50.00 23.50C44.76 17.80 45.63 9.82 50.00 4.50C54.37 9.82 55.24 17.80 50.00 23.50Z"></path>'
   + '<path class="st s2" fill="#e2a92b" d="M27.00 27.50C21.84 26.27 19.29 21.41 19.73 16.72C24.24 18.07 27.79 22.26 27.00 27.50Z"></path>'
   + '<path class="st s3" fill="#e2a92b" d="M73.00 27.50C72.21 22.26 75.76 18.07 80.27 16.72C80.71 21.41 78.16 26.27 73.00 27.50Z"></path></svg>';
-var SV_ARIA = { idle: '', press: 'Сохраняю', wait: 'Сохраняю', ok: 'Сохранено в тайне до начала матча', late: 'Ждём согласия соперников', err: 'Не удалось сохранить. Повторить?' };
+var SV_ARIA = { idle: '', press: 'Сохраняю', wait: 'Сохраняю', ok: 'Сохранено в тайне до начала матча', del: 'Прогноз отменён', late: 'Ждём согласия соперников', err: 'Не удалось сохранить. Повторить?' };
 function svAt(ms, fn) { SV.T.push(setTimeout(fn, ms)); }
 function svSet(ph, extra) {
   var bar = document.getElementById('savebar'), b = document.getElementById('save'); if (!bar || !b) return;
   SV.ph = ph;
-  ['idle', 'press', 'wait', 'ok', 'late', 'err', 'leave', 'hold'].forEach(function (k) { bar.classList.remove('sv-' + k); });
+  ['idle', 'press', 'wait', 'ok', 'del', 'late', 'err', 'leave', 'hold'].forEach(function (k) { bar.classList.remove('sv-' + k); });
   bar.classList.add('sv-' + ph); (extra || []).forEach(function (k) { bar.classList.add('sv-' + k); });
   b.setAttribute('aria-label', ph === 'idle' ? SV.label.replace(' · ', ', ') : SV_ARIA[ph]);
 }
@@ -3449,7 +3453,7 @@ function svHook() {
   API.save = function (items, ok, fail) {
     svGo();
     return orig.call(API, items, function (r) {
-      var errs = r && r.errors && r.errors.length, ph = r && r.late && !r.saved ? 'late' : (errs && !(r && (r.saved || r.late)) ? 'err' : 'ok');
+      var errs = r && r.errors && r.errors.length, ph = r && r.late && !r.saved ? 'late' : (errs && !(r && (r.saved || r.late || r.cancelled)) ? 'err' : r && r.cancelled && !r.saved && !r.late ? 'del' : 'ok');
       svEnd(ph);
       // всё приняли — кнопка сама скажет «Сохранено в тайне»; про непринятые — подсказка приложения остаётся
       SV.quiet = !errs; try { ok(r); } finally { SV.quiet = false; }
@@ -3475,10 +3479,10 @@ function pySave() {
     var late = /^Отправить на согласие/.test(v);
     SV.label = late ? 'Отдать на суд' : v.replace(/\s*\((\d+)\)\s*$/, ' · $1');
     var l = b.querySelector('.l0'); if (l) D.set.call(l, SV.label);
-    if (SV.ph === 'idle') { svScales(late); svSet('idle'); }
+    if (SV.ph === 'idle') { svScales(late); var bar = document.getElementById('savebar'); if (bar) bar.classList.toggle('sv-cx', /^Отменить прогноз/.test(v)); svSet('idle'); }
   };
   var t = D.get.call(b);
-  b.innerHTML = SV_EYE + '<span class="sclw"></span><span class="lb l0"></span><span class="lb l1"><span class="sv-e">Прячу до свистка…</span><span class="sv-s">Отдаю на суд…</span></span><span class="lb l2">Сохранено в тайне до начала матча</span><span class="lb l4">Ждём согласия соперников</span><span class="lb l3">Не удалось сохранить. Повторить?</span>';
+  b.innerHTML = SV_EYE + '<span class="sclw"></span><span class="lb l0"></span><span class="lb l1"><span class="sv-e">Прячу до свистка…</span><span class="sv-s">Отдаю на суд…</span><span class="sv-c">Стираю…</span></span><span class="lb l2">Сохранено в тайне до начала матча</span><span class="lb l5">Прогноз отменён</span><span class="lb l4">Ждём согласия соперников</span><span class="lb l3">Не удалось сохранить. Повторить?</span>';
   b.classList.add('sb');
   Object.defineProperty(b, 'textContent', { configurable: true, get: function () { return SV.label; }, set: lab });
   lab(t);
@@ -4414,7 +4418,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 <script>
 var BASE = "https://script.google.com/macros/s/AKfycbzkHUEzrC7PU8czbySO44Z6HEG0hlDa6N6ZmCsF3yACH-9yHuUJy6SRznqmcXdq1-a9/exec";
-var BUILD = "mwh3ugp9";
+var BUILD = "mwp4b3l4";
 var TG = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData ? window.Telegram.WebApp : null;
 var Q = new URLSearchParams(location.search);
 var AUTH = TG ? { tg: TG.initData } : { u: Q.get('u') || '', k: Q.get('k') || '' };
@@ -4493,12 +4497,13 @@ function find(key) {
 function todo(kind) {
   var n = 0, until = (DATA.now || Date.now()) + 7 * 864e5;
   groupsOf(kind).forEach(function (g) {
-    if (g.me) g.matches.forEach(function (m) { if (!m.started && m.phase !== 'off' && m.start < until && !m.mine && !edits[m.key]) n++; });
+    if (g.me) g.matches.forEach(function (m) { if (!m.started && m.phase !== 'off' && m.start < until && !hasPred(m)) n++; });
   });
   return n;
 }
 
 // ---------- ввод счёта ----------
+function hasPred(m) { var e = edits[m.key]; return e ? e.h !== null : !!m.mine; }   // с учётом несохранённых правок (отказ — прогноза нет)
 function current(m) {
   if (edits[m.key]) return edits[m.key];
   if (m.started) return m.pending ? { h: m.pending[0], a: m.pending[1] } : { h: null, a: null };
@@ -4506,6 +4511,12 @@ function current(m) {
 }
 function bump(key, side, d) {
   var m = find(key), c = current(m), h = c.h, a = c.a;
+  // 20.11, отказ от прогноза: на 0:0 ещё одно «−» у любой команды снимает счёт. Черновик просто стирается;
+  // сохранённый прогноз (до свистка) становится правкой «отменить» — уйдёт на сервер кнопкой сохранения
+  if (d < 0 && h === 0 && a === 0) {
+    if (!m.started && m.mine) edits[key] = { h: null, a: null }; else delete edits[key];
+    return render();
+  }
   if (h === null || a === null) { h = 0; a = 0; if (d > 0) { if (side === 'h') h = 1; else a = 1; } }
   else if (side === 'h') h = Math.max(0, Math.min(20, h + d));
   else a = Math.max(0, Math.min(20, a + d));
@@ -4562,6 +4573,7 @@ function matchRow(g, m, gridCols, editable) {
     h += '<div></div></div>';
   }
   if (editable && lateOpen[m.key]) h += '<div class="note">Прогноз попадёт в таблицу, если согласятся остальные.</div>';
+  else if (editable && dirty && !m.started && edits[m.key].h === null) h += '<div class="note">Прогноз отменится, когда сохранишь.</div>';
   else if (editable && m.pending && !dirty) h += '<div class="note">Твой прогноз ' + m.pending[0] + ':' + m.pending[1] + ' ждёт согласия остальных.</div>';
   // Без своего прогноза на идущий матч не видно ни счёт, ни чужие прогнозы — только минуту
   else if (m.locked && !dirty) h += '<div class="note"><b class="hl">Матч идёт.</b> Поторопись с прогнозом!</div>';
@@ -4642,7 +4654,7 @@ function renderPred(kind) {
     var wide = g.me && g.matches.some(function (m) { return !m.started || lateOpen[m.key] || canLate(g, m); });
     var gc = cols(g.players.length, wide ? meOf(g) : -1);
     var open = g.matches.filter(function (m) { return !m.started && m.phase !== 'off'; });
-    var done = open.filter(function (m) { return m.mine || edits[m.key]; }).length;
+    var done = open.filter(hasPred).length;
     var note = '';
     if (g.state === 'live') note = '<span class="live">Тур идёт</span>';
     else if (g.state === 'done') note = 'Тур завершён';
@@ -5871,7 +5883,8 @@ function render() {
   var n = Object.keys(edits).length;
   $('savebar').hidden = !(S.view === 'pred' && n);
   var late = Object.keys(edits).filter(function (k) { return find(k).started; }).length;
-  $('save').textContent = n ? (late === n ? 'Отправить на согласие' : 'Сохранить прогнозы') + ' (' + n + ')' : 'Сохранить';
+  var del = Object.keys(edits).filter(function (k) { return edits[k].h === null; }).length;
+  $('save').textContent = n ? (late === n ? 'Отправить на согласие' : del === n ? (n > 1 ? 'Отменить прогнозы' : 'Отменить прогноз') : 'Сохранить прогнозы') + ' (' + n + ')' : 'Сохранить';
   measure();
 }
 
@@ -5941,7 +5954,7 @@ document.addEventListener('click', function (e) {
 });
 
 $('save').addEventListener('click', function () {
-  var items = Object.keys(edits).map(function (k) { return { key: k, h: edits[k].h, a: edits[k].a }; });
+  var items = Object.keys(edits).map(function (k) { return edits[k].h === null ? { key: k, del: 1 } : { key: k, h: edits[k].h, a: edits[k].a }; });
   if (!items.length) return;
   if (DATA.stale) return toast('Секунду — обновляю данные');
   $('save').disabled = true; $('save').textContent = 'Сохраняю…';
@@ -5950,6 +5963,7 @@ $('save').addEventListener('click', function () {
       var msg = [];
       if (r.saved) msg.push('Прогнозы сохранены: ' + r.saved);
       if (r.late) msg.push('на согласие: ' + r.late);
+      if (r.cancelled) msg.push(r.cancelled > 1 ? 'Прогнозы отменены: ' + r.cancelled : 'Прогноз отменён');
       if (r.errors && r.errors.length) msg.push('не принято: ' + r.errors.join(', '));
       toast(msg.join('. ') || 'Готово');
       reload();
